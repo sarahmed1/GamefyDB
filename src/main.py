@@ -21,8 +21,8 @@ def main():
     parser.add_argument(
         "--target",
         type=str,
-        required=True,
-        help="Directory containing .html files to process"
+        required=False,
+        help="Directory containing .html files to process (run CLI mode if provided)"
     )
     parser.add_argument(
         "--batch-size",
@@ -42,6 +42,16 @@ def main():
     setup_logging()
     logger = logging.getLogger("main")
     
+    # If no target provided, run the UI
+    if not args.target:
+        from PySide6.QtWidgets import QApplication
+        from src.ui.main_window import MainWindow
+        app = QApplication(sys.argv)
+        window = MainWindow()
+        window.show()
+        sys.exit(app.exec())
+    
+    # Otherwise run the CLI pipeline
     target_dir = Path(args.target)
     if not target_dir.exists() or not target_dir.is_dir():
         logger.error(f"Target directory does not exist or is not a directory: {args.target}")
