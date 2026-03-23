@@ -7,45 +7,39 @@ Providing a reliable, user-friendly desktop interface to streamline the extracti
 ## Requirements
 
 ### Validated
-- [x] Extract tabular/structured data from `.html` files using BeautifulSoup4 and lxml (Validated in Phase 1: core-data-extraction-storage)
-- [x] Normalize the extracted raw data (Validated in Phase 1: core-data-extraction-storage)
-- [x] Persist normalized data in a local SQLite database (Validated in Phase 1: core-data-extraction-storage)
-- [x] Implement a PySide6-based desktop UI for initiating and monitoring the data pipeline (Validated in Phase 2: desktop-interface-processing-control)
-- [x] Provide basic status, progress tracking, and logging within the desktop UI (Validated in Phase 2: desktop-interface-processing-control)
+- ✓ Extract tabular/structured data from `.html` files using BeautifulSoup4 and lxml — v1.0
+- ✓ Normalize the extracted raw data — v1.0
+- ✓ Persist normalized data in a local SQLite database — v1.0
+- ✓ Implement a PySide6-based desktop UI for initiating and monitoring the data pipeline — v1.0
+- ✓ Provide basic status, progress tracking, and logging within the desktop UI — v1.0
 
 ### Active
-None at this time.
+(None - run `/gsd-new-milestone` to plan next version)
 
 ### Out of Scope
-- Machine Learning / Prediction features (Deferred to a later phase per user request)
+- Machine Learning / Prediction features — Deferred to a later phase (v2.0)
+- Cloud/Remote Database — Overcomplicates infrastructure, slows local processing
+- Web-based Electron UI — High overhead, complex packaging, slow IPC to Python tools
+
+## Context
+Shipped v1.0 MVP with 740 LOC Python.
+Tech stack: PySide6, SQLAlchemy, Pydantic, BeautifulSoup4, Pandas.
 
 ## Key Decisions
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Desktop Stack: PySide6 | A pure Python stack simplifies integration with the existing Python data pipeline and future ML tools, avoiding cross-language IPC overhead. | Validated in Phase 2 |
-| Data Parsing: BS4/lxml | The industry standard, robust Python tooling for handling potentially messy HTML data extraction. | Validated in Phase 1 |
-| Storage: SQLite | Self-contained, file-based SQL database perfectly suited for normalized, structured data on a desktop environment without requiring a separate database server. | Validated in Phase 1 |
+| Desktop Stack: PySide6 | A pure Python stack simplifies integration with the existing Python data pipeline and future ML tools, avoiding cross-language IPC overhead. | ✓ Good |
+| Data Parsing: BS4/lxml | The industry standard, robust Python tooling for handling potentially messy HTML data extraction. | ✓ Good |
+| Storage: SQLite | Self-contained, file-based SQL database perfectly suited for normalized, structured data on a desktop environment without requiring a separate database server. | ✓ Good |
+| Validation: Pydantic | Schema defines strict typing via Pydantic matching the DB structure. | ✓ Good |
+| Background: QThread | Used QThread with signals for non-blocking UI integration | ✓ Good |
 
 ## Current State
-Phase 2 complete — core data extraction pipeline is fully wired to a PySide6 desktop interface for user-driven processing and real-time monitoring.
+v1.0 MVP Shipped (2026-03-23) — Core data extraction pipeline is fully wired to a PySide6 desktop interface for user-driven processing and real-time monitoring.
 
-## Evolution
-
-This document evolves at phase transitions and milestone boundaries.
-
-**After each phase transition** (via `/gsd-transition`):
-1. Requirements invalidated? → Move to Out of Scope with reason
-2. Requirements validated? → Move to Validated with phase reference
-3. New requirements emerged? → Add to Active
-4. Decisions to log? → Add to Key Decisions
-5. "What This Is" still accurate? → Update if drifted
-
-**After each milestone** (via `/gsd-complete-milestone`):
-1. Full review of all sections
-2. Core Value check — still the right priority?
-3. Audit Out of Scope — reasons still valid?
-4. Update Context with current state
+## Next Milestone Goals
+(To be defined via `/gsd-new-milestone`)
 
 ---
-*Last updated: Mon Mar 23 2026 after phase 2 completion*
+*Last updated: 2026-03-23 after v1.0 milestone*
