@@ -2,7 +2,7 @@
 
 ## Phases
 - [x] **Phase 1: Core Data Extraction & Storage** - The system can extract, normalize, and persist HTML data to a local database.
-- [ ] **Phase 2: Desktop Interface & Processing Control** - Users can control and monitor the data pipeline through a responsive desktop application.
+- [x] **Phase 2: Desktop Interface & Processing Control** - Users can control and monitor the data pipeline through a responsive desktop application. (completed 2026-03-23)
 
 ## Phase Details
 
@@ -31,7 +31,7 @@
 **Plans**: 3 plans
 - [x] 02-01-PLAN.md — Build core PySide6 interface and directory selection
 - [x] 02-02-PLAN.md — Implement QThread pipeline worker and progress callbacks
-- [ ] 02-03-PLAN.md — Wire UI to worker, enabling processing and cancellation
+- [x] 02-03-PLAN.md — Wire UI to worker, enabling processing and cancellation
 **UI hint**: yes
 
 ## Progress
@@ -39,4 +39,4 @@
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Core Data Extraction & Storage | 3/3 | Complete | 2026-03-23 |
-| 2. Desktop Interface & Processing Control | 2/3 | In Progress|  |
+| 2. Desktop Interface & Processing Control | 3/3 | Complete   | 2026-03-23 |
