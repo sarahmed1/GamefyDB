@@ -2,12 +2,17 @@
 
 ## Project Reference
 **Core Value**: Providing a reliable, user-friendly desktop interface to streamline the extraction, normalization, and local storage of HTML-based data, ensuring it is cleanly formatted for subsequent ML modeling.
-**Current Focus**: Initial planning and setup phase.
+**Current Focus**: Core Data Extraction & Storage phase
 
 ## Current Position
 - **Phase**: 1
-- **Plan**: Not started
-- **Status**: Ready for phase planning
+- **Plan**: 01-01
+- **Status**: Ready for phase execution
+
+## Session Context
+**Stopped at**: Phase 1 plans created
+**Next Step**: Run /gsd-execute-phase 1 to begin building the core data extraction and storage backend.
+**Resume File**: `.planning/phases/01-core-data-extraction-storage/01-01-PLAN.md`
 
 ## Performance Metrics
 - **Phase 1 Progress**: 0%
@@ -16,15 +21,14 @@
 
 ## Accumulated Context
 **Decisions**:
-- PySide6 for desktop UI stack
-- BeautifulSoup4/lxml for HTML parsing
-- SQLite for local storage
+- Skip malformed files and log warning
+- Strict data normalization (drop invalid rows)
+- Schema creation via SQLAlchemy create_all()
+- Process files in batches
 
 **Todos**:
-- Create plan for Phase 1
+- Execute Phase 1 plans
 
 **Blockers**:
 - None
 
-## Session Continuity
-Next step: Call `/gsd-plan-phase 1` to break down the core data pipeline requirements into actionable execution steps.
