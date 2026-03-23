@@ -30,7 +30,7 @@
   4. User can click a cancel button to safely stop an active pipeline run.
 **Plans**: 3 plans
 - [x] 02-01-PLAN.md — Build core PySide6 interface and directory selection
-- [ ] 02-02-PLAN.md — Implement QThread pipeline worker and progress callbacks
+- [x] 02-02-PLAN.md — Implement QThread pipeline worker and progress callbacks
 - [ ] 02-03-PLAN.md — Wire UI to worker, enabling processing and cancellation
 **UI hint**: yes
 
@@ -39,4 +39,4 @@
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Core Data Extraction & Storage | 3/3 | Complete | 2026-03-23 |
-| 2. Desktop Interface & Processing Control | 0/0 | Not started | - |
+| 2. Desktop Interface & Processing Control | 2/3 | In Progress|  |
