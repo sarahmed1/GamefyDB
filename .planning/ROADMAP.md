@@ -16,7 +16,7 @@
   3. Normalized records are successfully saved to a local SQLite database file.
 **Plans**: 3 plans
 - [x] 01-01-PLAN.md — Setup Database Models and Session
-- [ ] 01-02-PLAN.md — HTML Extractor and Data Normalizer
+- [x] 01-02-PLAN.md — HTML Extractor and Data Normalizer
 - [ ] 01-03-PLAN.md — Batch Orchestrator and CLI Runner
 
 ### Phase 2: Desktop Interface & Processing Control
