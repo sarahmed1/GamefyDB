@@ -5,8 +5,8 @@
 ### Core Pipeline
 - [ ] **PIPE-01**: User can specify a local directory containing `.html` files for processing
 - [ ] **PIPE-02**: System extracts data from `.html` DOM using BeautifulSoup4 and lxml
-- [ ] **PIPE-03**: System normalizes extracted data into a standardized structure
-- [ ] **PIPE-04**: System persists normalized data sequentially in a local SQLite database schema
+- [x] **PIPE-03**: System normalizes extracted data into a standardized structure
+- [x] **PIPE-04**: System persists normalized data sequentially in a local SQLite database schema
 
 ### User Interface
 - [ ] **UI-01**: User can initiate the parsing and normalization pipeline via the desktop app
@@ -30,8 +30,8 @@
 |-------------|-------|--------|
 | PIPE-01 | Phase 2 | Pending |
 | PIPE-02 | Phase 1 | Pending |
-| PIPE-03 | Phase 1 | Pending |
-| PIPE-04 | Phase 1 | Pending |
+| PIPE-03 | Phase 1 | Complete |
+| PIPE-04 | Phase 1 | Complete |
 | UI-01 | Phase 2 | Pending |
 | UI-02 | Phase 2 | Pending |
 | UI-03 | Phase 2 | Pending |

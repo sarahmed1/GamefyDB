@@ -15,7 +15,7 @@
   2. Extracted data is normalized into a consistent standard format.
   3. Normalized records are successfully saved to a local SQLite database file.
 **Plans**: 3 plans
-- [ ] 01-01-PLAN.md — Setup Database Models and Session
+- [x] 01-01-PLAN.md — Setup Database Models and Session
 - [ ] 01-02-PLAN.md — HTML Extractor and Data Normalizer
 - [ ] 01-03-PLAN.md — Batch Orchestrator and CLI Runner
 
