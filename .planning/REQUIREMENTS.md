@@ -9,9 +9,9 @@
 - [x] **PIPE-04**: System persists normalized data sequentially in a local SQLite database schema
 
 ### User Interface
-- [ ] **UI-01**: User can initiate the parsing and normalization pipeline via the desktop app
-- [ ] **UI-02**: User sees real-time progress tracking (e.g., progress bar) without the UI freezing (via QThread)
-- [ ] **UI-03**: User can view basic logs and status messages for the current pipeline run
+- [x] **UI-01**: User can initiate the parsing and normalization pipeline via the desktop app
+- [x] **UI-02**: User sees real-time progress tracking (e.g., progress bar) without the UI freezing (via QThread)
+- [x] **UI-03**: User can view basic logs and status messages for the current pipeline run
 - [ ] **UI-04**: User can gracefully cancel or pause a long-running pipeline extraction process
 
 ## v2 Requirements (Deferred)
@@ -32,7 +32,7 @@
 | PIPE-02 | Phase 1 | Complete |
 | PIPE-03 | Phase 1 | Complete |
 | PIPE-04 | Phase 1 | Complete |
-| UI-01 | Phase 2 | Pending |
-| UI-02 | Phase 2 | Pending |
-| UI-03 | Phase 2 | Pending |
+| UI-01 | Phase 2 | Complete |
+| UI-02 | Phase 2 | Complete |
+| UI-03 | Phase 2 | Complete |
 | UI-04 | Phase 2 | Pending |

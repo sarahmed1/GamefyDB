@@ -29,7 +29,7 @@
   3. The UI remains responsive (does not freeze) during heavy data extraction.
   4. User can click a cancel button to safely stop an active pipeline run.
 **Plans**: 3 plans
-- [ ] 02-01-PLAN.md — Build core PySide6 interface and directory selection
+- [x] 02-01-PLAN.md — Build core PySide6 interface and directory selection
 - [ ] 02-02-PLAN.md — Implement QThread pipeline worker and progress callbacks
 - [ ] 02-03-PLAN.md — Wire UI to worker, enabling processing and cancellation
 **UI hint**: yes
