@@ -3,7 +3,7 @@
 ## v1 Requirements
 
 ### Core Pipeline
-- [ ] **PIPE-01**: User can specify a local directory containing `.html` files for processing
+- [x] **PIPE-01**: User can specify a local directory containing `.html` files for processing
 - [x] **PIPE-02**: System extracts data from `.html` DOM using BeautifulSoup4 and lxml
 - [x] **PIPE-03**: System normalizes extracted data into a standardized structure
 - [x] **PIPE-04**: System persists normalized data sequentially in a local SQLite database schema
@@ -28,7 +28,7 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| PIPE-01 | Phase 2 | Pending |
+| PIPE-01 | Phase 2 | Complete |
 | PIPE-02 | Phase 1 | Complete |
 | PIPE-03 | Phase 1 | Complete |
 | PIPE-04 | Phase 1 | Complete |
