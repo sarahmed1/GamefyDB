@@ -25,4 +25,14 @@
 - **Web-based Electron UI**: High overhead, complex packaging, slow IPC to Python tools. Use native PySide6.
 
 ## Traceability
-*(To be populated by roadmapper)*
+
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| PIPE-01 | Phase 2 | Pending |
+| PIPE-02 | Phase 1 | Pending |
+| PIPE-03 | Phase 1 | Pending |
+| PIPE-04 | Phase 1 | Pending |
+| UI-01 | Phase 2 | Pending |
+| UI-02 | Phase 2 | Pending |
+| UI-03 | Phase 2 | Pending |
+| UI-04 | Phase 2 | Pending |
