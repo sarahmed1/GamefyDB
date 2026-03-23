@@ -7,13 +7,12 @@ Providing a reliable, user-friendly desktop interface to streamline the extracti
 ## Requirements
 
 ### Validated
-(None yet — ship to validate)
+- [x] Extract tabular/structured data from `.html` files using BeautifulSoup4 and lxml (Validated in Phase 1: core-data-extraction-storage)
+- [x] Normalize the extracted raw data (Validated in Phase 1: core-data-extraction-storage)
+- [x] Persist normalized data in a local SQLite database (Validated in Phase 1: core-data-extraction-storage)
 
 ### Active
 - [ ] Implement a PySide6-based desktop UI for initiating and monitoring the data pipeline
-- [ ] Extract tabular/structured data from `.html` files using BeautifulSoup4 and lxml
-- [ ] Normalize the extracted raw data
-- [ ] Persist normalized data in a local SQLite database
 - [ ] Provide basic status, progress tracking, and logging within the desktop UI
 
 ### Out of Scope
@@ -24,8 +23,11 @@ Providing a reliable, user-friendly desktop interface to streamline the extracti
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
 | Desktop Stack: PySide6 | A pure Python stack simplifies integration with the existing Python data pipeline and future ML tools, avoiding cross-language IPC overhead. | — Pending |
-| Data Parsing: BS4/lxml | The industry standard, robust Python tooling for handling potentially messy HTML data extraction. | — Pending |
-| Storage: SQLite | Self-contained, file-based SQL database perfectly suited for normalized, structured data on a desktop environment without requiring a separate database server. | — Pending |
+| Data Parsing: BS4/lxml | The industry standard, robust Python tooling for handling potentially messy HTML data extraction. | Validated in Phase 1 |
+| Storage: SQLite | Self-contained, file-based SQL database perfectly suited for normalized, structured data on a desktop environment without requiring a separate database server. | Validated in Phase 1 |
+
+## Current State
+Phase 1 complete — core data extraction and storage pipeline is established and functionally parsing HTML into local SQLite.
 
 ## Evolution
 
@@ -45,4 +47,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: Mon Mar 23 2026 after initialization*
+*Last updated: Mon Mar 23 2026 after phase 1 completion*
