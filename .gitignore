@@ -2,6 +2,10 @@
 __pycache__/
 *.py[cod]
 *$py.class
+.cache/
+.dmypy.json
+.pytype/
+.ipynb_checkpoints/
 
 # Packaging and build artifacts
 build/
@@ -10,7 +14,15 @@ downloads/
 .eggs/
 *.egg-info/
 *.egg
+*.whl
+MANIFEST
+site/
 pip-wheel-metadata/
+
+# Local environment files
+.env
+.env.*
+!.env.example
 
 # Virtual environments
 .venv/
@@ -35,10 +47,17 @@ htmlcov/
 # Local databases and runtime files
 local.db
 local.db-*
+*.sqlite3
+*.db
 *.db-journal
 *.db-wal
 *.db-shm
 *.sqlite-journal
+
+# Qt/PySide generated artifacts
+*.qrc.depends
+ui_*.py
+qmlcache/
 
 # Logs
 *.log
@@ -46,6 +65,15 @@ local.db-*
 # OS/editor files
 .DS_Store
 Thumbs.db
+Desktop.ini
+.swp
+.swo
 .vscode/
 .idea/
 *.code-workspace
+
+# Project-specific temporary/planning folders
+.planning/
+temp/
+exports/
+output/
