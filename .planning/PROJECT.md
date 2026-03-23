@@ -10,10 +10,11 @@ Providing a reliable, user-friendly desktop interface to streamline the extracti
 - [x] Extract tabular/structured data from `.html` files using BeautifulSoup4 and lxml (Validated in Phase 1: core-data-extraction-storage)
 - [x] Normalize the extracted raw data (Validated in Phase 1: core-data-extraction-storage)
 - [x] Persist normalized data in a local SQLite database (Validated in Phase 1: core-data-extraction-storage)
+- [x] Implement a PySide6-based desktop UI for initiating and monitoring the data pipeline (Validated in Phase 2: desktop-interface-processing-control)
+- [x] Provide basic status, progress tracking, and logging within the desktop UI (Validated in Phase 2: desktop-interface-processing-control)
 
 ### Active
-- [ ] Implement a PySide6-based desktop UI for initiating and monitoring the data pipeline
-- [ ] Provide basic status, progress tracking, and logging within the desktop UI
+None at this time.
 
 ### Out of Scope
 - Machine Learning / Prediction features (Deferred to a later phase per user request)
@@ -22,12 +23,12 @@ Providing a reliable, user-friendly desktop interface to streamline the extracti
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Desktop Stack: PySide6 | A pure Python stack simplifies integration with the existing Python data pipeline and future ML tools, avoiding cross-language IPC overhead. | — Pending |
+| Desktop Stack: PySide6 | A pure Python stack simplifies integration with the existing Python data pipeline and future ML tools, avoiding cross-language IPC overhead. | Validated in Phase 2 |
 | Data Parsing: BS4/lxml | The industry standard, robust Python tooling for handling potentially messy HTML data extraction. | Validated in Phase 1 |
 | Storage: SQLite | Self-contained, file-based SQL database perfectly suited for normalized, structured data on a desktop environment without requiring a separate database server. | Validated in Phase 1 |
 
 ## Current State
-Phase 1 complete — core data extraction and storage pipeline is established and functionally parsing HTML into local SQLite.
+Phase 2 complete — core data extraction pipeline is fully wired to a PySide6 desktop interface for user-driven processing and real-time monitoring.
 
 ## Evolution
 
@@ -47,4 +48,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: Mon Mar 23 2026 after phase 1 completion*
+*Last updated: Mon Mar 23 2026 after phase 2 completion*
