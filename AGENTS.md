@@ -1,12 +1,9 @@
-<!-- GSD:project-start source:PROJECT.md -->
 ## Project
 
 A desktop application built with PySide6 that ingests a Python data pipeline. The system handles parsing and extracting data from local `.html` files (which contain raw database data) using BeautifulSoup4/lxml, normalizes this data, and stores it systematically in a local SQLite database. Future milestones will include an ML prediction module, but initial efforts focus purely on the foundational stack, data extraction, and normalization pipeline.
 
 **Core Value:** Providing a reliable, user-friendly desktop interface to streamline the extraction, normalization, and local storage of HTML-based data, ensuring it is cleanly formatted for subsequent ML modeling.
-<!-- GSD:project-end -->
 
-<!-- GSD:stack-start source:research/STACK.md -->
 ## Technology Stack
 
 ## Recommended Stack
@@ -49,38 +46,40 @@ A desktop application built with PySide6 that ingests a Python data pipeline. Th
 - Official PySide6 Documentation
 - SQLAlchemy 2.0 Release Notes
 - BeautifulSoup4 Official Documentation
-<!-- GSD:stack-end -->
 
-<!-- GSD:conventions-start source:CONVENTIONS.md -->
 ## Conventions
 
 Conventions not yet established. Will populate as patterns emerge during development.
-<!-- GSD:conventions-end -->
 
-<!-- GSD:architecture-start source:ARCHITECTURE.md -->
 ## Architecture
 
 Architecture not yet mapped. Follow existing patterns found in the codebase.
-<!-- GSD:architecture-end -->
 
-<!-- GSD:workflow-start source:GSD defaults -->
-## GSD Workflow Enforcement
+## Workflow
 
-Before using Edit, Write, or other file-changing tools, start work through a GSD command so planning artifacts and execution context stay in sync.
+Use direct repository edits for implementation and fixes.
 
-Use these entry points:
-- `/gsd:quick` for small fixes, doc updates, and ad-hoc tasks
-- `/gsd:debug` for investigation and bug fixing
-- `/gsd:execute-phase` for planned phase work
+Suggested approach:
+- Keep changes small and focused
+- Add or update tests when behavior changes
+- Run relevant tests before finishing
+- Document assumptions and follow-up work clearly
 
-Do not make direct repo edits outside a GSD workflow unless the user explicitly asks to bypass it.
-<!-- GSD:workflow-end -->
+## Context7 Usage
+
+Use Context7 for library, framework, and API documentation questions instead of relying on memory.
+
+When Context7 applies:
+- Setup or configuration tasks for a framework/library
+- Code generation that depends on external libraries
+- API reference requests or method/option lookups
+- Version-specific questions (prefer versioned docs when available)
+
+Context7 flow:
+1. Resolve the library ID using `mcp_io_github_ups_resolve-library-id`.
+2. Fetch docs with `mcp_io_github_ups_get-library-docs` using the selected ID.
+3. Base implementation details on fetched docs and mention version context when relevant.
 
 
 
-<!-- GSD:profile-start -->
-## Developer Profile
 
-> Profile not yet configured. Run `/gsd:profile-user` to generate your developer profile.
-> This section is managed by `generate-claude-profile` -- do not edit manually.
-<!-- GSD:profile-end -->

@@ -1,20 +1,12 @@
 import argparse
 import sys
-import logging
 from pathlib import Path
 
 # Ensure src is in the path when running directly
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from src.database.session import init_db
-from src.pipeline.orchestrator import run_pipeline
-
-def setup_logging():
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s [%(levelname)s] %(name)s - %(message)s",
-        handlers=[logging.StreamHandler(sys.stdout)]
-    )
+from src.backend.app.cli import run_cli
+from src.frontend.app.gui import run_gui
 
 def main():
     parser = argparse.ArgumentParser(description="GamefyDB Data Extraction Pipeline")
@@ -38,35 +30,12 @@ def main():
     )
     
     args = parser.parse_args()
-    
-    setup_logging()
-    logger = logging.getLogger("main")
-    
-    # If no target provided, run the UI
+
     if not args.target:
-        from PySide6.QtWidgets import QApplication
-        from src.ui.main_window import MainWindow
-        app = QApplication(sys.argv)
-        window = MainWindow()
-        window.show()
-        sys.exit(app.exec())
-    
-    # Otherwise run the CLI pipeline
-    target_dir = Path(args.target)
-    if not target_dir.exists() or not target_dir.is_dir():
-        logger.error(f"Target directory does not exist or is not a directory: {args.target}")
-        sys.exit(1)
-        
-    logger.info("Initializing database...")
-    init_db(args.db_url)
-    
-    logger.info(f"Running pipeline on {args.target}...")
-    try:
-        run_pipeline(target_directory=str(args.target), batch_size=args.batch_size, db_url=args.db_url)
-        logger.info("Pipeline execution wrapper finished.")
-    except Exception as e:
-        logger.error(f"Pipeline failed: {e}", exc_info=True)
-        sys.exit(1)
+        sys.exit(run_gui())
+
+    exit_code = run_cli(target=args.target, batch_size=args.batch_size, db_url=args.db_url)
+    sys.exit(exit_code)
 
 if __name__ == "__main__":
     main()
