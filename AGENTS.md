@@ -1,8 +1,8 @@
 ## Project
 
-A desktop application built with PySide6 that ingests a Python data pipeline. The system handles parsing and extracting data from local `.html` files (which contain raw database data) using BeautifulSoup4/lxml, normalizes this data, and stores it systematically in a local SQLite database. Future milestones will include an ML prediction module, but initial efforts focus purely on the foundational stack, data extraction, and normalization pipeline.
+A desktop application built with PySide6 that ingests a Python data pipeline. The system handles parsing and extracting data from local Excel files (`.xlsx`/`.xls`) and legacy `.html` reports, normalizes this data, and stores it systematically in a local SQLite database. Future milestones will include an ML prediction module, but initial efforts focus purely on the foundational stack, data extraction, and normalization pipeline.
 
-**Core Value:** Providing a reliable, user-friendly desktop interface to streamline the extraction, normalization, and local storage of HTML-based data, ensuring it is cleanly formatted for subsequent ML modeling.
+**Core Value:** Providing a reliable, user-friendly desktop interface to streamline the extraction, normalization, and local storage of report data, ensuring it is cleanly formatted for subsequent ML modeling.
 
 ## Technology Stack
 
@@ -15,8 +15,10 @@ A desktop application built with PySide6 that ingests a Python data pipeline. Th
 ### Data Parsing & Extraction
 | Technology | Version | Purpose | Why | Confidence |
 |------------|---------|---------|-----|------------|
-| BeautifulSoup4 | 4.12+ | HTML Parsing | Industry standard for handling messy HTML files. Easy API for navigating DOM. | HIGH |
-| lxml | 5.2+ | Parsing Engine | Highly performant C-based backend for BS4. Crucial for speed when processing many large local `.html` files. | HIGH |
+| openpyxl | 3.1+ | Excel Parsing (.xlsx) | Primary engine used by pandas.read_excel for modern Excel files. | HIGH |
+| xlrd | 2.0+ | Excel Parsing (.xls) | Required by pandas to read legacy `.xls` reports. | HIGH |
+| lxml | 5.2+ | HTML Parsing Engine (Legacy) | Maintains compatibility with historical HTML exports via pandas.read_html. | MEDIUM |
+| BeautifulSoup4 | 4.12+ | HTML Tooling (Optional) | Available for potential custom HTML parsing workflows as needed. | MEDIUM |
 ### Data Normalization
 | Technology | Version | Purpose | Why | Confidence |
 |------------|---------|---------|-----|------------|
@@ -41,7 +43,13 @@ A desktop application built with PySide6 that ingests a Python data pipeline. Th
 | Normalization | Pandas | Built-in Python Dicts | Fine for small data, but built-in data structures are too slow and lack the statistical/cleaning methods needed for ML preparation. |
 ## Installation
 # Core Dependencies
+- Install project dependencies with:
+	- `python -m pip install -r requirements.txt`
 # Dev Dependencies
+- Run tests with:
+	- `python -m pytest tests -q`
+- Build desktop executable with:
+	- `python -m PyInstaller --clean --noconfirm GamefyDB.spec`
 ## Sources
 - Official PySide6 Documentation
 - SQLAlchemy 2.0 Release Notes
@@ -64,6 +72,7 @@ Suggested approach:
 - Add or update tests when behavior changes
 - Run relevant tests before finishing
 - Document assumptions and follow-up work clearly
+- Before release, run a clean executable build via PyInstaller and validate startup
 
 ## Context7 Usage
 

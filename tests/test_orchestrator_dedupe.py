@@ -1,5 +1,7 @@
 from pathlib import Path
 
+import pandas as pd
+
 from sqlalchemy import create_engine, func, select
 from sqlalchemy.orm import Session
 
@@ -17,9 +19,24 @@ def test_run_pipeline_is_rerun_safe_for_same_source_files(tmp_path: Path):
     source_dir = tmp_path / "data"
     source_dir.mkdir()
 
-    fixture_src = Path("data") / "SESSION DATA 01-09-2025.html"
-    fixture_dst = source_dir / fixture_src.name
-    fixture_dst.write_text(fixture_src.read_text(encoding="utf-8"), encoding="utf-8")
+    fixture_dst = source_dir / "SESSION DATA 01-09-2025.xlsx"
+    pd.DataFrame(
+        [
+            {
+                "Cashier": "cashier-1",
+                "Terminal": "terminal-1",
+                "Session Type": "Standard",
+                "Free Time": "0 min",
+                "Paused": "5 min",
+                "Duration": "1 h 0 min",
+                "Order/Transfer": "1,00 TND",
+                "USB Data": "0,00 TND",
+                "Usage": "4,00 TND",
+                "Discount": "0,00 TND",
+                "Total Amount": "5,00 TND",
+            }
+        ]
+    ).to_excel(fixture_dst, index=False)
 
     db_path = tmp_path / "pipeline.db"
     db_url = f"sqlite:///{db_path.as_posix()}"

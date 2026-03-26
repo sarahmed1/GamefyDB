@@ -14,6 +14,11 @@ from src.backend.schemas.record import (
 
 logger = logging.getLogger(__name__)
 
+NOISE_ROW_PATTERN = re.compile(
+    r"(?:\bPage\s*\d+\s*/\s*\d+\b)|(?:\b\d{2}/\d{2}/\d{4}\s+\d{2}:\d{2}:\d{2}\b)",
+    re.IGNORECASE,
+)
+
 def parse_currency(val: Any) -> float:
     if pd.isna(val) or val is None:
         return 0.0
@@ -63,6 +68,101 @@ def safe_str(val: Any) -> str | None:
         return None
     return str(val).strip()
 
+
+def _row_contains_noise_marker(row: pd.Series) -> bool:
+    row_text = " | ".join(
+        str(v).strip() for v in row.values
+        if v is not None and str(v).strip() != ""
+    )
+    if not row_text:
+        return False
+    return bool(NOISE_ROW_PATTERN.search(row_text))
+
+
+def _is_noise_text(value: Any) -> bool:
+    text = safe_str(value)
+    if not text:
+        return False
+    return bool(NOISE_ROW_PATTERN.fullmatch(text))
+
+
+def _has_meaningful_text(*values: Any) -> bool:
+    for value in values:
+        text = safe_str(value)
+        if text and not _is_noise_text(text):
+            return True
+    return False
+
+
+def _is_effectively_empty_record(record_type: str, data: Dict[str, Any]) -> bool:
+    if record_type == "session":
+        text_present = _has_meaningful_text(data.get("cashier"), data.get("terminal"), data.get("session_type"))
+        number_present = any(
+            (data.get(k) or 0) != 0 for k in (
+                "free_time_minutes", "paused_minutes", "duration_minutes",
+                "order_transfer_tnd", "usb_data_tnd", "usage_tnd",
+                "discount_tnd", "total_amount_tnd"
+            )
+        )
+        return not (text_present or number_present)
+
+    if record_type == "cash":
+        text_present = _has_meaningful_text(
+            data.get("cashier"), data.get("income_expense"), data.get("payment_method"), data.get("transaction_type"), data.get("comment")
+        )
+        date_present = data.get("date") is not None
+        number_present = (data.get("amount_tnd") or 0) != 0
+        return not (text_present or date_present or number_present)
+
+    if record_type == "stock":
+        text_present = _has_meaningful_text(
+            data.get("cashier"), data.get("item_name"), data.get("category"), data.get("in_out"), data.get("comment")
+        )
+        date_present = data.get("date") is not None
+        number_present = any((data.get(k) or 0) != 0 for k in ("quantity", "unit_price_tnd", "total_amount_tnd"))
+        return not (text_present or date_present or number_present)
+
+    if record_type == "member":
+        text_present = _has_meaningful_text(data.get("username"), data.get("firstname"), data.get("lastname"))
+        id_present = data.get("member_id") is not None
+        number_present = any(
+            (data.get(k) or 0) != 0 for k in (
+                "duration_minutes", "usage_tnd", "order_transfer_tnd", "usb_data_tnd", "total_amount_tnd"
+            )
+        )
+        return not (text_present or id_present or number_present)
+
+    return False
+
+
+def _should_skip_noise_row(record_type: str, row: pd.Series, data: Dict[str, Any]) -> bool:
+    if not _row_contains_noise_marker(row):
+        return False
+
+    if record_type == "session":
+        has_identity = _has_meaningful_text(data.get("cashier"), data.get("terminal"), data.get("session_type"))
+        return not has_identity
+
+    if record_type == "cash":
+        has_identity = _has_meaningful_text(
+            data.get("cashier"), data.get("income_expense"), data.get("payment_method"), data.get("transaction_type")
+        ) or (data.get("date") is not None)
+        return not has_identity
+
+    if record_type == "stock":
+        has_identity = _has_meaningful_text(
+            data.get("cashier"), data.get("item_name"), data.get("category"), data.get("in_out")
+        ) or (data.get("date") is not None)
+        return not has_identity
+
+    if record_type == "member":
+        has_identity = (data.get("member_id") is not None) or _has_meaningful_text(
+            data.get("username"), data.get("firstname"), data.get("lastname")
+        )
+        return not has_identity
+
+    return _is_effectively_empty_record(record_type, data)
+
 def normalize_data(extracted: Tuple[str, List[Dict[str, Any]]]) -> List[Any]:
     if not extracted:
         return []
@@ -94,6 +194,8 @@ def normalize_data(extracted: Tuple[str, List[Dict[str, Any]]]) -> List[Any]:
                     "discount_tnd": parse_currency(row.get("Discount")),
                     "total_amount_tnd": parse_currency(row.get("Total Amount"))
                 }
+                if _should_skip_noise_row(record_type, row, data):
+                    continue
                 valid_records.append((record_type, SessionRecordSchema(**{k: v for k,v in data.items() if v is not None})))
             except Exception as e:
                 logger.error(f"Error normalizing session row {i}: {e}")
@@ -111,6 +213,8 @@ def normalize_data(extracted: Tuple[str, List[Dict[str, Any]]]) -> List[Any]:
                     "amount_tnd": parse_currency(row.get("Amount")),
                     "comment": safe_str(row.get("Comment"))
                 }
+                if _should_skip_noise_row(record_type, row, data):
+                    continue
                 valid_records.append((record_type, CashRecordSchema(**{k: v for k,v in data.items() if v is not None})))
             except Exception as e:
                 logger.error(f"Error normalizing cash row {i}: {e}")
@@ -139,6 +243,8 @@ def normalize_data(extracted: Tuple[str, List[Dict[str, Any]]]) -> List[Any]:
                     "total_amount_tnd": parse_currency(row.get("Total Amount")),
                     "comment": safe_str(row.get("Comment"))
                 }
+                if _should_skip_noise_row(record_type, row, data):
+                    continue
                 valid_records.append((record_type, StockRecordSchema(**{k: v for k,v in data.items() if v is not None})))
             except Exception as e:
                 logger.error(f"Error normalizing stock row {i}: {e}")
@@ -169,6 +275,8 @@ def normalize_data(extracted: Tuple[str, List[Dict[str, Any]]]) -> List[Any]:
                     "usb_data_tnd": parse_currency(row.get("USB Data")),
                     "total_amount_tnd": parse_currency(row.get("Total Amount"))
                 }
+                if _should_skip_noise_row(record_type, row, data):
+                    continue
                 valid_records.append((record_type, MemberRecordSchema(**{k: v for k,v in data.items() if v is not None})))
             except Exception as e:
                 logger.error(f"Error normalizing member row {i}: {e}")

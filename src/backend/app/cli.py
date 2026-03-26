@@ -40,7 +40,12 @@ def run_cli(target: str, batch_size: int = 50, db_url: str = "sqlite:///local.db
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="GamefyDB CLI Pipeline")
-    parser.add_argument("--target", type=str, required=True, help="Directory containing .html files")
+    parser.add_argument(
+        "--target",
+        type=str,
+        required=True,
+        help="Directory containing .xlsx, .xls, or .html files",
+    )
     parser.add_argument("--batch-size", type=int, default=50, help="Number of files to process per batch")
     parser.add_argument("--db-url", type=str, default="sqlite:///local.db", help="Database URL")
     args = parser.parse_args()

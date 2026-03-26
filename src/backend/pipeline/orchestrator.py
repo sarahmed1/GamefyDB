@@ -5,7 +5,7 @@ from typing import Callable, Optional
 
 from sqlalchemy import delete
 
-from src.backend.pipeline.extractor import extract_html_file
+from src.backend.pipeline.extractor import SUPPORTED_INPUT_PATTERNS, extract_file
 from src.backend.pipeline.normalizer import normalize_data
 from src.backend.database.session import get_session, init_db, DEFAULT_DB_URL
 from src.backend.database.models import SessionRecord, CashRecord, StockRecord, MemberRecord
@@ -21,7 +21,7 @@ def run_pipeline(
     should_cancel: Optional[Callable[[], bool]] = None
 ):
     """
-    Scans target_directory for .html files and processes them in batches.
+    Scans target_directory for supported input files and processes them in batches.
     Extracts raw data, normalizes it, and inserts it into the database.
     Rolls back on failure.
     """
@@ -35,16 +35,26 @@ def run_pipeline(
     # Initialize the DB schema to ensure tables exist
     init_db(db_url)
     
-    # Glob for HTML files
+    # Glob for supported source files.
     target_path = Path(target_directory)
-    html_files = list(target_path.glob("*.html"))
-    total_files = len(html_files)
+    input_files = sorted(
+        {
+            filepath
+            for pattern in SUPPORTED_INPUT_PATTERNS
+            for filepath in target_path.glob(pattern)
+        }
+    )
+    total_files = len(input_files)
     
     if progress_callback:
         progress_callback(0, total_files)
     
     if total_files == 0:
-        _log(f"No .html files found in {target_directory}", logging.WARNING)
+        _log(
+            f"No supported files found in {target_directory}. "
+            "Expected .xlsx, .xls, or .html inputs.",
+            logging.WARNING,
+        )
         return
         
     num_batches = math.ceil(total_files / batch_size)
@@ -57,7 +67,7 @@ def run_pipeline(
             _log("Pipeline cancelled by user. Gracefully shutting down.")
             break
             
-        batch_files = html_files[i * batch_size : (i + 1) * batch_size]
+        batch_files = input_files[i * batch_size : (i + 1) * batch_size]
         _log(f"Processing batch {i + 1}/{num_batches} ({len(batch_files)} files)")
         
         # 1. Extraction & 2. Normalization
@@ -65,7 +75,7 @@ def run_pipeline(
         for filepath in batch_files:
             if should_cancel and should_cancel():
                 break
-            extracted = extract_html_file(str(filepath))
+            extracted = extract_file(str(filepath))
             if extracted:
                 normalized_schemas.extend(normalize_data(extracted))
             processed_count += 1

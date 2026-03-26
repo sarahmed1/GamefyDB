@@ -14,7 +14,7 @@ def main():
         "--target",
         type=str,
         required=False,
-        help="Directory containing .html files to process (run CLI mode if provided)"
+        help="Directory containing .xlsx, .xls, or .html files to process (run CLI mode if provided)"
     )
     parser.add_argument(
         "--batch-size",

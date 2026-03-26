@@ -1,10 +1,10 @@
 # GamefyDB
 
-A robust Python application built with **PySide6** and **Pandas** designed to ingest, normalize, and store FastReport HTML data exports into a structured SQLite database. This system acts as a foundational data pipeline to cleanly format raw tabular data for future Machine Learning modeling.
+A robust Python application built with **PySide6** and **Pandas** designed to ingest, normalize, and store FastReport data exports (Excel first, with legacy HTML support) into a structured SQLite database. This system acts as a foundational data pipeline to cleanly format raw tabular data for future Machine Learning modeling.
 
 ## Features
 
-- **Automated HTML Extraction:** Reads complex FastReport HTML files featuring merged cells and spacer columns.
+- **Automated Report Extraction:** Reads FastReport exports from `.xlsx`/`.xls` files and legacy `.html` reports.
 - **Robust Normalization:** Cleans currencies (e.g., `6,00 TND` -> `6.0`), time durations (e.g., `3 h 54 min` -> `234` mins), and messy strings.
 - **Data Integrity:** Strict validation layer using **Pydantic** schemas and modern **SQLAlchemy 2.0** ORM typed models.
 - **Targeted Storage:** Dynamically routes reports to 4 specific SQLite tables:
@@ -28,7 +28,7 @@ src/
       app/                   # Frontend app entrypoints
       ui/                    # PySide6 windows and background workers
 tests/                     # Pipeline and DB tests
-data/                      # Local HTML fixture data
+data/                      # Local fixture data
 ```
 
 ## Prerequisites
@@ -76,7 +76,7 @@ python -m src.frontend.app.gui
 ```
 
 ### 2. Run the CLI Pipeline
-To run the extraction and normalization pipeline directly from the command line, use the `--target` flag and point it to the directory containing your `.html` files (e.g., the `data/` directory).
+To run the extraction and normalization pipeline directly from the command line, use the `--target` flag and point it to the directory containing your `.xlsx`/`.xls` files (legacy `.html` is also accepted).
 
 ```bash
 python src/main.py --target data
@@ -97,3 +97,15 @@ To verify the extraction and normalization logic against your raw data sets:
 ```bash
 python -m pytest tests/
 ```
+
+## Build Windows Executable
+
+The project includes a PyInstaller spec file for desktop packaging.
+
+```bash
+python -m PyInstaller --clean --noconfirm GamefyDB.spec
+```
+
+Generated outputs:
+- `dist/GamefyDB/` (distribution folder)
+- `build/GamefyDB/` (intermediate build artifacts)

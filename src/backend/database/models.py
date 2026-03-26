@@ -1,8 +1,12 @@
 from sqlalchemy import String
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 from sqlalchemy.orm import Mapped, mapped_column
 from src.backend.database.session import Base
+
+
+def _utc_now() -> datetime:
+    return datetime.now(timezone.utc)
 
 class SessionRecord(Base):
     __tablename__ = "sessions"
@@ -20,7 +24,7 @@ class SessionRecord(Base):
     usage_tnd: Mapped[float] = mapped_column(default=0.0)
     discount_tnd: Mapped[float] = mapped_column(default=0.0)
     total_amount_tnd: Mapped[float] = mapped_column(default=0.0)
-    extracted_at: Mapped[datetime] = mapped_column(default=datetime.utcnow)
+    extracted_at: Mapped[datetime] = mapped_column(default=_utc_now)
 
 class CashRecord(Base):
     __tablename__ = "cash_reports"
@@ -34,7 +38,7 @@ class CashRecord(Base):
     transaction_type: Mapped[Optional[str]]
     amount_tnd: Mapped[float] = mapped_column(default=0.0)
     comment: Mapped[Optional[str]]
-    extracted_at: Mapped[datetime] = mapped_column(default=datetime.utcnow)
+    extracted_at: Mapped[datetime] = mapped_column(default=_utc_now)
 
 class StockRecord(Base):
     __tablename__ = "stock_reports"
@@ -50,7 +54,7 @@ class StockRecord(Base):
     unit_price_tnd: Mapped[float] = mapped_column(default=0.0)
     total_amount_tnd: Mapped[float] = mapped_column(default=0.0)
     comment: Mapped[Optional[str]]
-    extracted_at: Mapped[datetime] = mapped_column(default=datetime.utcnow)
+    extracted_at: Mapped[datetime] = mapped_column(default=_utc_now)
 
 class MemberRecord(Base):
     __tablename__ = "member_reports"
@@ -66,4 +70,4 @@ class MemberRecord(Base):
     order_transfer_tnd: Mapped[float] = mapped_column(default=0.0)
     usb_data_tnd: Mapped[float] = mapped_column(default=0.0)
     total_amount_tnd: Mapped[float] = mapped_column(default=0.0)
-    extracted_at: Mapped[datetime] = mapped_column(default=datetime.utcnow)
+    extracted_at: Mapped[datetime] = mapped_column(default=_utc_now)
