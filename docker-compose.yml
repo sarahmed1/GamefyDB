@@ -1,0 +1,7 @@
+services:
+  etl:
+    build: .
+    volumes:
+      - ./excel:/app/excel:ro
+      - ./output:/app/output
+    # Future: add ml-service here, mount ./output as read-only source

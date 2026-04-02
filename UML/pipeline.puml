@@ -1,0 +1,44 @@
+@startuml pipeline
+title GamefyDB ETL Pipeline
+
+skinparam defaultFontName Monospaced
+skinparam ArrowColor #555555
+skinparam ActivityBackgroundColor #EEF4FF
+skinparam ActivityBorderColor #5566AA
+
+|Source|
+start
+:4 × .xls files\n(cash, sessions, stock, members);
+
+|ingestor.py|
+:_read_raw()\nxlrd.open_workbook → DataFrame\n(no header, all strings);
+:_strip_artifacts()\nDrop title/date/blank/page-break/\nheader/footer rows;\n
+note right
+  COLUMN_MAPS holds\n  empirically verified\n  xlrd column indices
+end note
+:ingest_all() → dict[str, DataFrame]\nraw string DataFrames;
+
+|cleaner.py|
+:per-file clean functions\n_clean_cash / _clean_sessions\n_clean_stock / _clean_members;
+note right
+  parse_amount()   → float (strips \\u202f)\n  parse_datetime() → datetime\n  parse_duration() → int (minutes)\n  extract_terminal() → name from (COMMENT)
+end note
+:clean_all() → dict[str, DataFrame]\ntyped + normalised;
+
+|transformer.py|
+:build_dims()\nUnion natural keys → surrogate IDs\n4 dimension tables;
+:build_facts()\n_resolve_fk() maps natural → surrogate\n4 fact tables;
+:transform() → dict[str, DataFrame]\n4 dims + 4 facts;
+
+|writer.py|
+if (--format?) then (csv)
+  :write CSVs\ndims/  →  dim_*.csv\nfacts/ →  fact_*.csv;
+else (excel)
+  :write gamefydb.xlsx\none sheet per table;
+endif
+
+|Output|
+:Star-schema dataset\nready for DWH import;
+stop
+
+@enduml

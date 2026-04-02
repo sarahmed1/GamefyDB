@@ -1,0 +1,98 @@
+@startuml star_schema
+title GamefyDB Star Schema
+
+skinparam defaultFontName Monospaced
+skinparam linetype ortho
+skinparam ClassBackgroundColor #FAFAFA
+skinparam ClassBorderColor #5566AA
+skinparam ClassHeaderBackgroundColor #D0DCFF
+
+entity "dim_cashier" as dc {
+  * cashier_id : int <<PK>>
+  --
+  cashier_name : str
+}
+
+entity "dim_terminal" as dt {
+  * terminal_id : int <<PK>>
+  --
+  terminal_name : str
+  terminal_type : str\n  (VIP | PlayStation | Computer | Other)
+}
+
+entity "dim_item" as di {
+  * item_id : int <<PK>>
+  --
+  item_name : str
+  category : str
+}
+
+entity "dim_member" as dm {
+  * member_id : int <<PK>>
+  --
+  username : str
+  firstname : str
+  lastname : str
+}
+
+entity "fact_cash_transactions" as fct {
+  * cashier_id : int <<FK>>
+  o terminal_id : int <<FK, nullable>>
+  --
+  transaction_datetime : datetime
+  income_expense : str
+  payment_method : str
+  transaction_type : str
+  amount_tnd : float
+}
+
+entity "fact_sessions" as fs {
+  * cashier_id : int <<FK>>
+  * terminal_id : int <<FK>>
+  --
+  session_type : str
+  is_free_time : bool
+  is_paused : bool
+  duration_minutes : int
+  order_transfer_tnd : float
+  usb_data_tnd : float
+  usage_tnd : float
+  discount_tnd : float
+  total_amount_tnd : float
+}
+
+entity "fact_stock_movements" as fsm {
+  * cashier_id : int <<FK>>
+  * item_id : int <<FK>>
+  o terminal_id : int <<FK, nullable>>
+  --
+  movement_datetime : datetime
+  in_out : str
+  quantity : int
+  unit_price_tnd : float
+  total_amount_tnd : float
+}
+
+entity "fact_member_stats" as fms {
+  * member_id : int <<FK>>
+  --
+  duration_minutes : int
+  usage_tnd : float
+  orders_transfer_tnd : float
+  usb_data_tnd : float
+  total_amount_tnd : float
+}
+
+dc ||--o{ fct
+dc ||--o{ fs
+dc ||--o{ fsm
+
+dt ||--o{ fct
+dt ||--|| fs
+dt ||--o{ fsm
+
+di ||--o{ fsm
+
+dm ||--o{ fms
+
+@enduml

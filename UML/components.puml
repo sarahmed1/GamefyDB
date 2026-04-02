@@ -1,0 +1,66 @@
+@startuml components
+title GamefyDB Module Components
+
+skinparam defaultFontName Monospaced
+skinparam ComponentBackgroundColor #EEF4FF
+skinparam ComponentBorderColor #5566AA
+skinparam InterfaceBackgroundColor #FFFBE6
+skinparam ArrowColor #555555
+skinparam PackageBackgroundColor #F7F7F7
+
+package "gamefydb/" {
+
+  component "ingestor.py" as ING {
+    [ingest_all()]
+    [_read_raw()]
+    [_strip_artifacts()]
+    note "COLUMN_MAPS\nFILE_MAP\nKEY_COLS" as n1
+  }
+
+  component "cleaner.py" as CLN {
+    [clean_all()]
+    [_clean_cash()]
+    [_clean_sessions()]
+    [_clean_stock()]
+    [_clean_members()]
+    note "parse_amount()\nparse_datetime()\nparse_duration()\nextract_terminal()" as n2
+  }
+
+  component "transformer.py" as TRF {
+    [transform()]
+    [build_dims()]
+    [build_facts()]
+    [_resolve_fk()]
+    [_classify_terminal()]
+  }
+
+  component "writer.py" as WRT {
+    [write_all()]
+    [_write_excel()]
+  }
+
+}
+
+package "Third-party" {
+  [xlrd] as XLRD
+  [pandas] as PD
+  [openpyxl] as OPX
+}
+
+package "CLI" {
+  [run.py] as RUN
+}
+
+RUN --> ING : ingest_all(input_dir)
+ING --> CLN : dict[str,DataFrame] (raw)
+CLN --> TRF : dict[str,DataFrame] (cleaned)
+TRF --> WRT : dict[str,DataFrame] (star schema)
+
+ING ..> XLRD : open_workbook()
+ING ..> PD
+CLN ..> PD
+TRF ..> PD
+WRT ..> PD
+WRT ..> OPX : ExcelWriter (--format excel)
+
+@enduml

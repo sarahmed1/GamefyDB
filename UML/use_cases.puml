@@ -1,0 +1,64 @@
+@startuml use_cases
+title GamefyDB — Use Case Diagram
+
+skinparam defaultFontName Monospaced
+skinparam ActorBackgroundColor #EEF4FF
+skinparam ActorBorderColor #5566AA
+skinparam UsecaseBackgroundColor #FAFAFA
+skinparam UsecaseBorderColor #5566AA
+skinparam UsecaseHeaderBackgroundColor #D0DCFF
+skinparam ArrowColor #555555
+skinparam PackageBackgroundColor #F7F7F7
+
+left to right direction
+
+actor "Analyst" as analyst
+actor "DWH System" as dwh
+
+rectangle "GamefyDB ETL Pipeline" {
+
+  usecase "Run ETL Pipeline" as UC_RUN
+  usecase "Ingest XLS Reports" as UC_INGEST
+  usecase "Clean & Normalize Data" as UC_CLEAN
+  usecase "Transform to Star Schema" as UC_TRANSFORM
+  usecase "Export as CSV" as UC_CSV
+  usecase "Export as Excel" as UC_EXCEL
+  usecase "Load into Data Warehouse" as UC_LOAD
+
+  UC_RUN ..> UC_INGEST    : <<include>>
+  UC_RUN ..> UC_CLEAN     : <<include>>
+  UC_RUN ..> UC_TRANSFORM : <<include>>
+
+  UC_CSV   ..> UC_RUN : <<extend>>
+  UC_EXCEL ..> UC_RUN : <<extend>>
+
+  UC_LOAD ..> UC_CSV   : <<extend>>
+  UC_LOAD ..> UC_EXCEL : <<extend>>
+}
+
+analyst --> UC_RUN
+analyst --> UC_CSV
+analyst --> UC_EXCEL
+
+dwh --> UC_LOAD
+
+note right of UC_INGEST
+  Reads 4 × .xls files via xlrd
+  cash / sessions / stock / members
+  Strips page-break artifacts
+end note
+
+note right of UC_CLEAN
+  Parses amounts (strips \\u202f)
+  Parses datetimes & durations
+  Extracts terminal names
+  Drops invalid/footer rows
+end note
+
+note right of UC_TRANSFORM
+  Builds 4 dimension tables
+  Builds 4 fact tables
+  Resolves natural → surrogate FKs
+end note
+
+@enduml
