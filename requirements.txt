@@ -2,3 +2,5 @@ pandas
 xlrd
 openpyxl
 pytest
+prophet
+scikit-learn
