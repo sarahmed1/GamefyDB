@@ -4,3 +4,4 @@ openpyxl
 pytest
 prophet
 scikit-learn
+pmdarima
