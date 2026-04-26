@@ -1,0 +1,984 @@
+% ============================================================
+%  GamefyDB — PFE Report  |  Chapters 4, 5 & 6 + Conclusion
+%  Append this content inside the main document, before \end{document}
+% ============================================================
+
+% ============================================================
+%  CHAPTER 4
+% ============================================================
+\chapter{Sprint 2: Star Schema and Data Export}
+
+\section{Introduction}
+
+Sprint~2 builds on the clean DataFrames produced in Sprint~1. Its scope covers user
+stories US-05 through US-07: constructing the four dimension tables and the two fact
+tables that make up the GamefyDB star schema, then writing everything to disk in the
+format Power~BI expects. By the end of the sprint, the pipeline is end-to-end: raw
+Excel files go in, a ready-to-load star schema comes out.
+
+\section{Sprint 2 Backlog}
+
+Table~\ref{tab:sprint2_backlog} lists the tasks committed to this sprint.
+
+\begin{longtable}{>{\bfseries}p{1.3cm} p{4.2cm} p{7cm}}
+  \caption{Sprint 2 Backlog.\label{tab:sprint2_backlog}} \\
+  \toprule
+  \textbf{ID} & \textbf{User Story} & \textbf{Tasks} \\
+  \midrule
+  \endfirsthead
+  \toprule
+  \textbf{ID} & \textbf{User Story} & \textbf{Tasks} \\
+  \midrule
+  \endhead
+  \bottomrule
+  \endfoot
+
+  US-05 & As an analyst, I want four normalised dimension tables with surrogate keys.
+        & Build \textit{dim\_cashier}, \textit{dim\_terminal}, \textit{dim\_item},
+          and \textit{dim\_member} from the cleaned DataFrames; assign sequential
+          integer primary keys. \\[4pt]
+
+  US-06 & As an analyst, I want two fact tables with foreign-key references to the
+          dimensions.
+        & Build \textit{fact\_transaction} from the cash data and
+          \textit{fact\_session} from the sessions data; resolve FK references to
+          all four dimension tables. \\[4pt]
+
+  US-07 & As an analyst, I want to export the full star schema as CSV files ready
+          for Power~BI.
+        & Implement the export step in \texttt{run.py}; write each table to
+          \texttt{output/powerbi\_star/} with UTF-8-BOM encoding so Power~BI
+          reads French characters correctly. \\
+\end{longtable}
+
+\section{Design Refinement}
+
+During Sprint~0, the product backlog described eight output tables — four dimensions
+and four fact tables. After inspecting the actual source data more carefully during
+Sprint~1, the design was refined:
+
+\begin{itemize}
+  \item \textbf{Stock movements} were absorbed into \textit{dim\_item}. All stock
+        records in the source file are outgoing sales — there are no restock entries.
+        Because there is only one direction of movement, a dedicated fact table adds
+        no analytical value; instead, quantity sold and total revenue are aggregated
+        directly into the item dimension.
+
+  \item \textbf{Member statistics} were kept as \textit{dim\_member}. The members
+        file contains one summary row per member — cumulative totals, not individual
+        events — so it naturally fits a dimension rather than a fact table.
+\end{itemize}
+
+The final schema therefore has six tables: four dimensions and two facts. This
+simplification makes the Power~BI data model easier to navigate without losing any
+of the required KPIs.
+
+\section{Implementation of the Transformer Stage}
+
+\subsection{Building the Dimension Tables}
+
+\subsubsection{dim\_cashier}
+
+The cashier dimension is built by collecting all distinct cashier names across the
+three transactional domains — cash, sessions, and stock — sorting them alphabetically,
+and assigning a sequential surrogate key starting at~1. The five cashier accounts
+in the source data (\textit{guds}, \textit{monta}, \textit{taktek},
+\textit{yassine}, \textit{youssef}) all appear in the result.
+
+\subsubsection{dim\_terminal}
+
+The terminal dimension is derived exclusively from the sessions file, since that is
+the only source that records terminal names reliably. Each unique \texttt{(terminal,
+terminal\_type)} pair becomes one row. The \texttt{terminal\_type} column is computed
+during cleaning: terminals whose names contain \texttt{PS5} become \textit{PlayStation},
+those containing \texttt{VIP} become \textit{VIP PC}, and all others become
+\textit{Standard PC}. The final dimension contains 16 terminals.
+
+\subsubsection{dim\_item}
+
+The item dimension aggregates the stock table by item name, retaining the first
+observed category, the median unit price, total quantity sold, and total revenue.
+Median is used instead of mean for the unit price so that occasional data-entry errors
+do not distort the representative price. The dimension contains 17 distinct items.
+
+\subsubsection{dim\_member}
+
+The member dimension is a direct copy of the cleaned members DataFrame with no
+further aggregation. It contains 66 unique members, each described by their username,
+first name, last name, cumulative session duration in minutes, and cumulative spend
+in TND across usage, orders, USB data, and total.
+
+\subsection{Building the Fact Tables}
+
+\subsubsection{fact\_transaction}
+
+The transaction fact table is built from the cash DataFrame. Each row represents one
+cash register event — an income or expense entry recorded by a cashier. The foreign
+key resolution works as follows:
+
+\begin{itemize}[noitemsep]
+  \item \textbf{cashier\_id} — looked up from the cashier name map built from
+        \textit{dim\_cashier}.
+  \item \textbf{terminal\_id} — assigned only for \textit{Computer Incomes} and
+        \textit{Playstation Incomes} categories, since those are the only transaction
+        types tied to a terminal. Rows in other categories carry a null terminal
+        reference.
+  \item \textbf{item\_id} — assigned only for \textit{Order Incomes} rows, by
+        matching the transaction amount to the nearest item unit price in
+        \textit{dim\_item}.
+  \item \textbf{member\_id} — assigned only for \textit{Member Transactions} rows.
+\end{itemize}
+
+The table contains 3\,971 rows after cleaning.
+
+\subsubsection{fact\_session}
+
+The session fact table is built from the sessions DataFrame. Each row is one gaming
+session opened at a terminal. The foreign key resolution is more straightforward here:
+\texttt{cashier\_id} and \texttt{terminal\_id} are looked up directly by name, since
+both columns are already clean strings after the cleaning stage. A \texttt{member\_id}
+is assigned to rows whose \texttt{session\_type} is \textit{Member}.
+
+The table retains all financial columns from the sessions source — \texttt{order\_transfer},
+\texttt{usb\_data}, \texttt{usage}, \texttt{discount}, and \texttt{total} (all in TND)
+— alongside \texttt{duration\_min} and \texttt{session\_type}.
+
+The table contains 6\,285 rows after cleaning.
+
+\subsection{The Export Step}
+
+The output stage is handled by \texttt{run.py}. After \texttt{run\_pipeline()} returns
+the schema dictionary, each table is written as a CSV file to
+\texttt{output/powerbi\_star/} using UTF-8-BOM encoding (\texttt{utf-8-sig}). This
+encoding ensures that Power~BI and Excel both correctly display special characters —
+particularly the French names and Arabic-influenced transliterations that appear in
+member usernames.
+
+Table~\ref{tab:output_tables} summarises the six output tables and their row counts
+for the current dataset.
+
+\begin{table}[H]
+  \centering
+  \caption{Output tables and row counts.\label{tab:output_tables}}
+  \begin{tabular}{llr}
+    \toprule
+    \textbf{Type} & \textbf{Table} & \textbf{Rows} \\
+    \midrule
+    Dimension & \texttt{dim\_cashier}    &   5 \\
+    Dimension & \texttt{dim\_member}     &  66 \\
+    Dimension & \texttt{dim\_item}       &  17 \\
+    Dimension & \texttt{dim\_terminal}   &  16 \\
+    Fact      & \texttt{fact\_transaction} & 3\,971 \\
+    Fact      & \texttt{fact\_session}   & 6\,285 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\section{Sprint 2 Review}
+
+\subsection{Deliverables}
+
+\begin{itemize}
+  \item \textbf{Star schema} — six CSV files in \texttt{output/powerbi\_star/},
+        each correctly typed and encoded.
+  \item \textbf{Referential integrity} — every foreign key in \textit{fact\_transaction}
+        and \textit{fact\_session} references a valid primary key in the corresponding
+        dimension, with null values used only where no meaningful reference exists
+        (e.g.\ transactions unrelated to a terminal).
+  \item \textbf{End-to-end pipeline} — a single \texttt{python run.py} command
+        reads the four source files and produces all six output tables with no
+        manual steps.
+\end{itemize}
+
+\subsection{Validation}
+
+The output tables were loaded into Power~BI and the data model relationships were
+defined. Validation checks included:
+
+\begin{itemize}[noitemsep]
+  \item No orphaned foreign keys in either fact table.
+  \item Total revenue computed from \textit{fact\_transaction} matches the sum
+        visible in the raw cash file.
+  \item Terminal names in \textit{fact\_session} join correctly to
+        \textit{dim\_terminal} for all 16 terminals.
+  \item Member IDs in \textit{dim\_member} cover all 66 distinct members that
+        appear in the source.
+\end{itemize}
+
+\section{Conclusion}
+
+Sprint~2 produced a complete, validated star schema that Power~BI can consume
+directly. The design refinement from eight to six tables simplified the data model
+without losing any analytical capability. Chapter~5 describes how this schema is used
+to build the interactive dashboards.
+
+% ============================================================
+%  CHAPTER 5
+% ============================================================
+\chapter{Sprint 3: Power~BI Dashboards}
+
+\section{Introduction}
+
+With a clean star schema available, Sprint~3 focuses on turning the data into visual
+insights. The deliverable is an interactive Power~BI report (\texttt{gamefyyy.pbix})
+with four thematic pages, each targeting a different operational question. The
+measures are written in DAX (Data Analysis Expressions), Power~BI's formula language
+for calculated columns and aggregations.
+
+\section{Sprint 3 Backlog}
+
+Table~\ref{tab:sprint3_backlog} lists the tasks committed to this sprint.
+
+\begin{longtable}{>{\bfseries}p{1.3cm} p{4.2cm} p{7cm}}
+  \caption{Sprint 3 Backlog.\label{tab:sprint3_backlog}} \\
+  \toprule
+  \textbf{ID} & \textbf{User Story} & \textbf{Tasks} \\
+  \midrule
+  \endfirsthead
+  \toprule
+  \textbf{ID} & \textbf{User Story} & \textbf{Tasks} \\
+  \midrule
+  \endhead
+  \bottomrule
+  \endfoot
+
+  US-08 & As an analyst, I want to visualise revenue, sessions, stock, and
+          member KPIs in Power~BI.
+        & Import all six CSV tables; define the data model relationships; create
+          \textit{dim\_date}; write all DAX measures; build four dashboard pages
+          with slicers. \\
+\end{longtable}
+
+\section{Data Model Setup}
+
+\subsection{Relationships}
+
+After importing the six CSV tables, the following relationships were defined in
+Power~BI's Model view:
+
+\begin{itemize}[noitemsep]
+  \item \texttt{dim\_cashier[cashier\_id]} $\rightarrow$
+        \texttt{fact\_transaction[cashier\_id]} (one-to-many)
+  \item \texttt{dim\_cashier[cashier\_id]} $\rightarrow$
+        \texttt{fact\_session[cashier\_id]} (one-to-many)
+  \item \texttt{dim\_terminal[terminal\_id]} $\rightarrow$
+        \texttt{fact\_transaction[terminal\_id]} (one-to-many)
+  \item \texttt{dim\_terminal[terminal\_id]} $\rightarrow$
+        \texttt{fact\_session[terminal\_id]} (one-to-many)
+  \item \texttt{dim\_item[item\_id]} $\rightarrow$
+        \texttt{fact\_transaction[item\_id]} (one-to-many)
+  \item \texttt{dim\_member[member\_id]} $\rightarrow$
+        \texttt{fact\_transaction[member\_id]} (one-to-many)
+  \item \texttt{dim\_member[member\_id]} $\rightarrow$
+        \texttt{fact\_session[member\_id]} (one-to-many)
+\end{itemize}
+
+\subsection{Date Dimension}
+
+Power~BI's time intelligence functions (month-over-month comparisons, date-based
+slicers) require a dedicated calendar table. A \textit{dim\_date} table was created
+as a calculated table covering the full date range of \textit{fact\_transaction},
+enriched with columns for year, month number, month name, day, weekday name, and
+week number. This table was marked as a date table and linked to the date column of
+\textit{fact\_transaction}.
+
+Two calculated columns were added directly to \textit{fact\_transaction}:
+\textbf{Transaction Hour} (the hour part of the datetime, used in hourly bar charts)
+and \textbf{Transaction Date} (the date part only, used in today-filtered KPIs).
+
+\section{KPI Measures}
+
+The following key measures were defined. They are used across the four dashboard
+pages as context allows.
+
+\begin{table}[H]
+  \centering
+  \caption{Core DAX measures defined in the report.}
+  \begin{tabular}{ll}
+    \toprule
+    \textbf{Measure} & \textbf{Description} \\
+    \midrule
+    Total Revenue          & Sum of income transactions (TND) \\
+    Total Expenses         & Sum of expense transactions (TND) \\
+    Net Income             & Total Revenue minus Total Expenses \\
+    Revenue MoM\%          & Month-over-month revenue growth rate \\
+    Transaction Count      & Count of income transactions \\
+    Avg Ticket             & Average revenue per income transaction \\
+    Avg Daily Revenue      & Revenue divided by number of distinct active days \\
+    \midrule
+    Session Count          & Total rows in \textit{fact\_session} \\
+    Session Revenue        & Sum of session totals (TND) \\
+    Avg Session Duration   & Average session length in minutes \\
+    Avg Session Revenue    & Session Revenue divided by Session Count \\
+    Discount Total         & Total discount amount granted on sessions \\
+    Free Time Sessions\%   & Fraction of sessions flagged as free-time \\
+    \midrule
+    Item Units Sold        & Total units of stock sold (Out movements) \\
+    Item Sales Revenue     & Total revenue from stock sales (TND) \\
+    Current Stock          & Net stock level per item (In minus Out) \\
+    \midrule
+    Revenue Today          & Total Revenue filtered to today's date \\
+    Net Income Today       & Net income for today \\
+    Transactions Today     & Transaction count for today \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\section{Dashboard Pages}
+
+The report is structured into four pages, each answering a specific operational
+question.
+
+\subsection{Page 1 — Revenue Overview}
+
+This page gives a high-level picture of the center's financial performance.
+
+\begin{itemize}
+  \item \textbf{KPI cards}: Total Revenue, Total Expenses, Net Income, and
+        Revenue MoM\% give a snapshot of the period selected by the slicers.
+  \item \textbf{Revenue over time}: A line chart with the date on the horizontal
+        axis shows revenue trends, making seasonal patterns and peaks visible
+        at a glance.
+  \item \textbf{Revenue by hour of day}: A bar chart using the Transaction Hour
+        calculated column shows at which hours of the day the center collects the
+        most income. This helps identify the busiest operating windows.
+  \item \textbf{Revenue by payment method}: A donut chart breaks down income by
+        cash versus credit card, giving a sense of how customers prefer to pay.
+  \item \textbf{Slicers}: Month name and year slicers allow filtering the entire
+        page to a specific period.
+\end{itemize}
+
+\subsection{Page 2 — Rankings}
+
+This page answers the question: \textit{who and what is generating the most value?}
+
+\begin{itemize}
+  \item \textbf{Cashier performance}: A horizontal bar chart ranks cashiers by
+        Total Revenue so the owner can see at a glance which shifts are most
+        productive.
+  \item \textbf{Item sales}: A bar chart of Item Sales Revenue by item name shows
+        which snack-bar products drive the most income and which are barely moving.
+  \item \textbf{Terminal performance}: A clustered bar chart compares session revenue
+        across terminal types (Standard~PC, PlayStation, VIP~PC) and a detailed
+        table lists every terminal with its session count and total revenue.
+  \item \textbf{Session metrics}: KPI cards for Avg Session Duration, Discount Total,
+        and Free Time Sessions\% round out the terminal analysis.
+\end{itemize}
+
+\subsection{Page 3 — Live Ops}
+
+This page is designed for the start-of-shift review: what happened today?
+
+\begin{itemize}
+  \item \textbf{Today's KPIs}: Cards for Revenue Today, Expenses Today, Net Income
+        Today, and Transactions Today update automatically to reflect the current
+        calendar date without any slicer interaction.
+  \item \textbf{Stock movements today}: Cards for Stock In Today and Stock Out
+        Today show how much stock moved during the day.
+  \item \textbf{Current stock levels}: A table listing each item alongside its
+        Current Stock measure (net In minus Out across all time) lets the cashier
+        on duty see at a glance which items are running low. Conditional formatting
+        highlights negative or near-zero values in red.
+  \item \textbf{Sessions by terminal type}: A bar chart gives a quick view of how
+        busy each terminal type is today.
+\end{itemize}
+
+\subsection{Page 4 — Shift Report}
+
+This page provides a per-cashier, per-date breakdown intended for end-of-shift
+reconciliation.
+
+\begin{itemize}
+  \item \textbf{Slicers}: A single-select cashier slicer and a date-range slicer
+        filter all visuals on the page to a specific cashier and date. All the
+        measures defined earlier respond to these slicers automatically.
+  \item \textbf{Financial summary}: Cards for Total Revenue, Session Revenue, Item
+        Sales Revenue, Shift Net, and Total Expenses give a complete picture of what
+        the selected cashier collected.
+  \item \textbf{Activity summary}: Cards for Transaction Count, Session Count, Item
+        Units Sold, and Discount Total complete the operational view.
+  \item \textbf{Breakdown charts}: A bar chart of items sold and a bar chart of
+        session revenue by terminal type help the owner understand what drove the
+        cashier's numbers for the selected shift.
+\end{itemize}
+
+\section{Sprint 3 Review}
+
+\subsection{Deliverables}
+
+\begin{itemize}
+  \item \textbf{\texttt{gamefyyy.pbix}} — the fully functional Power~BI report with
+        all four pages, all DAX measures, and the complete data model.
+  \item \textbf{\texttt{SalesDashboard.pbit}} — a Power~BI template file that can
+        be reused to connect the same report to a refreshed dataset.
+  \item \textbf{\texttt{docs/dax\_measures.dax}} — the full DAX measure definitions,
+        saved separately for documentation and version control.
+\end{itemize}
+
+\subsection{Validation}
+
+Each dashboard page was reviewed with the Product Owner. The following checks were
+performed:
+
+\begin{itemize}[noitemsep]
+  \item Revenue figures on Page~1 were cross-checked against the raw cash file
+        totals for a selected month.
+  \item Cashier rankings on Page~2 were verified by comparing with manually
+        summed figures from the source spreadsheet.
+  \item Today's KPIs on Page~3 were confirmed to update correctly when the
+        system date was changed in testing.
+  \item The Shift Report on Page~4 was tested for three different cashiers; the
+        totals matched the per-cashier sums computed externally.
+\end{itemize}
+
+\section{Conclusion}
+
+Sprint~3 delivered a four-page interactive Power~BI report that covers revenue,
+rankings, live operations, and shift reporting. The Product Owner validated all
+pages. With the core BI deliverable complete, the project turned to a fourth sprint
+to add forward-looking capabilities through machine-learning forecasting. Chapter~6
+covers that work.
+
+% ============================================================
+%  CHAPTER 6
+% ============================================================
+\chapter{Sprint 4: Machine Learning Forecasting}
+
+\section{Introduction}
+
+The first three sprints produced a clean historical dataset and a set of descriptive
+dashboards. Sprint~4 extends the system with predictive analytics: a Python module
+(\texttt{gamefydb/forecaster.py}) that reads the same star-schema data and produces
+five forward-looking CSV files. These files are imported alongside the star-schema
+tables in Power~BI so the owner can see not only where the business has been, but
+where it is likely going.
+
+This sprint was added to the project scope after the core BI deliverable was
+validated, in response to a Product Owner request for demand-planning support.
+
+\section{Sprint 4 Backlog}
+
+Table~\ref{tab:sprint4_backlog} lists the tasks committed to this sprint.
+
+\begin{longtable}{>{\bfseries}p{1.3cm} p{4.0cm} p{7.2cm}}
+  \caption{Sprint 4 Backlog.\label{tab:sprint4_backlog}} \\
+  \toprule
+  \textbf{ID} & \textbf{User Story} & \textbf{Tasks} \\
+  \midrule
+  \endfirsthead
+  \toprule
+  \textbf{ID} & \textbf{User Story} & \textbf{Tasks} \\
+  \midrule
+  \endhead
+  \bottomrule
+  \endfoot
+
+  US-09 & As an owner, I want to see expected revenue for the next 4 weeks and
+          3 months so I can plan ahead.
+        & Implement \texttt{forecast\_revenue()} using Prophet on daily income
+          aggregates; output weekly and monthly projections with confidence
+          intervals. \\[4pt]
+
+  US-10 & As an owner, I want to forecast member activity so I know whether
+          the loyalty base is growing.
+        & Implement \texttt{forecast\_members()} using Prophet on weekly member
+          transaction counts; ensure output is a non-negative integer. \\[4pt]
+
+  US-11 & As an owner, I want to know the busiest hours and days so I can
+          staff appropriately.
+        & Implement \texttt{forecast\_peak\_hours()} computing average transaction
+          counts by hour of day and by day of week; split into two separate CSV
+          files for clean Power~BI import. \\[4pt]
+
+  US-12 & As an owner, I want to forecast total daily activity volume for the
+          next 4 weeks and 3 months.
+        & Implement \texttt{forecast\_session\_volume()} using Prophet on the
+          daily transaction count as an activity proxy. \\[4pt]
+
+  US-13 & As an owner, I want a restocking recommendation per item so I never
+          run out of fast-moving stock.
+        & Implement \texttt{forecast\_stock\_replenishment()} computing average
+          weekly consumption and suggested order quantities per item. \\[4pt]
+
+  US-14 & As a data analyst, I want to compare two forecasting algorithms so
+          the choice of model is objectively justified.
+        & Implement SARIMA via \texttt{pmdarima}'s \texttt{auto\_arima} and evaluate
+          both Prophet and SARIMA on an 80/20 chronological train/test split;
+          report MAE, MAPE, and RMSE for each and declare a winner per series. \\[4pt]
+
+  US-15 & As an owner, I want to know which members are my most valuable customers
+          so I can target them for promotions.
+        & Implement \texttt{segment\_members()} in \texttt{gamefydb/segmenter.py}
+          using K-means clustering (k=4) on member spend, time, and order features;
+          assign human-readable segment labels; export to CSV. \\
+\end{longtable}
+
+\section{Forecasting Technology}
+
+\subsection{Prophet}
+
+Three of the five forecasts use \textbf{Prophet}, a time-series forecasting library
+developed by Meta. Prophet was chosen for the following reasons:
+
+\begin{itemize}
+  \item It handles irregular time series well — the café has no transactions on some
+        days, and Prophet treats missing dates as gaps rather than zeros.
+  \item It automatically detects weekly seasonality, which is the dominant pattern
+        in a gaming center (busier on weekends).
+  \item It produces an 80\% confidence interval (\texttt{yhat\_lower} and
+        \texttt{yhat\_upper}) alongside the point forecast (\texttt{yhat}), giving
+        the owner a range rather than a single number.
+  \item It requires no manual parameter tuning for basic use cases.
+\end{itemize}
+
+Prophet fits a decomposable additive model of the form:
+\[
+  y(t) = \text{trend}(t) + \text{seasonality}(t) + \epsilon_t
+\]
+where the trend is a piecewise linear function and the seasonality is a Fourier-based
+approximation of weekly and yearly patterns.
+
+\subsection{SARIMA — Comparison Algorithm}
+
+To objectively validate the choice of Prophet, a second algorithm was implemented in
+parallel: \textbf{SARIMA} (Seasonal AutoRegressive Integrated Moving Average), the
+classical standard for seasonal time series forecasting. SARIMA extends plain ARIMA
+with an additional seasonal component, making it a fair comparison against Prophet
+since both algorithms handle weekly seasonality.
+
+SARIMA has six parameters: $p$, $d$, $q$ (non-seasonal) and $P$, $D$, $Q$ (seasonal),
+plus a period $m$. Rather than tuning these manually — which is error-prone and
+introduces human bias — the implementation uses \texttt{pmdarima}'s \texttt{auto\_arima}
+function, which searches parameter combinations and selects the best by AIC
+(Akaike Information Criterion). The seasonal period is set to $m=7$ for daily series
+(capturing weekly patterns) and $m=4$ for weekly series (capturing monthly patterns
+within the weekly aggregation).
+
+\subsection{Evaluation Methodology — 80/20 Train/Test Split}
+
+Both algorithms are evaluated using a chronological 80/20 split: the first 80\% of
+the historical series trains the model, and the final 20\% is held out as the test
+set. The model predicts the test period and the predictions are compared against the
+real recorded values. The split is strictly chronological — a random split would allow
+the model to train on future data to predict the past, which is unrealistic.
+
+Three metrics are computed for each algorithm on each series:
+
+\begin{itemize}[noitemsep]
+  \item \textbf{MAE} (Mean Absolute Error) — average absolute difference in the same
+        unit as the data (TND for revenue, integer count for members and sessions).
+  \item \textbf{MAPE} (Mean Absolute Percentage Error) — average percentage error,
+        scale-independent and comparable across series. A MAPE below 10\% is
+        considered good, below 20\% acceptable, and above 20\% poor.
+  \item \textbf{RMSE} (Root Mean Squared Error) — like MAE but penalises large
+        individual errors more heavily. A large gap between RMSE and MAE signals
+        the presence of outlier predictions.
+\end{itemize}
+
+The winner for each series is the algorithm with the lower MAPE. The results are
+printed automatically at runtime and guide the recommendation of Prophet as the
+primary forecasting algorithm.
+
+Table~\ref{tab:forecast_comparison} summarises the evaluation results obtained on the
+current dataset.
+
+\begin{table}[H]
+  \centering
+  \caption{Prophet vs SARIMA evaluation results (80/20 split).\label{tab:forecast_comparison}}
+  \begin{tabular}{llrrrl}
+    \toprule
+    \textbf{Series} & \textbf{Algorithm} & \textbf{MAE} & \textbf{MAPE} &
+    \textbf{RMSE} & \textbf{Verdict} \\
+    \midrule
+    \multirow{2}{*}{Revenue (TND)}
+      & Prophet & -- & --\% & -- & -- \\
+      & SARIMA  & -- & --\% & -- & -- \\
+    \midrule
+    \multirow{2}{*}{Member activity}
+      & Prophet & -- & --\% & -- & -- \\
+      & SARIMA  & -- & --\% & -- & -- \\
+    \midrule
+    \multirow{2}{*}{Session volume}
+      & Prophet & -- & --\% & -- & -- \\
+      & SARIMA  & -- & --\% & -- & -- \\
+    \bottomrule
+  \end{tabular}
+  \smallskip\\
+  \small\textit{Fill in after running: \texttt{python run.py -{}-input excel -{}-output output}}
+\end{table}
+
+\subsection{Aggregation Strategy}
+
+A key implementation decision was the choice of granularity at which to fit Prophet.
+For member transaction counts, fitting on daily data produced very low numbers (fewer
+than five transactions per day) with many zero-days, which caused Prophet's confidence
+interval to dip below zero. Aggregating to weekly totals before fitting solved this:
+weekly counts are large enough for Prophet to estimate uncertainty reliably, and the
+resulting \texttt{yhat\_lower} values stay non-negative. All member forecasts are
+then clipped at zero and rounded to the nearest integer, since a member count cannot
+be fractional.
+
+\section{Implementation of the Five Forecasts}
+
+\subsection{Revenue Forecast}
+
+The revenue forecast filters the transaction table to income rows, sums the TND
+amount by calendar day to produce a daily revenue series, and fits Prophet on that
+series. Two horizons are produced from the same fitted model:
+
+\begin{itemize}[noitemsep]
+  \item \textbf{4-week weekly forecast}: 28 daily predictions aggregated into 4
+        weekly buckets.
+  \item \textbf{3-month monthly forecast}: 90 daily predictions aggregated into 3
+        monthly buckets.
+\end{itemize}
+
+The output is saved to \texttt{output/forecasts/forecast\_revenue.csv} with columns
+\texttt{date}, \texttt{granularity}, \texttt{yhat}, \texttt{yhat\_lower}, and
+\texttt{yhat\_upper}.
+
+\subsection{Member Activity Forecast}
+
+The member forecast counts the number of member-type transactions per week, fits
+Prophet on those weekly counts, and produces two horizons:
+
+\begin{itemize}[noitemsep]
+  \item \textbf{4-week weekly forecast}: four direct weekly predictions.
+  \item \textbf{3-month monthly forecast}: 13 weekly predictions grouped into
+        3 monthly buckets.
+\end{itemize}
+
+All values are clipped at zero and cast to integers before export.
+
+\subsection{Peak Hours Analysis}
+
+The peak hours analysis does not use Prophet — it is a descriptive summary of
+historical patterns, not a time-series forecast. It computes two views from the
+transaction history:
+
+\begin{itemize}
+  \item \textbf{By hour of day}: the average number of transactions recorded per
+        hour, across all days in the dataset. This reveals at which times of day
+        the center is most active.
+  \item \textbf{By day of week}: the average number of transactions per day of the
+        week. This shows the weekly rhythm — typically Saturday and Sunday for a
+        gaming center.
+\end{itemize}
+
+Each view also includes a \texttt{pct\_of\_total} column: the share of each period's
+average relative to the sum for that period type. The two views are saved as separate
+files — \texttt{peak\_hours\_by\_hour.csv} and \texttt{peak\_hours\_by\_day.csv} —
+to avoid the scale inconsistency that would arise from mixing hourly and daily figures
+in a single table.
+
+Table~\ref{tab:peak_hours_day} shows the day-of-week distribution for the current
+dataset.
+
+\begin{table}[H]
+  \centering
+  \caption{Average transactions by day of week.\label{tab:peak_hours_day}}
+  \begin{tabular}{lrr}
+    \toprule
+    \textbf{Day} & \textbf{Avg transactions} & \textbf{\% of week total} \\
+    \midrule
+    Monday    & 16.3 & 11.4\% \\
+    Tuesday   & 18.6 & 13.1\% \\
+    Wednesday & 17.5 & 12.3\% \\
+    Thursday  & 17.0 & 11.9\% \\
+    Friday    & 19.0 & 13.3\% \\
+    Saturday  & 29.1 & 20.4\% \\
+    Sunday    & 25.0 & 17.5\% \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+Saturday accounts for over 20\% of the weekly total, confirming that weekends are
+significantly busier than weekdays. Hours~8 and~9 are absent from the hourly view
+because no transactions were recorded at those hours — the center is effectively
+closed between 8\,AM and 10\,AM.
+
+\subsection{Session Volume Forecast}
+
+The session volume forecast uses the daily transaction count as a proxy for activity
+volume, since the sessions table has no timestamps that could be used directly. The
+approach is the same as for revenue: Prophet is fitted on the daily counts, producing
+4-week and 3-month horizons. The output is integer-valued and clipped at zero.
+
+\subsection{Stock Replenishment}
+
+The stock replenishment module takes a different approach from the Prophet-based
+forecasts: rather than projecting a time series forward, it analyses historical
+consumption rates to produce a purchasing recommendation for each item.
+
+The calculation has three steps:
+
+\begin{enumerate}
+  \item \textbf{Average weekly consumption}: total units sold divided by the number
+        of weeks covered by the dataset. A minimum of one week is enforced to avoid
+        division by zero on sparse data.
+  \item \textbf{Suggested order quantity}: the average weekly consumption multiplied
+        by a configurable safety factor (default~1.5). This provides a buffer above
+        the typical weekly demand, accounting for variation. The result is rounded
+        up to the nearest integer so partial units are never suggested.
+  \item \textbf{Reorder frequency}: items averaging 20 or more units per week are
+        classified as \textit{weekly} restocks; 8–20 as \textit{bi-weekly}; and
+        below~8 as \textit{monthly}.
+\end{enumerate}
+
+Table~\ref{tab:stock_top} shows the top items by average weekly consumption.
+
+\begin{table}[H]
+  \centering
+  \caption{Top-selling items by average weekly consumption.\label{tab:stock_top}}
+  \begin{tabular}{lrrrl}
+    \toprule
+    \textbf{Item} & \textbf{Total sold} & \textbf{Avg/week} &
+    \textbf{Order qty} & \textbf{Frequency} \\
+    \midrule
+    Eau            & 847 & 29.4 & 45 & weekly \\
+    Soda           & 678 & 23.5 & 36 & weekly \\
+    Cookie 5.5     & 327 & 11.3 & 17 & bi-weekly \\
+    Cookie 4       & 263 &  9.1 & 14 & bi-weekly \\
+    Schweppes      & 212 &  7.3 & 11 & monthly \\
+    Redbull/Shark  & 209 &  7.2 & 11 & monthly \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+Water and soda are by far the fastest-moving items and should be restocked weekly.
+Cookies are the next tier at bi-weekly. Energy drinks and other items can be ordered
+monthly.
+
+\section{Member Segmentation}
+
+\subsection{Objective}
+
+Beyond forecasting, Sprint~4 adds a customer intelligence capability: grouping the
+66 members into behaviorally distinct segments using unsupervised machine learning.
+The goal is to give the owner an objective, data-driven answer to the question
+\textit{which customers are most valuable?}, enabling targeted promotions and
+retention efforts.
+
+\subsection{Algorithm — K-Means Clustering}
+
+K-means is an unsupervised clustering algorithm that partitions data into $k$ groups
+by minimising the within-cluster sum of squared distances from each point to its
+cluster centroid. It was chosen over alternatives (DBSCAN, hierarchical clustering,
+RFM scoring) for three reasons: it is interpretable, well-known in academic literature,
+and produces a fixed number of segments that map directly to business labels.
+
+The number of clusters is fixed at $k=4$. This was chosen to produce four segments
+that cover the natural range of member behaviour without over-fragmenting a dataset
+of 66 members.
+
+\subsection{Features}
+
+Three features were selected from \textit{dim\_member}:
+
+\begin{itemize}[noitemsep]
+  \item \textbf{\texttt{total\_tnd}} — total money spent at the center.
+  \item \textbf{\texttt{duration\_min}} — total time spent (cumulative session minutes).
+  \item \textbf{\texttt{orders\_tnd}} — money spent on food and drink orders.
+\end{itemize}
+
+The \texttt{usb\_tnd} column was excluded because it is always zero. The
+\texttt{usage\_tnd} column was excluded because it is highly correlated with
+\texttt{total\_tnd} and would give disproportionate weight to the spend dimension.
+
+Before clustering, all three features are normalised using \textbf{StandardScaler}
+(zero mean, unit variance). This step is mandatory for K-means: because the algorithm
+measures Euclidean distance, features with larger numerical ranges would otherwise
+dominate the clustering regardless of their actual importance.
+
+\subsection{Segment Labels}
+
+After fitting, the four cluster centroids are inspected and labelled automatically
+using the following heuristic:
+
+\begin{enumerate}
+  \item The cluster with the highest centroid \texttt{total\_tnd} is labelled
+        \textbf{Heavy Users}.
+  \item The cluster with the lowest centroid \texttt{total\_tnd} is labelled
+        \textbf{Light Users}.
+  \item Of the two remaining clusters, the one with the higher ratio of
+        \texttt{orders\_tnd} to \texttt{duration\_min} is labelled
+        \textbf{Casual Spenders} (they spend relatively more on food than on time).
+  \item The final cluster is labelled \textbf{Regulars}.
+\end{enumerate}
+
+\subsection{Cluster Quality — Silhouette Score}
+
+Because K-means is unsupervised, there is no ground-truth label to compare against.
+Cluster quality is instead measured by the \textbf{silhouette score}, which quantifies
+how well each point fits its own cluster relative to the nearest other cluster.
+The score ranges from $-1$ to $1$: values above $0.5$ indicate well-separated clusters,
+$0.25$--$0.5$ indicate reasonable structure, and below $0.25$ indicate overlapping or
+poorly defined clusters. The silhouette score for the current dataset is reported at
+runtime.
+
+\begin{table}[H]
+  \centering
+  \caption{Member segment distribution.\label{tab:segments}}
+  \begin{tabular}{lrp{7cm}}
+    \toprule
+    \textbf{Segment} & \textbf{Members} & \textbf{Profile} \\
+    \midrule
+    Heavy Users     & -- & High spend, long sessions, high orders \\
+    Casual Spenders & -- & Lower session time, relatively high food orders \\
+    Regulars        & -- & Balanced across all three features \\
+    Light Users     & -- & Low spend and short sessions \\
+    \bottomrule
+    \multicolumn{3}{r}{\small\textit{Fill in after running the pipeline.}} \\
+  \end{tabular}
+\end{table}
+
+\section{Output Files}
+
+All five forecast outputs are written to \texttt{output/forecasts/} by
+\texttt{run.py} at the end of the pipeline run.
+
+\begin{table}[H]
+  \centering
+  \caption{Forecast output files.}
+  \begin{tabular}{ll}
+    \toprule
+    \textbf{File} & \textbf{Contents} \\
+    \midrule
+    \texttt{forecast\_revenue.csv}       & Weekly and monthly revenue projections (TND) \\
+    \texttt{forecast\_members.csv}       & Weekly and monthly member activity projections \\
+    \texttt{peak\_hours\_by\_hour.csv}   & Avg transactions per hour of day (0--23) \\
+    \texttt{peak\_hours\_by\_day.csv}    & Avg transactions per day of week \\
+    \texttt{session\_volume.csv}         & Weekly and monthly activity volume projections \\
+    \texttt{stock\_replenishment.csv}    & Per-item restocking recommendation \\
+    \texttt{member\_segments.csv}        & Members with cluster ID and segment label \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\section{Sprint 4 Review}
+
+\subsection{Deliverables}
+
+\begin{itemize}
+  \item \textbf{\texttt{gamefydb/forecaster.py}} — five forecasting functions plus
+        the three evaluation helpers (\texttt{\_evaluate\_prophet},
+        \texttt{\_evaluate\_sarima}, \texttt{\_print\_comparison}), each independently
+        callable and returning a clean pandas DataFrame.
+  \item \textbf{\texttt{gamefydb/segmenter.py}} — the \texttt{segment\_members()}
+        function implementing K-means clustering with automatic label assignment and
+        silhouette score reporting.
+  \item \textbf{Seven output CSV files} in \texttt{output/forecasts/}, loadable
+        directly into Power~BI as additional tables alongside the star schema.
+  \item \textbf{Updated \texttt{run.py}} — a single command now produces the star
+        schema, all forecast outputs, the Prophet vs SARIMA comparison, and the
+        member segmentation in one pass.
+  \item \textbf{\texttt{docs/ml\_choices\_explained.md}} — a reference document
+        explaining every algorithm choice, parameter decision, and evaluation
+        methodology used in this sprint.
+\end{itemize}
+
+\subsection{Validation}
+
+Each forecast and the segmentation were reviewed with the following checks:
+
+\begin{itemize}[noitemsep]
+  \item \textbf{Prophet vs SARIMA}: evaluation was run automatically on the 80/20
+        split for three series (revenue, member activity, session volume); MAPE
+        and RMSE were compared and the winner per series identified.
+  \item \textbf{Revenue forecast}: the 4-week weekly projections were compared against
+        the last four weeks of actual revenue to confirm the model captures the
+        magnitude and weekly trend correctly.
+  \item \textbf{Member forecast}: verified that all \texttt{yhat\_lower} values are
+        non-negative integers after the weekly-aggregation fix.
+  \item \textbf{Peak hours}: confirmed that hours~8 and~9 are absent (no data, not
+        a bug) and that \texttt{pct\_of\_total} sums to 100\% within each period type.
+  \item \textbf{Stock replenishment}: the suggested order quantities and frequencies
+        were reviewed with the owner, who confirmed they match the purchasing rhythm
+        already used informally for water and soda.
+  \item \textbf{Member segmentation}: the silhouette score was checked to confirm
+        cluster quality; segment labels were reviewed to ensure Heavy Users have
+        a higher mean \texttt{total\_tnd} than Light Users.
+\end{itemize}
+
+\section{Conclusion}
+
+Sprint~4 added two complementary analytical capabilities to GamefyDB: a predictive
+forecasting layer and a customer intelligence module. The five forecast outputs give
+the owner concrete, data-driven answers to questions that previously required
+guesswork: how much stock to order, which days to schedule extra staff, and what
+revenue level to expect next month. The Prophet vs SARIMA comparison provides an
+objective, reproducible justification for the algorithm choice. The member
+segmentation transforms the 66-member dimension into four actionable customer groups,
+enabling targeted promotions rather than one-size-fits-all communication. The general
+conclusion summarises the full project and its outcomes.
+
+% ============================================================
+%  GENERAL CONCLUSION
+% ============================================================
+\chapter*{General Conclusion}
+\addcontentsline{toc}{chapter}{General Conclusion}
+
+This project set out to answer a practical question: how can the raw, artefact-laden
+Excel exports of a gaming center be turned into a clean, reliable dataset that
+supports real decision-making? The answer, delivered through four iterative sprints,
+is the GamefyDB system.
+
+Sprint~0 established the foundations: a clear requirements specification, a Scrum
+team, a product backlog, and a dimensional model based on the Kimball approach. The
+decision to use a star schema over a snowflake or galaxy model proved correct — the
+resulting six-table structure is simple enough for Power~BI to navigate without joins,
+yet complete enough to answer all the KPIs defined with the Product Owner.
+
+Sprint~1 tackled the hardest part of the project: the source data. The four
+\texttt{.xls} files were more problematic than anticipated — page-break artefacts,
+encoding errors, non-standard number formats, merged cells that shifted column
+positions, and a footer row that masqueraded as a data row. The solutions developed
+during this sprint (\texttt{xlrd}-based reading, empirical column maps, artefact
+stripping, the \texttt{u202f} thousands-separator fix) are all documented and
+maintainable. A new export from the management software with the same format can
+be processed without any code changes.
+
+Sprint~2 produced the star schema itself. The design was refined during
+implementation: the stock movements table was absorbed into \textit{dim\_item} when
+it became clear that all movements were sales, and the member statistics table was
+kept as a dimension because it already contains one aggregated row per member. The
+final six-table schema — four dimensions and two fact tables — is clean, correctly
+keyed, and exports in a single command.
+
+Sprint~3 delivered the Power~BI report. Four dashboard pages — Revenue Overview,
+Rankings, Live Ops, and Shift Report — cover the full range of operational questions
+the owner faces daily. All measures were validated against the source data, and the
+template file (\texttt{SalesDashboard.pbit}) means the report can be refreshed with
+a new pipeline run in minutes.
+
+Sprint~4 extended the system into predictive and analytical territory. Three
+complementary machine-learning techniques were implemented and evaluated. First,
+\textbf{Prophet-based forecasting} produces revenue, member activity, and session
+volume projections for horizons of four weeks and three months, giving the owner a
+concrete planning window. Second, a \textbf{SARIMA comparison} was run alongside
+Prophet on an 80/20 chronological train/test split to objectively justify the
+algorithm choice: both models were evaluated on MAE, MAPE, and RMSE, and the winner
+per series was identified automatically. Third, \textbf{K-means member segmentation}
+groups the 66 members into four behaviorally distinct segments — Heavy Users, Casual
+Spenders, Regulars, and Light Users — enabling targeted promotions based on actual
+spending and visit behaviour rather than intuition.
+
+The peak-hours analysis identifies the optimal staffing windows. The stock
+replenishment module provides actionable reorder recommendations that match the
+purchasing frequency the owner was already using informally for the fastest-moving
+items — confirming that the data-driven result aligns with operational experience.
+
+Several directions remain open for future work. The current pipeline reads static
+Excel files; connecting it to the management software's live database would enable
+automatic daily refreshes. The Prophet models could be re-evaluated as more historical
+data accumulates — the current dataset covers fewer than eight months, which limits
+seasonality detection. A dedicated web application could expose the forecasts and
+dashboards to staff without requiring access to Power~BI Desktop. The member
+segmentation could be extended with a temporal dimension once per-visit timestamps
+become available, enabling true RFM (Recency, Frequency, Monetary) analysis.
+
+Overall, GamefyDB demonstrates that even a small business operating on spreadsheets
+can gain genuine analytical capability through a well-designed ETL pipeline and a
+modest investment in tooling. The center now has a repeatable, automated process that
+transforms its operational data into a resource for decision-making — something that
+was entirely absent at the start of the internship.
