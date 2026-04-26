@@ -1,33 +1,90 @@
 import argparse
-from gamefydb.ingestor import ingest_all
-from gamefydb.cleaner import clean_all
-from gamefydb.transformer import transform
-from gamefydb.writer import write_all
+import os
+
+import pandas as pd
+
+from gamefydb.pipeline import run_pipeline
+from gamefydb.forecaster import (
+    forecast_revenue,
+    forecast_members,
+    forecast_peak_hours,
+    forecast_session_volume,
+    forecast_stock_replenishment,
+)
+from gamefydb.segmenter import segment_members
 
 
 def main():
-    parser = argparse.ArgumentParser(description='GamefyDB ETL pipeline')
-    parser.add_argument('--input',  default='excel',  help='Directory containing .xls source files')
+    parser = argparse.ArgumentParser(description='GamefyDB PFE — clean + star schema + forecast')
+    parser.add_argument('--input',  default='excel',  help='Directory with .xls source files')
     parser.add_argument('--output', default='output', help='Output directory')
-    parser.add_argument('--format', dest='fmt', choices=['csv', 'excel'], default='csv',
-                        help='Output format: csv (default) or excel')
     args = parser.parse_args()
 
-    print(f'Ingesting from {args.input}...')
-    raw = ingest_all(args.input)
+    print('Loading and cleaning...')
+    schema, cash, stock = run_pipeline(args.input)
 
-    print('Cleaning...')
-    cleaned = clean_all(raw)
-
-    print('Transforming to star schema...')
-    schema = transform(cleaned)
-
-    print(f'Writing {args.fmt} output to {args.output}...')
-    write_all(schema, args.output, fmt=args.fmt)
-
-    print('Done.')
+    print('Writing star schema...')
+    star_dir = os.path.join(args.output, 'powerbi_star')
+    os.makedirs(star_dir, exist_ok=True)
     for name, df in schema.items():
+        df.to_csv(os.path.join(star_dir, f'{name}.csv'), index=False, encoding='utf-8-sig')
         print(f'  {name}: {len(df)} rows')
+
+    print('Forecasting...')
+    print('  Note: each model is evaluated on an 80/20 chronological train/test split')
+    print('  (first 80% of historical data trains the model, last 20% is held out')
+    print('   and compared against real recorded values to measure accuracy)')
+    print('  Verdict thresholds — GOOD: MAPE < 10%  ACCEPTABLE: < 20%  POOR: > 20%')
+    print()
+    forecasts_dir = os.path.join(args.output, 'forecasts')
+    os.makedirs(forecasts_dir, exist_ok=True)
+
+    # Rename star schema columns to match forecaster expectations
+    tx = schema['fact_transaction'].rename(columns={
+        'type': 'income_expense',
+        'amount': 'amount_tnd',
+        'date': 'transaction_datetime',
+        'category': 'transaction_type',
+    })
+
+    # Cleaned stock rows (individual movements) for replenishment
+    stock_mv = stock.rename(columns={'date': 'movement_datetime'})
+
+    print('  Revenue...')
+    forecast_revenue(tx).to_csv(
+        os.path.join(forecasts_dir, 'forecast_revenue.csv'), index=False
+    )
+
+    print('  Member activity...')
+    forecast_members(tx).to_csv(
+        os.path.join(forecasts_dir, 'forecast_members.csv'), index=False
+    )
+
+    print('  Peak hours...')
+    ph_hour, ph_day = forecast_peak_hours(tx)
+    ph_hour.to_csv(os.path.join(forecasts_dir, 'peak_hours_by_hour.csv'), index=False)
+    ph_day.to_csv(os.path.join(forecasts_dir, 'peak_hours_by_day.csv'), index=False)
+
+    print('  Session volume...')
+    forecast_session_volume(tx).to_csv(
+        os.path.join(forecasts_dir, 'session_volume.csv'), index=False
+    )
+
+    print('  Stock replenishment...')
+    forecast_stock_replenishment(stock_mv).to_csv(
+        os.path.join(forecasts_dir, 'stock_replenishment.csv'), index=False
+    )
+
+    print('  Member segmentation...')
+    segments = segment_members(schema['dim_member'])
+    segments.to_csv(
+        os.path.join(forecasts_dir, 'member_segments.csv'), index=False, encoding='utf-8-sig'
+    )
+    for label, count in segments['segment_label'].value_counts().items():
+        print(f'    {label}: {count} members')
+
+    print(f'  Forecasts written to {forecasts_dir}/')
+    print('Done.')
 
 
 if __name__ == '__main__':
