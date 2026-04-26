@@ -83,6 +83,10 @@ def _evaluate_sarima(df: pd.DataFrame, split: float, m: int = 7):
 
 
 def _print_comparison(label: str, n: int, split: float, prophet_m: dict, sarima_m) -> None:
+    if not prophet_m:
+        print(f'    [{label}] Prophet evaluation failed — skipped')
+        return
+
     n_train = int(n * split)
     n_test = n - n_train
     pct = int(split * 100)
