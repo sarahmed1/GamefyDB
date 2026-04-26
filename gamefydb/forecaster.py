@@ -144,7 +144,9 @@ def forecast_revenue(transactions_df: pd.DataFrame) -> pd.DataFrame:
     income = transactions_df[transactions_df['income_expense'] == 'Income'].copy()
     income['_v'] = income['amount_tnd']
     daily = _to_daily(income, 'transaction_datetime', '_v')
-    _evaluate_prophet(daily, split=0.8)
+    p = _evaluate_prophet(daily, split=0.8)
+    s = _evaluate_sarima(daily, split=0.8, m=7)
+    _print_comparison('Revenue (TND)', len(daily), 0.8, p, s)
     weekly, monthly = _prophet_forecast(daily)
     result = pd.concat([weekly, monthly], ignore_index=True)
     return result[['date', 'granularity', 'yhat', 'yhat_lower', 'yhat_upper']]
@@ -171,7 +173,9 @@ def forecast_members(transactions_df: pd.DataFrame) -> pd.DataFrame:
         .rename(columns={'_w': 'ds'})
     )
     weekly_hist['ds'] = pd.to_datetime(weekly_hist['ds'])
-    _evaluate_prophet(weekly_hist, split=0.8, freq='W')
+    p = _evaluate_prophet(weekly_hist, split=0.8, freq='W')
+    s = _evaluate_sarima(weekly_hist, split=0.8, m=4)
+    _print_comparison('Member activity', len(weekly_hist), 0.8, p, s)
 
     m = Prophet(interval_width=0.8)
     m.fit(weekly_hist)
@@ -256,7 +260,9 @@ def forecast_session_volume(transactions_df: pd.DataFrame) -> pd.DataFrame:
     df = transactions_df.copy()
     df['_v'] = 1
     daily = _to_daily(df, 'transaction_datetime', '_v')
-    _evaluate_prophet(daily, split=0.8)
+    p = _evaluate_prophet(daily, split=0.8)
+    s = _evaluate_sarima(daily, split=0.8, m=7)
+    _print_comparison('Session volume', len(daily), 0.8, p, s)
     weekly, monthly = _prophet_forecast(daily)
     result = pd.concat([weekly, monthly], ignore_index=True)
     for col in ['yhat', 'yhat_lower', 'yhat_upper']:
