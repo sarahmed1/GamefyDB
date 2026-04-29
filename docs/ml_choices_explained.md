@@ -181,6 +181,44 @@ The value 42 is a conventional default in the machine learning community (a refe
 
 ---
 
+## 11. Anomaly Detection — Z-Score (Day-of-Week)
+
+**What it is:**
+An anomaly is a day where the observed value is statistically far from what is normal for that day of the week. We use Z-score to measure this distance:
+
+    z = (actual − weekday_mean) / weekday_std
+
+Where `weekday_mean` and `weekday_std` are computed from all historical days of the same weekday (e.g. all Mondays, all Tuesdays, etc.).
+
+**Why day-of-week grouping:**
+A gaming center has strong weekly seasonality — weekends are busier than weekdays. Comparing a Sunday against the overall daily average would flag almost every Sunday as an anomaly, which is meaningless. By comparing each day only against its own weekday peers, we detect days that are unusual relative to what is expected for that specific day of the week.
+
+**Why all data is used (no train/test split):**
+Anomaly detection does not predict the future — it asks which past days were statistically unusual. Using all available data gives the most accurate baseline. Unlike forecasting models, nothing is held back for evaluation.
+
+**Threshold — 2σ:**
+A day is flagged if its Z-score exceeds 2.0 in either direction. Roughly 5% of days in a normal distribution fall outside ±2σ. A minimum of 4 data points per weekday group is required to compute a meaningful standard deviation.
+
+**Severity:**
+- **Mild (2–3σ):** unusual but plausible — e.g. a slow Monday or a moderately busy Sunday
+- **Severe (>3σ):** very unlikely by chance (~0.3% probability) — likely caused by an external event such as a power cut, a gaming tournament, a public holiday, or a cashier error
+
+**Three series monitored independently:**
+- Revenue (TND) — daily sum of income transactions
+- Session volume — daily count of all transactions
+- Member activity — daily count of member transactions
+
+Each series uses its own mean and std. An anomaly in revenue has no effect on the session volume Z-score.
+
+**Alternatives considered:**
+- **Rolling Z-score** — uses a sliding window instead of the full historical mean. More adaptive to long-term trends but adds complexity. With 7 months of data, the global weekday mean is stable enough.
+- **Isolation Forest** — a machine learning method for anomaly detection. More powerful but harder to explain to a non-technical audience and overkill for three independent univariate series.
+- **Prophet residuals** — flag days where actual revenue deviates from Prophet's forecast. Ties anomaly detection to the forecast model; if Prophet overfits, it masks anomalies rather than finding them.
+
+**Conclusion:** Day-of-week Z-score is the right balance of simplicity, statistical rigor, and explainability for a thesis project of this scope.
+
+---
+
 ## Summary Table
 
 | Choice | Decision | Main Reason |
@@ -198,3 +236,5 @@ The value 42 is a conventional default in the machine learning community (a refe
 | Normalization | StandardScaler | Required for distance-based algorithms |
 | Label assignment | Heuristic on centroids | Consistent, automatic, business-interpretable |
 | Random seed | 42 | Reproducibility |
+| Anomaly detection algorithm | Z-score (day-of-week) | Statistical standard, no extra library, easy to explain |
+| Anomaly threshold | 2σ (mild) / 3σ (severe) | Flags ~5% of days; severe reserved for true outliers |

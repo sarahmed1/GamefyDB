@@ -1,5 +1,7 @@
-import argparse
 import os
+os.environ.setdefault('MPLBACKEND', 'Agg')
+
+import argparse
 
 import pandas as pd
 
@@ -12,6 +14,25 @@ from gamefydb.forecaster import (
     forecast_stock_replenishment,
 )
 from gamefydb.segmenter import segment_members
+from gamefydb.anomaly_detector import detect_anomalies
+
+
+def _print_anomaly_summary(anomalies: pd.DataFrame) -> None:
+    for label in ['revenue', 'session_volume', 'member_activity']:
+        subset = anomalies[anomalies['series'] == label]
+        n = len(subset)
+        if n == 0:
+            print(f'    [{label}]  no anomalies detected')
+            continue
+        severe = int((subset['severity'] == 'severe').sum())
+        mild = n - severe
+        noun = 'anomaly' if n == 1 else 'anomalies'
+        print(f'    [{label}]  {n} {noun} — {severe} severe, {mild} mild')
+        w = subset.iloc[0]
+        print(f'      Worst: {w["date"]} {str(w["weekday"])[:3]}'
+              f'  actual={w["actual"]}'
+              f'  expected={w["weekday_mean"]}'
+              f'  z={w["z_score"]:+.2f} ({w["severity"]}, {w["direction"]})')
 
 
 def main():
@@ -82,6 +103,11 @@ def main():
     )
     for label, count in segments['segment_label'].value_counts().items():
         print(f'    {label}: {count} members')
+
+    print('  Anomaly detection...')
+    anomalies = detect_anomalies(tx)
+    _print_anomaly_summary(anomalies)
+    anomalies.to_csv(os.path.join(forecasts_dir, 'anomalies.csv'), index=False)
 
     print(f'  Forecasts written to {forecasts_dir}/')
     print('Done.')
