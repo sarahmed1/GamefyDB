@@ -9,6 +9,12 @@ Output: a printed summary during pipeline run + `output/forecasts/anomalies.csv`
 
 ---
 
+## No Train/Test Split
+
+Anomaly detection does not use a train/test split. Unlike forecasting (where 80% of data trains the model and 20% tests future predictions), Z-score anomaly detection uses **all available data** to establish what "normal" looks like — the mean and std per weekday. It then flags days within that same dataset that deviate too far from normal. More data means a better baseline, so nothing is held back. The question being answered is not "how accurate are future predictions?" but "which past days were statistically unusual?"
+
+---
+
 ## Method — Day-of-Week Z-Score
 
 For each series and each weekday group:
