@@ -173,7 +173,7 @@ def forecast_members(transactions_df: pd.DataFrame) -> pd.DataFrame:
         .rename(columns={'_w': 'ds'})
     )
     weekly_hist['ds'] = pd.to_datetime(weekly_hist['ds'])
-    p = _evaluate_prophet(weekly_hist, split=0.8, freq='W')
+    p = _evaluate_prophet(weekly_hist, split=0.8, freq='7D')
     s = _evaluate_sarima(weekly_hist, split=0.8, m=4)
     _print_comparison('Member activity', len(weekly_hist), 0.8, p, s)
 

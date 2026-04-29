@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 from sklearn.cluster import KMeans
+from sklearn.metrics import silhouette_score
 from sklearn.preprocessing import StandardScaler
 
 
@@ -47,6 +48,10 @@ def segment_members(dim_member: pd.DataFrame) -> pd.DataFrame:
 
     km = KMeans(n_clusters=N_CLUSTERS, random_state=42, n_init=10)
     df['cluster_id'] = km.fit_predict(X_scaled)
+
+    score = silhouette_score(X_scaled, df['cluster_id'])
+    verdict = 'GOOD' if score > 0.5 else ('ACCEPTABLE' if score > 0.25 else 'POOR')
+    print(f'    Silhouette score: {score:.2f}  → {verdict}')
 
     centers = scaler.inverse_transform(km.cluster_centers_)
     label_map = _assign_labels(centers)

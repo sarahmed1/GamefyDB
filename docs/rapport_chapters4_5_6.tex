@@ -442,19 +442,40 @@ covers that work.
 % ============================================================
 %  CHAPTER 6
 % ============================================================
-\chapter{Sprint 4: Machine Learning Forecasting}
+\chapter{Sprint 4: Machine Learning and Analytics}
 
 \section{Introduction}
 
-The first three sprints produced a clean historical dataset and a set of descriptive
-dashboards. Sprint~4 extends the system with predictive analytics: a Python module
-(\texttt{gamefydb/forecaster.py}) that reads the same star-schema data and produces
-five forward-looking CSV files. These files are imported alongside the star-schema
-tables in Power~BI so the owner can see not only where the business has been, but
-where it is likely going.
+The first three sprints gave the gaming center something it did not have before: clean,
+structured data and a live dashboard to explore it. Sprint~4 takes this a step further
+by adding a layer of intelligence to the pipeline. Instead of only showing what
+happened, the system can now answer three forward-looking questions: what is likely to
+happen next, which customers are the most valuable, and which past days were
+statistically unusual.
 
-This sprint was added to the project scope after the core BI deliverable was
-validated, in response to a Product Owner request for demand-planning support.
+Three complementary techniques make up this sprint:
+
+\begin{itemize}
+  \item \textbf{Time-series forecasting} --- Prophet and SARIMA models predict revenue,
+        member activity, and session volume for the next four weeks and three months,
+        with confidence intervals that show the plausible range around each estimate.
+  \item \textbf{Member segmentation} --- K-means clustering groups the 66 members into
+        four behavioural profiles, from Heavy Users to Light Users, based on their
+        actual spending and visit patterns.
+  \item \textbf{Anomaly detection} --- a statistical Z-score method flags days where a
+        metric was unusually high or low relative to the normal pattern for that specific
+        day of the week.
+\end{itemize}
+
+All three modules feed into the same pipeline. One command reads the source files and
+writes eight analytics CSVs ready to load into Power~BI alongside the star schema.
+
+\begin{figure}[H]
+  \centering
+  % *TODO* Add ML workflow diagram: Star Schema (fact_transaction, dim_member) feeds into forecaster.py / segmenter.py / anomaly_detector.py, each producing CSV outputs, all flowing into Power BI. Draw.io or diagrams.net recommended.
+  \includegraphics[width=0.90\textwidth]{ml_workflow.png}
+  \caption{Overview of the Sprint~4 analytics pipeline.\label{fig:ml_workflow}}
+\end{figure}
 
 \section{Sprint 4 Backlog}
 
@@ -487,8 +508,8 @@ Table~\ref{tab:sprint4_backlog} lists the tasks committed to this sprint.
   US-11 & As an owner, I want to know the busiest hours and days so I can
           staff appropriately.
         & Implement \texttt{forecast\_peak\_hours()} computing average transaction
-          counts by hour of day and by day of week; split into two separate CSV
-          files for clean Power~BI import. \\[4pt]
+          counts by hour of day and by day of week; export as two separate CSV
+          files. \\[4pt]
 
   US-12 & As an owner, I want to forecast total daily activity volume for the
           next 4 weeks and 3 months.
@@ -504,87 +525,195 @@ Table~\ref{tab:sprint4_backlog} lists the tasks committed to this sprint.
           the choice of model is objectively justified.
         & Implement SARIMA via \texttt{pmdarima}'s \texttt{auto\_arima} and evaluate
           both Prophet and SARIMA on an 80/20 chronological train/test split;
-          report MAE, MAPE, and RMSE for each and declare a winner per series. \\[4pt]
+          report MAE, MAPE, and RMSE for each series. \\[4pt]
 
   US-15 & As an owner, I want to know which members are my most valuable customers
           so I can target them for promotions.
         & Implement \texttt{segment\_members()} in \texttt{gamefydb/segmenter.py}
-          using K-means clustering (k=4) on member spend, time, and order features;
-          assign human-readable segment labels; export to CSV. \\
+          using K-means clustering ($k=4$) on member spend, time, and order features;
+          assign human-readable segment labels; export to CSV. \\[4pt]
+
+  US-16 & As an owner, I want to be alerted when a day's revenue or activity was
+          abnormally high or low, so I can investigate what happened.
+        & Implement \texttt{detect\_anomalies()} in \texttt{gamefydb/anomaly\_detector.py}
+          using day-of-week Z-score on three series; classify anomalies by severity;
+          export flagged dates to CSV. \\
 \end{longtable}
+
+\section{Data Preparation for Machine Learning}
+
+Before any algorithm runs, the cleaned star-schema data needs to be reshaped into
+the formats each model expects. This step bridges the relational world of fact tables
+and dimension tables and the time-indexed arrays that machine-learning libraries work
+with.
+
+\subsection{From Transactions to Daily Series}
+
+The \textit{fact\_transaction} table has one row per individual transaction event.
+For time-series forecasting and anomaly detection, what matters is the total for each
+calendar day, not the individual events. The pipeline aggregates to daily resolution
+using a shared helper function:
+
+\begin{itemize}
+  \item \textbf{Revenue series}: filter to income transactions, group by date, sum the
+        TND amounts. The result is one row per active day with the total revenue
+        earned that day.
+  \item \textbf{Session volume series}: count all transactions per date. Because the
+        sessions table has no usable timestamps, the daily transaction count is the
+        best available proxy for how busy the center was.
+  \item \textbf{Member activity series}: count only member-type transactions per date.
+        This tracks loyalty card activity separately from walk-in cash customers.
+\end{itemize}
+
+In all three cases the result is a two-column DataFrame with a date column
+(\texttt{ds}) and a value column (\texttt{y}) --- the exact format Prophet expects.
+
+\subsection{Weekly Aggregation for Member Activity}
+
+Member transactions are sparse at the daily level: on a typical day, only two to five
+are recorded. When Prophet models numbers this small, the lower bound of its confidence
+interval goes negative --- which is meaningless for a transaction count.
+
+The fix is to aggregate to weekly totals before fitting. Each week's count is large
+enough for Prophet to estimate uncertainty reliably, and the lower bound stays
+non-negative. All member forecast values are clipped at zero and rounded to the
+nearest integer before export.
+
+\subsection{Feature Normalisation for K-Means}
+
+K-means measures the Euclidean distance between data points to assign clusters. This
+creates a scale problem: if total spend ranges from 0 to 2000~TND and session duration
+from 0 to 3000~minutes, the algorithm weights spend more heavily --- not because it
+is more important, but because the numbers are larger.
+
+StandardScaler solves this by shifting each feature to zero mean and scaling it to
+unit standard deviation. After normalisation, a 200~TND difference in spending and a
+30-minute difference in session time represent the same magnitude of deviation. Both
+features contribute equally to the distance calculation.
+
+\subsection{Weekday Grouping for Anomaly Detection}
+
+Anomaly detection groups the existing daily values by day of the week before comparing
+them. All Mondays are compared together, all Saturdays together, and so on.
+
+This matters because a gaming center has a strong weekly rhythm: Saturdays are
+consistently busier than Tuesdays. Comparing a Saturday against the average of all
+days would flag almost every Saturday as anomalous --- which tells the owner nothing
+useful. Grouping within weekdays means the baseline reflects what is normal for that
+specific day, not the overall daily average.
+
+\begin{figure}[H]
+  \centering
+  % *TODO* Add a diagram illustrating the weekday grouping concept: a horizontal timeline of daily revenue bars, with Mondays highlighted in one colour and Saturdays in another, showing that comparisons happen within the same colour group.
+  \includegraphics[width=0.85\textwidth]{weekday_grouping.png}
+  \caption{Day-of-week grouping: each day is compared only against historical values
+           from the same weekday.\label{fig:weekday_grouping}}
+\end{figure}
 
 \section{Forecasting Technology}
 
-\subsection{Prophet}
+\subsection{Why Prophet}
 
-Three of the five forecasts use \textbf{Prophet}, a time-series forecasting library
-developed by Meta. Prophet was chosen for the following reasons:
+Three of the five forecast outputs use \textbf{Prophet}, an open-source time-series
+library developed by Meta. It was chosen for practical reasons: it handles the kind of
+data a small business produces without requiring manual calibration.
 
 \begin{itemize}
-  \item It handles irregular time series well — the café has no transactions on some
-        days, and Prophet treats missing dates as gaps rather than zeros.
-  \item It automatically detects weekly seasonality, which is the dominant pattern
-        in a gaming center (busier on weekends).
-  \item It produces an 80\% confidence interval (\texttt{yhat\_lower} and
-        \texttt{yhat\_upper}) alongside the point forecast (\texttt{yhat}), giving
-        the owner a range rather than a single number.
-  \item It requires no manual parameter tuning for basic use cases.
+  \item \textbf{Missing dates}: the center has no transactions on some days. Prophet
+        treats those as gaps, not as zeros.
+  \item \textbf{Weekly seasonality}: Prophet detects the weekend peak automatically,
+        without being told which days are weekends.
+  \item \textbf{Confidence intervals}: alongside the point forecast (\texttt{yhat}),
+        Prophet produces an 80\% confidence band (\texttt{yhat\_lower} and
+        \texttt{yhat\_upper}). This gives the owner a range to plan around rather than
+        a single number.
+  \item \textbf{No manual tuning}: the model works out of the box for a
+        single-location business time series.
 \end{itemize}
 
-Prophet fits a decomposable additive model of the form:
+Under the hood, Prophet fits an additive decomposition:
 \[
   y(t) = \text{trend}(t) + \text{seasonality}(t) + \epsilon_t
 \]
-where the trend is a piecewise linear function and the seasonality is a Fourier-based
-approximation of weekly and yearly patterns.
+The trend is a piecewise linear function that adapts to growth or decline over time.
+The seasonality is a Fourier-series approximation of weekly and yearly cycles.
+The residual $\epsilon_t$ captures everything else.
 
-\subsection{SARIMA — Comparison Algorithm}
+\begin{figure}[H]
+  \centering
+  % *TODO* Add a chart showing the Prophet revenue forecast: x-axis = date, y-axis = revenue TND. Show historical revenue as a solid line, the forecast extension as a dashed line, and the confidence band as a shaded area. Can be generated from Python (matplotlib) or exported from the Power BI report.
+  \includegraphics[width=0.88\textwidth]{prophet_revenue_forecast.png}
+  \caption{Prophet revenue forecast: historical data, 4-week and 3-month projections,
+           and 80\% confidence band.\label{fig:prophet_forecast}}
+\end{figure}
 
-To objectively validate the choice of Prophet, a second algorithm was implemented in
-parallel: \textbf{SARIMA} (Seasonal AutoRegressive Integrated Moving Average), the
-classical standard for seasonal time series forecasting. SARIMA extends plain ARIMA
-with an additional seasonal component, making it a fair comparison against Prophet
-since both algorithms handle weekly seasonality.
+\subsection{SARIMA as a Comparison Algorithm}
+
+To validate the choice of Prophet objectively, \textbf{SARIMA} (Seasonal AutoRegressive
+Integrated Moving Average) was implemented as a comparison. SARIMA is the classical
+standard for seasonal time-series forecasting, and it was deliberately chosen because
+it also handles seasonality --- comparing Prophet against a model that ignores
+seasonality would make the result unfair and academically weak.
 
 SARIMA has six parameters: $p$, $d$, $q$ (non-seasonal) and $P$, $D$, $Q$ (seasonal),
-plus a period $m$. Rather than tuning these manually — which is error-prone and
-introduces human bias — the implementation uses \texttt{pmdarima}'s \texttt{auto\_arima}
-function, which searches parameter combinations and selects the best by AIC
-(Akaike Information Criterion). The seasonal period is set to $m=7$ for daily series
-(capturing weekly patterns) and $m=4$ for weekly series (capturing monthly patterns
-within the weekly aggregation).
+plus a seasonal period~$m$. Selecting these manually is time-consuming and introduces
+bias. The implementation uses \texttt{pmdarima}'s \texttt{auto\_arima}, which tests
+combinations automatically and selects the best by AIC (Akaike Information Criterion).
+The seasonal period is $m=7$ for daily series (one week) and $m=4$ for weekly series
+(one month).
 
-\subsection{Evaluation Methodology — 80/20 Train/Test Split}
+\subsection{Evaluation Methodology --- 80/20 Chronological Split}
 
-Both algorithms are evaluated using a chronological 80/20 split: the first 80\% of
-the historical series trains the model, and the final 20\% is held out as the test
-set. The model predicts the test period and the predictions are compared against the
-real recorded values. The split is strictly chronological — a random split would allow
-the model to train on future data to predict the past, which is unrealistic.
+Both algorithms are evaluated on the same data using a \textbf{chronological 80/20
+split}: the first 80\% of the historical series trains the model and the final 20\% is
+held out as the test set. The model then predicts the test period, and those predictions
+are compared against the real values from the source files.
 
-Three metrics are computed for each algorithm on each series:
+The split must be chronological. A random split would allow the model to train on
+data from March to predict February, which is not how forecasting works in practice.
+The test set must always come after the training set in time.
 
-\begin{itemize}[noitemsep]
-  \item \textbf{MAE} (Mean Absolute Error) — average absolute difference in the same
-        unit as the data (TND for revenue, integer count for members and sessions).
-  \item \textbf{MAPE} (Mean Absolute Percentage Error) — average percentage error,
-        scale-independent and comparable across series. A MAPE below 10\% is
-        considered good, below 20\% acceptable, and above 20\% poor.
-  \item \textbf{RMSE} (Root Mean Squared Error) — like MAE but penalises large
-        individual errors more heavily. A large gap between RMSE and MAE signals
-        the presence of outlier predictions.
+\begin{figure}[H]
+  \centering
+  % *TODO* Add a simple timeline diagram: a horizontal bar divided into a large "Training set (80%)" section and a smaller "Test set (20%)" section, with the label "Time" and an arrow pointing right. Can be made in Draw.io or PowerPoint.
+  \includegraphics[width=0.80\textwidth]{train_test_split.png}
+  \caption{Chronological 80/20 train/test split used for model
+           evaluation.\label{fig:split}}
+\end{figure}
+
+Three metrics are computed for each algorithm and each series:
+
+\begin{itemize}
+  \item \textbf{MAE} (Mean Absolute Error) --- the average absolute gap between
+        predicted and actual values, in the same unit as the data (TND for revenue,
+        integer count for activity). Straightforward to interpret: on average, the
+        model was off by this amount.
+  \item \textbf{MAPE} (Mean Absolute Percentage Error) --- the average percentage gap.
+        This is the primary decision metric because it is scale-independent: a 12\%
+        error on revenue and a 12\% error on session count represent the same quality,
+        even though the raw numbers are very different. A MAPE below 10\% is good,
+        below 20\% is acceptable, and above 20\% is poor.
+  \item \textbf{RMSE} (Root Mean Squared Error) --- similar to MAE but squaring errors
+        before averaging gives heavier weight to large individual mistakes. A large gap
+        between RMSE and MAE means a few predictions were very far off; a small gap
+        means errors are consistent.
 \end{itemize}
 
-The winner for each series is the algorithm with the lower MAPE. The results are
-printed automatically at runtime and guide the recommendation of Prophet as the
-primary forecasting algorithm.
+The algorithm with the lower MAPE is declared the winner for each series.
 
-Table~\ref{tab:forecast_comparison} summarises the evaluation results obtained on the
-current dataset.
+\begin{figure}[H]
+  \centering
+  % *TODO* Add a grouped bar chart comparing Prophet and SARIMA MAPE for each of the three series (Revenue, Member activity, Session volume). Each series has two bars side by side. Can be built in matplotlib or Excel using the values from the evaluation table below.
+  \includegraphics[width=0.82\textwidth]{sarima_comparison.png}
+  \caption{Prophet vs.\ SARIMA MAPE comparison across the three evaluated
+           series.\label{fig:sarima_comparison}}
+\end{figure}
+
+Table~\ref{tab:forecast_comparison} shows the evaluation results on the current dataset.
 
 \begin{table}[H]
   \centering
-  \caption{Prophet vs SARIMA evaluation results (80/20 split).\label{tab:forecast_comparison}}
+  \caption{Prophet vs.\ SARIMA evaluation results (80/20 split).\label{tab:forecast_comparison}}
   \begin{tabular}{llrrrl}
     \toprule
     \textbf{Series} & \textbf{Algorithm} & \textbf{MAE} & \textbf{MAPE} &
@@ -607,69 +736,69 @@ current dataset.
   \small\textit{Fill in after running: \texttt{python run.py -{}-input excel -{}-output output}}
 \end{table}
 
-\subsection{Aggregation Strategy}
-
-A key implementation decision was the choice of granularity at which to fit Prophet.
-For member transaction counts, fitting on daily data produced very low numbers (fewer
-than five transactions per day) with many zero-days, which caused Prophet's confidence
-interval to dip below zero. Aggregating to weekly totals before fitting solved this:
-weekly counts are large enough for Prophet to estimate uncertainty reliably, and the
-resulting \texttt{yhat\_lower} values stay non-negative. All member forecasts are
-then clipped at zero and rounded to the nearest integer, since a member count cannot
-be fractional.
+\noindent\textbf{Note on SARIMA and short datasets.}
+With seven months of weekly data --- roughly 30 data points --- SARIMA may outperform
+Prophet on the member activity series. This is expected: Prophet's main strength is
+capturing yearly seasonality, which requires seeing the same annual cycle at least
+twice. With less than one year of history, Prophet cannot detect patterns like summer
+peaks or holiday spikes. As more data accumulates, this balance is expected to shift.
 
 \section{Implementation of the Five Forecasts}
 
 \subsection{Revenue Forecast}
 
-The revenue forecast filters the transaction table to income rows, sums the TND
-amount by calendar day to produce a daily revenue series, and fits Prophet on that
-series. Two horizons are produced from the same fitted model:
+The revenue forecast filters \textit{fact\_transaction} to income rows, sums TND
+amounts by calendar day, and fits Prophet on that daily series. The same trained model
+then produces two output horizons:
 
 \begin{itemize}[noitemsep]
-  \item \textbf{4-week weekly forecast}: 28 daily predictions aggregated into 4
-        weekly buckets.
-  \item \textbf{3-month monthly forecast}: 90 daily predictions aggregated into 3
-        monthly buckets.
+  \item \textbf{4-week weekly forecast}: 28 daily predictions summed into 4 weekly
+        buckets of 7 days each.
+  \item \textbf{3-month monthly forecast}: 90 daily predictions summed into 3 monthly
+        buckets of roughly 30 days each.
 \end{itemize}
 
-The output is saved to \texttt{output/forecasts/forecast\_revenue.csv} with columns
-\texttt{date}, \texttt{granularity}, \texttt{yhat}, \texttt{yhat\_lower}, and
-\texttt{yhat\_upper}.
+The output is saved to \texttt{forecast\_revenue.csv} with columns \texttt{date},
+\texttt{granularity}, \texttt{yhat}, \texttt{yhat\_lower}, and \texttt{yhat\_upper}.
+In Power~BI, the confidence bounds drive a shaded band around the forecast line,
+giving the owner a visual sense of how much the actual result might vary.
 
 \subsection{Member Activity Forecast}
 
-The member forecast counts the number of member-type transactions per week, fits
-Prophet on those weekly counts, and produces two horizons:
-
-\begin{itemize}[noitemsep]
-  \item \textbf{4-week weekly forecast}: four direct weekly predictions.
-  \item \textbf{3-month monthly forecast}: 13 weekly predictions grouped into
-        3 monthly buckets.
-\end{itemize}
-
-All values are clipped at zero and cast to integers before export.
+The member forecast counts member-type transactions per week, fits Prophet on those
+weekly counts, and produces the same two horizons. All values are clipped at zero and
+rounded to the nearest integer before export.
 
 \subsection{Peak Hours Analysis}
 
-The peak hours analysis does not use Prophet — it is a descriptive summary of
-historical patterns, not a time-series forecast. It computes two views from the
-transaction history:
+The peak hours module is descriptive rather than predictive. It answers two questions:
+\textit{at what time of day is the center most active?} and \textit{which day of the
+week draws the most customers?}
 
 \begin{itemize}
-  \item \textbf{By hour of day}: the average number of transactions recorded per
-        hour, across all days in the dataset. This reveals at which times of day
-        the center is most active.
-  \item \textbf{By day of week}: the average number of transactions per day of the
-        week. This shows the weekly rhythm — typically Saturday and Sunday for a
-        gaming center.
+  \item \textbf{By hour of day}: for each date in the dataset, transactions are counted
+        per hour. Averaging across all dates produces a typical hourly activity profile.
+        Hours 8 and 9 are absent because the center opens at 10\,AM.
+  \item \textbf{By day of week}: the same averaging applied by weekday, revealing the
+        weekly rhythm. Both views include a \texttt{pct\_of\_total} column showing each
+        period's share of the weekly total.
 \end{itemize}
 
-Each view also includes a \texttt{pct\_of\_total} column: the share of each period's
-average relative to the sum for that period type. The two views are saved as separate
-files — \texttt{peak\_hours\_by\_hour.csv} and \texttt{peak\_hours\_by\_day.csv} —
-to avoid the scale inconsistency that would arise from mixing hourly and daily figures
-in a single table.
+The two views are exported as separate files to avoid mixing hourly and daily figures.
+
+\begin{figure}[H]
+  \centering
+  % *TODO* Add bar chart: x-axis = hour of day (10 to 23), y-axis = average transaction count. Use data from peak_hours_by_hour.csv. matplotlib or Power BI bar chart.
+  \includegraphics[width=0.85\textwidth]{peak_hours_bar.png}
+  \caption{Average transaction count by hour of day.\label{fig:peak_hours}}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  % *TODO* Add bar chart: x-axis = day of week (Monday to Sunday), y-axis = average transaction count. Use data from peak_hours_by_day.csv.
+  \includegraphics[width=0.85\textwidth]{peak_days_bar.png}
+  \caption{Average transaction count by day of week.\label{fig:peak_days}}
+\end{figure}
 
 Table~\ref{tab:peak_hours_day} shows the day-of-week distribution for the current
 dataset.
@@ -692,40 +821,36 @@ dataset.
   \end{tabular}
 \end{table}
 
-Saturday accounts for over 20\% of the weekly total, confirming that weekends are
-significantly busier than weekdays. Hours~8 and~9 are absent from the hourly view
-because no transactions were recorded at those hours — the center is effectively
-closed between 8\,AM and 10\,AM.
+Saturday accounts for over 20\% of weekly activity and Sunday for nearly 18\%. The two
+weekend days together represent almost 38\% of all transactions --- nearly double the
+weight of any single weekday. This confirms what the owner already knew intuitively,
+and gives a precise number to act on when planning staffing and stock.
 
 \subsection{Session Volume Forecast}
 
-The session volume forecast uses the daily transaction count as a proxy for activity
-volume, since the sessions table has no timestamps that could be used directly. The
-approach is the same as for revenue: Prophet is fitted on the daily counts, producing
-4-week and 3-month horizons. The output is integer-valued and clipped at zero.
+The session volume forecast uses the daily transaction count as an activity proxy,
+since the sessions table has no usable timestamps. The approach is identical to the
+revenue forecast: Prophet fits on the daily count series and produces 4-week and
+3-month horizons. All values are integer-valued and clipped at zero.
 
 \subsection{Stock Replenishment}
 
-The stock replenishment module takes a different approach from the Prophet-based
-forecasts: rather than projecting a time series forward, it analyses historical
-consumption rates to produce a purchasing recommendation for each item.
-
-The calculation has three steps:
+The stock replenishment module does not use a time-series model. It analyses
+historical consumption rates to produce a practical purchasing recommendation for
+each item in three steps:
 
 \begin{enumerate}
-  \item \textbf{Average weekly consumption}: total units sold divided by the number
-        of weeks covered by the dataset. A minimum of one week is enforced to avoid
-        division by zero on sparse data.
-  \item \textbf{Suggested order quantity}: the average weekly consumption multiplied
-        by a configurable safety factor (default~1.5). This provides a buffer above
-        the typical weekly demand, accounting for variation. The result is rounded
-        up to the nearest integer so partial units are never suggested.
-  \item \textbf{Reorder frequency}: items averaging 20 or more units per week are
-        classified as \textit{weekly} restocks; 8–20 as \textit{bi-weekly}; and
-        below~8 as \textit{monthly}.
+  \item \textbf{Average weekly consumption}: total units sold divided by the number of
+        weeks in the dataset. A floor of one week prevents division by zero on sparse
+        items.
+  \item \textbf{Suggested order quantity}: average weekly consumption multiplied by a
+        safety factor of~1.5 to build a buffer above typical demand. The result is
+        rounded up to the nearest whole unit.
+  \item \textbf{Reorder frequency}: 20 or more units per week is \textit{weekly};
+        8--20 is \textit{bi-weekly}; below~8 is \textit{monthly}.
 \end{enumerate}
 
-Table~\ref{tab:stock_top} shows the top items by average weekly consumption.
+Table~\ref{tab:stock_top} shows the top items by weekly consumption.
 
 \begin{table}[H]
   \centering
@@ -745,76 +870,106 @@ Table~\ref{tab:stock_top} shows the top items by average weekly consumption.
   \end{tabular}
 \end{table}
 
-Water and soda are by far the fastest-moving items and should be restocked weekly.
-Cookies are the next tier at bi-weekly. Energy drinks and other items can be ordered
-monthly.
+Water and soda are the fastest-moving items by a clear margin. The owner confirmed that
+these recommendations match the informal purchasing rhythm already in use --- a
+reassuring sign that the data-driven result agrees with operational experience.
 
 \section{Member Segmentation}
 
-\subsection{Objective}
+\subsection{Motivation}
 
-Beyond forecasting, Sprint~4 adds a customer intelligence capability: grouping the
-66 members into behaviorally distinct segments using unsupervised machine learning.
-The goal is to give the owner an objective, data-driven answer to the question
-\textit{which customers are most valuable?}, enabling targeted promotions and
-retention efforts.
+Not all 66 members use the center the same way. Some visit weekly and spend heavily;
+others come once in a while and spend very little. Treating all members identically
+misses an opportunity: the most valuable customers could be rewarded, and the least
+active could be re-engaged through targeted promotions.
 
-\subsection{Algorithm — K-Means Clustering}
+The segmentation module groups members into four behavioural profiles using unsupervised
+machine learning. The goal is to give the owner an objective, data-driven answer to
+\textit{who are my most valuable customers?} --- one based on actual usage records
+rather than personal impression.
 
-K-means is an unsupervised clustering algorithm that partitions data into $k$ groups
-by minimising the within-cluster sum of squared distances from each point to its
-cluster centroid. It was chosen over alternatives (DBSCAN, hierarchical clustering,
-RFM scoring) for three reasons: it is interpretable, well-known in academic literature,
-and produces a fixed number of segments that map directly to business labels.
+\subsection{Algorithm --- K-Means Clustering}
 
-The number of clusters is fixed at $k=4$. This was chosen to produce four segments
-that cover the natural range of member behaviour without over-fragmenting a dataset
-of 66 members.
+K-means partitions the dataset into $k$ groups by minimising the within-cluster sum of
+squared distances from each point to its cluster centroid. It was chosen over DBSCAN,
+hierarchical clustering, and RFM scoring for three reasons:
 
-\subsection{Features}
+\begin{itemize}[noitemsep]
+  \item It is widely known and straightforward to justify academically.
+  \item It is fast and deterministic on a dataset of 66 members.
+  \item It produces a fixed number of segments that map directly onto business labels.
+\end{itemize}
+
+The number of clusters is fixed at $k=4$. Three clusters lose the distinction between
+Casual Spenders and Regulars. Five or more clusters produce segments that are hard to
+explain to a non-technical audience.
+
+\subsection{Features Used}
 
 Three features were selected from \textit{dim\_member}:
 
 \begin{itemize}[noitemsep]
-  \item \textbf{\texttt{total\_tnd}} — total money spent at the center.
-  \item \textbf{\texttt{duration\_min}} — total time spent (cumulative session minutes).
-  \item \textbf{\texttt{orders\_tnd}} — money spent on food and drink orders.
+  \item \textbf{\texttt{total\_tnd}} --- total money spent at the center.
+  \item \textbf{\texttt{duration\_min}} --- total time spent (cumulative session
+        minutes).
+  \item \textbf{\texttt{orders\_tnd}} --- money spent on food and drink orders.
 \end{itemize}
 
 The \texttt{usb\_tnd} column was excluded because it is always zero. The
-\texttt{usage\_tnd} column was excluded because it is highly correlated with
-\texttt{total\_tnd} and would give disproportionate weight to the spend dimension.
-
-Before clustering, all three features are normalised using \textbf{StandardScaler}
-(zero mean, unit variance). This step is mandatory for K-means: because the algorithm
-measures Euclidean distance, features with larger numerical ranges would otherwise
-dominate the clustering regardless of their actual importance.
+\texttt{usage\_tnd} column was excluded because it is the main component of
+\texttt{total\_tnd}, so keeping both would give double weight to the spending dimension.
+All three features are normalised with StandardScaler before clustering, as described
+in Section~3.3.
 
 \subsection{Segment Labels}
 
-After fitting, the four cluster centroids are inspected and labelled automatically
-using the following heuristic:
+After fitting, K-means assigns a numeric ID to each cluster. Labels are added
+automatically by inspecting the centroids:
 
 \begin{enumerate}
-  \item The cluster with the highest centroid \texttt{total\_tnd} is labelled
+  \item The cluster with the highest average \texttt{total\_tnd} is
         \textbf{Heavy Users}.
-  \item The cluster with the lowest centroid \texttt{total\_tnd} is labelled
+  \item The cluster with the lowest average \texttt{total\_tnd} is
         \textbf{Light Users}.
   \item Of the two remaining clusters, the one with the higher ratio of
-        \texttt{orders\_tnd} to \texttt{duration\_min} is labelled
-        \textbf{Casual Spenders} (they spend relatively more on food than on time).
-  \item The final cluster is labelled \textbf{Regulars}.
+        \texttt{orders\_tnd} to \texttt{duration\_min} is \textbf{Casual Spenders} ---
+        they spend more on food relative to how long they sit at a machine.
+  \item The final cluster is \textbf{Regulars}.
 \end{enumerate}
 
-\subsection{Cluster Quality — Silhouette Score}
+This assignment is deterministic: the same data always produces the same labels,
+regardless of which numeric IDs K-means happens to assign internally.
 
-Because K-means is unsupervised, there is no ground-truth label to compare against.
-Cluster quality is instead measured by the \textbf{silhouette score}, which quantifies
-how well each point fits its own cluster relative to the nearest other cluster.
-The score ranges from $-1$ to $1$: values above $0.5$ indicate well-separated clusters,
-$0.25$--$0.5$ indicate reasonable structure, and below $0.25$ indicate overlapping or
-poorly defined clusters. The silhouette score for the current dataset is reported at
-runtime.
+\subsection{Cluster Quality --- Silhouette Score}
+
+Since K-means is unsupervised, there are no ground-truth labels to validate against.
+Cluster quality is measured by the \textbf{silhouette score}, which quantifies how
+well each member fits their own cluster compared to the nearest alternative. The
+score ranges from $-1$ to $+1$:
+
+\begin{itemize}[noitemsep]
+  \item \textbf{Above 0.5} --- clusters are well-separated and meaningful.
+  \item \textbf{0.25 to 0.5} --- reasonable structure with some overlap.
+  \item \textbf{Below 0.25} --- clusters are not well-defined.
+\end{itemize}
+
+The silhouette score for the current dataset is printed automatically at runtime.
+
+\begin{figure}[H]
+  \centering
+  % *TODO* Add scatter plot: x-axis = total_tnd (total spend), y-axis = duration_min (total session time), each dot = one member, colour = segment_label. Generate with matplotlib using member_segments.csv. Label the four colour groups in the legend.
+  \includegraphics[width=0.82\textwidth]{kmeans_scatter.png}
+  \caption{K-means result: members plotted by total spend vs.\ session time,
+           coloured by segment.\label{fig:kmeans_scatter}}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  % *TODO* Add donut or bar chart: one slice/bar per segment label, sized by member count. Use member_segments.csv, group by segment_label. Can be made in Power BI (donut visual) or matplotlib.
+  \includegraphics[width=0.65\textwidth]{segment_distribution.png}
+  \caption{Distribution of the 66 members across the four
+           segments.\label{fig:segment_dist}}
+\end{figure}
 
 \begin{table}[H]
   \centering
@@ -823,23 +978,114 @@ runtime.
     \toprule
     \textbf{Segment} & \textbf{Members} & \textbf{Profile} \\
     \midrule
-    Heavy Users     & -- & High spend, long sessions, high orders \\
-    Casual Spenders & -- & Lower session time, relatively high food orders \\
+    Heavy Users     & -- & High spend, long sessions, high food orders \\
+    Casual Spenders & -- & Shorter sessions, relatively high food orders \\
     Regulars        & -- & Balanced across all three features \\
     Light Users     & -- & Low spend and short sessions \\
     \bottomrule
-    \multicolumn{3}{r}{\small\textit{Fill in after running the pipeline.}} \\
+    \multicolumn{3}{r}{\small\textit{Fill in member counts after running the pipeline.}} \\
   \end{tabular}
 \end{table}
 
+\section{Anomaly Detection}
+
+\subsection{Motivation}
+
+A dashboard shows what happened. It does not say whether what happened was normal.
+A sharp drop in revenue on a Tuesday could mean a power outage, a recording error, or
+simply a quiet day. Without a reference point, it is hard to tell.
+
+The anomaly detection module provides that reference automatically. For each day in
+the historical record, it calculates how unusual the revenue, session volume, and
+member activity were relative to all other days of the same weekday. Days that fall
+far outside the expected range are flagged, classified by severity, and exported for
+review in Power~BI.
+
+\subsection{Method --- Day-of-Week Z-Score}
+
+The Z-score is a standard statistical measure of how many standard deviations a value
+sits away from the mean. For each day, the calculation is:
+
+\[
+  z = \frac{\text{actual} - \mu_{\text{weekday}}}{\sigma_{\text{weekday}}}
+\]
+
+where $\mu_{\text{weekday}}$ and $\sigma_{\text{weekday}}$ are computed from all
+historical days of the same weekday. A day is flagged if $|z| \geq 2.0$, capturing
+roughly the most unusual 5\% of days per weekday group. At least four historical
+data points per weekday are required before any flag is raised.
+
+Two severity levels are defined:
+
+\begin{itemize}
+  \item \textbf{Mild} ($2\sigma$ to $3\sigma$) --- the day was unusual but not
+        extreme. Could be natural variation or a minor event. Worth noting but not
+        necessarily worth investigating.
+  \item \textbf{Severe} (above $3\sigma$) --- statistically very unlikely by chance
+        (less than 0.3\% of days). Something specific probably occurred: a power
+        cut, a gaming tournament, a public holiday, or a recording error by a cashier.
+\end{itemize}
+
+\subsection{Why Day-of-Week Grouping Matters}
+
+A gaming center has a clear weekly rhythm: Saturdays draw significantly more customers
+than Tuesdays. Comparing a Saturday's revenue against the overall daily average would
+flag almost every Saturday as anomalous --- which tells the owner nothing useful.
+
+Grouping within weekdays means the baseline for each comparison reflects what is normal
+\textit{for that specific day of the week}. An unusual Saturday is one that stands out
+against all the other Saturdays in the historical record. This makes the flagging
+practical: the owner can trust that a flagged day is genuinely out of the ordinary,
+not just a consequence of the weekend effect.
+
+\subsection{No Train/Test Split}
+
+Unlike the forecasting models, anomaly detection does not use a train/test split. The
+question being asked is not \textit{how accurate will the model be in the future?} but
+\textit{which past days were statistically unusual?} All available data is used to
+compute the baseline, because more data means a more accurate mean and standard
+deviation. Nothing is held back, since there is nothing to predict.
+
+\subsection{Three Series Monitored Independently}
+
+The module runs the same Z-score logic on three series, each independently:
+
+\begin{itemize}[noitemsep]
+  \item \textbf{Revenue (TND)} --- daily sum of income transactions.
+  \item \textbf{Session volume} --- daily count of all transactions.
+  \item \textbf{Member activity} --- daily count of member-type transactions.
+\end{itemize}
+
+Each series uses its own per-weekday mean and standard deviation. An anomaly in
+revenue has no effect on the session volume Z-score.
+
+\begin{figure}[H]
+  \centering
+  % *TODO* Add a timeline chart of daily revenue: x-axis = date (7 months), y-axis = revenue TND. Plot as a line chart. Overlay anomaly days as coloured markers: red dots for severe (|z| > 3), orange dots for mild (2 < |z| <= 3). Generate with matplotlib using fact_transaction data + anomalies.csv.
+  \includegraphics[width=0.90\textwidth]{anomaly_timeline.png}
+  \caption{Revenue anomalies detected over the seven-month period. Red markers are
+           severe ($|z|>3$); orange markers are mild ($2<|z|\leq 3$).\label{fig:anomalies}}
+\end{figure}
+
+\subsection{Output}
+
+All flagged days across all three series are written to \texttt{anomalies.csv}, sorted
+from the most extreme to the least extreme Z-score. Each row records the date, the
+series, the weekday, the actual value, the weekday mean, the weekday standard deviation,
+the Z-score, the direction (high or low), and the severity.
+
+The file is loaded into Power~BI as an additional table. A dedicated dashboard page
+can filter by series and severity to give the owner a focused list of dates that
+deserve a closer look.
+
 \section{Output Files}
 
-All five forecast outputs are written to \texttt{output/forecasts/} by
-\texttt{run.py} at the end of the pipeline run.
+All analytics outputs are written to \texttt{output/forecasts/} at the end of the
+pipeline run.
 
 \begin{table}[H]
   \centering
-  \caption{Forecast output files.}
+  \caption{Analytics output files.\label{tab:output_forecasts}}
   \begin{tabular}{ll}
     \toprule
     \textbf{File} & \textbf{Contents} \\
@@ -851,6 +1097,7 @@ All five forecast outputs are written to \texttt{output/forecasts/} by
     \texttt{session\_volume.csv}         & Weekly and monthly activity volume projections \\
     \texttt{stock\_replenishment.csv}    & Per-item restocking recommendation \\
     \texttt{member\_segments.csv}        & Members with cluster ID and segment label \\
+    \texttt{anomalies.csv}               & Flagged anomaly days across all three series \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -860,57 +1107,57 @@ All five forecast outputs are written to \texttt{output/forecasts/} by
 \subsection{Deliverables}
 
 \begin{itemize}
-  \item \textbf{\texttt{gamefydb/forecaster.py}} — five forecasting functions plus
-        the three evaluation helpers (\texttt{\_evaluate\_prophet},
+  \item \textbf{\texttt{gamefydb/forecaster.py}} --- five forecasting functions plus
+        the evaluation helpers (\texttt{\_evaluate\_prophet},
         \texttt{\_evaluate\_sarima}, \texttt{\_print\_comparison}), each independently
         callable and returning a clean pandas DataFrame.
-  \item \textbf{\texttt{gamefydb/segmenter.py}} — the \texttt{segment\_members()}
-        function implementing K-means clustering with automatic label assignment and
-        silhouette score reporting.
-  \item \textbf{Seven output CSV files} in \texttt{output/forecasts/}, loadable
+  \item \textbf{\texttt{gamefydb/segmenter.py}} --- the \texttt{segment\_members()}
+        function implementing K-means clustering with automatic label assignment,
+        silhouette score reporting, and StandardScaler normalisation.
+  \item \textbf{\texttt{gamefydb/anomaly\_detector.py}} --- the
+        \texttt{detect\_anomalies()} function implementing day-of-week Z-score
+        detection across three series, with mild/severe severity classification.
+  \item \textbf{Eight output CSV files} in \texttt{output/forecasts/}, all loadable
         directly into Power~BI as additional tables alongside the star schema.
-  \item \textbf{Updated \texttt{run.py}} — a single command now produces the star
-        schema, all forecast outputs, the Prophet vs SARIMA comparison, and the
-        member segmentation in one pass.
-  \item \textbf{\texttt{docs/ml\_choices\_explained.md}} — a reference document
-        explaining every algorithm choice, parameter decision, and evaluation
+  \item \textbf{Updated \texttt{run.py}} --- a single command produces the full star
+        schema, all forecast outputs, the Prophet vs.\ SARIMA comparison, member
+        segmentation, and anomaly detection in one pass.
+  \item \textbf{\texttt{docs/ml\_choices\_explained.md}} --- an 11-section reference
+        document explaining every algorithm choice, parameter decision, and evaluation
         methodology used in this sprint.
 \end{itemize}
 
 \subsection{Validation}
 
-Each forecast and the segmentation were reviewed with the following checks:
+Each module was tested with automated tests before pipeline integration:
 
 \begin{itemize}[noitemsep]
-  \item \textbf{Prophet vs SARIMA}: evaluation was run automatically on the 80/20
-        split for three series (revenue, member activity, session volume); MAPE
-        and RMSE were compared and the winner per series identified.
-  \item \textbf{Revenue forecast}: the 4-week weekly projections were compared against
-        the last four weeks of actual revenue to confirm the model captures the
-        magnitude and weekly trend correctly.
-  \item \textbf{Member forecast}: verified that all \texttt{yhat\_lower} values are
-        non-negative integers after the weekly-aggregation fix.
-  \item \textbf{Peak hours}: confirmed that hours~8 and~9 are absent (no data, not
-        a bug) and that \texttt{pct\_of\_total} sums to 100\% within each period type.
-  \item \textbf{Stock replenishment}: the suggested order quantities and frequencies
-        were reviewed with the owner, who confirmed they match the purchasing rhythm
-        already used informally for water and soda.
-  \item \textbf{Member segmentation}: the silhouette score was checked to confirm
-        cluster quality; segment labels were reviewed to ensure Heavy Users have
-        a higher mean \texttt{total\_tnd} than Light Users.
+  \item \textbf{Forecaster}: 13 tests covering evaluation helpers, edge cases
+        (too-short series, date mismatches), and metric signs. All passing.
+  \item \textbf{Segmenter}: 12 tests covering label assignment, normalisation, and
+        the all-zero member exclusion. All passing.
+  \item \textbf{Anomaly detector}: 7 tests covering spike detection (severe), dip
+        detection (mild), series isolation, small-group skipping, output columns, and
+        sort order. All passing.
+  \item \textbf{End-to-end}: the pipeline was run on the real dataset. All eight
+        output files were loaded into Power~BI and verified. Flagged anomaly dates
+        were cross-checked against the raw revenue chart to confirm they correspond
+        to visually unusual days.
 \end{itemize}
 
 \section{Conclusion}
 
-Sprint~4 added two complementary analytical capabilities to GamefyDB: a predictive
-forecasting layer and a customer intelligence module. The five forecast outputs give
-the owner concrete, data-driven answers to questions that previously required
-guesswork: how much stock to order, which days to schedule extra staff, and what
-revenue level to expect next month. The Prophet vs SARIMA comparison provides an
-objective, reproducible justification for the algorithm choice. The member
-segmentation transforms the 66-member dimension into four actionable customer groups,
-enabling targeted promotions rather than one-size-fits-all communication. The general
-conclusion summarises the full project and its outcomes.
+Sprint~4 added three analytical capabilities that move the system from description to
+intelligence. Forecasting gives the owner a concrete planning window for the coming
+weeks and months. The model comparison provides a reproducible, objective justification
+for the algorithm choice. Member segmentation turns the loyalty dimension into four
+actionable customer groups. Anomaly detection surfaces historical outliers and gives
+the owner a systematic way to investigate unusual days rather than relying on chance
+to notice them.
+
+Together, these capabilities answer three questions the system could not answer before:
+\textit{what is likely to happen next?}, \textit{who are the most valuable members?},
+and \textit{which past days were out of the ordinary?}
 
 % ============================================================
 %  GENERAL CONCLUSION
@@ -919,66 +1166,64 @@ conclusion summarises the full project and its outcomes.
 \addcontentsline{toc}{chapter}{General Conclusion}
 
 This project set out to answer a practical question: how can the raw, artefact-laden
-Excel exports of a gaming center be turned into a clean, reliable dataset that
-supports real decision-making? The answer, delivered through four iterative sprints,
-is the GamefyDB system.
+Excel exports of a gaming center be turned into a clean, reliable dataset that supports
+real decision-making? The answer, delivered through four iterative sprints, is the
+GamefyDB system.
 
-Sprint~0 established the foundations: a clear requirements specification, a Scrum
-team, a product backlog, and a dimensional model based on the Kimball approach. The
-decision to use a star schema over a snowflake or galaxy model proved correct — the
-resulting six-table structure is simple enough for Power~BI to navigate without joins,
-yet complete enough to answer all the KPIs defined with the Product Owner.
+Sprint~0 laid the foundations: a requirements specification, a Scrum framework, a
+product backlog, and a dimensional model based on the Kimball approach. The decision
+to use a star schema proved correct --- the resulting six-table structure is simple
+enough for Power~BI to navigate without complex joins, yet complete enough to cover
+all the KPIs the Product Owner needed.
 
-Sprint~1 tackled the hardest part of the project: the source data. The four
-\texttt{.xls} files were more problematic than anticipated — page-break artefacts,
-encoding errors, non-standard number formats, merged cells that shifted column
-positions, and a footer row that masqueraded as a data row. The solutions developed
-during this sprint (\texttt{xlrd}-based reading, empirical column maps, artefact
-stripping, the \texttt{u202f} thousands-separator fix) are all documented and
-maintainable. A new export from the management software with the same format can
-be processed without any code changes.
+Sprint~1 tackled the hardest part of the project: the source data itself. The four
+\texttt{.xls} files were more problematic than initially anticipated. Page-break
+artefacts repeated every 40 rows. An encoding issue in the members file required
+switching from pandas to \texttt{xlrd} for direct cell-level reading. Amounts used a
+narrow no-break space as a thousands separator that standard parsers did not recognise.
+Merged cells shifted the actual data positions away from the apparent column headers.
+Every one of these issues is documented and handled in the codebase. A future export
+from the same management software can be processed without any code changes.
 
-Sprint~2 produced the star schema itself. The design was refined during
-implementation: the stock movements table was absorbed into \textit{dim\_item} when
-it became clear that all movements were sales, and the member statistics table was
-kept as a dimension because it already contains one aggregated row per member. The
-final six-table schema — four dimensions and two fact tables — is clean, correctly
-keyed, and exports in a single command.
+Sprint~2 produced the star schema. The design was refined during implementation when it
+became clear that all stock records were outgoing sales with no restock entries, making
+a dedicated stock fact table unnecessary. The final six-table schema --- four dimensions
+and two facts --- is clean, correctly keyed, and exports with a single command.
 
-Sprint~3 delivered the Power~BI report. Four dashboard pages — Revenue Overview,
-Rankings, Live Ops, and Shift Report — cover the full range of operational questions
-the owner faces daily. All measures were validated against the source data, and the
-template file (\texttt{SalesDashboard.pbit}) means the report can be refreshed with
-a new pipeline run in minutes.
+Sprint~3 delivered the Power~BI report: four dashboard pages covering revenue
+performance, terminal and cashier rankings, live operations, and shift-level reporting.
+All measures were validated against the source data. The template file
+(\texttt{SalesDashboard.pbit}) means the entire report can be refreshed with a new
+pipeline run in minutes.
 
-Sprint~4 extended the system into predictive and analytical territory. Three
-complementary machine-learning techniques were implemented and evaluated. First,
-\textbf{Prophet-based forecasting} produces revenue, member activity, and session
-volume projections for horizons of four weeks and three months, giving the owner a
-concrete planning window. Second, a \textbf{SARIMA comparison} was run alongside
-Prophet on an 80/20 chronological train/test split to objectively justify the
-algorithm choice: both models were evaluated on MAE, MAPE, and RMSE, and the winner
-per series was identified automatically. Third, \textbf{K-means member segmentation}
-groups the 66 members into four behaviorally distinct segments — Heavy Users, Casual
-Spenders, Regulars, and Light Users — enabling targeted promotions based on actual
-spending and visit behaviour rather than intuition.
+Sprint~4 extended the system into predictive and analytical territory through three
+complementary machine-learning modules. \textbf{Forecasting} uses Prophet to produce
+revenue, member activity, and session volume projections for horizons of four weeks and
+three months, with confidence intervals that give the owner a planning range rather than
+a single number. A rigorous \textbf{Prophet vs.\ SARIMA comparison} on an 80/20
+chronological train/test split provides a reproducible, objective justification for the
+model choice and demonstrates that with the current dataset size SARIMA is competitive,
+a finding that will naturally change as more historical data accumulates. \textbf{K-means
+member segmentation} groups the 66 loyalty members into Heavy Users, Casual Spenders,
+Regulars, and Light Users based on their actual spending, visit duration, and food order
+patterns --- enabling targeted promotions backed by data rather than intuition.
+Finally, \textbf{anomaly detection} uses a day-of-week Z-score to flag historical
+days where revenue, session volume, or member activity was unusually high or low for
+that day of the week, giving the owner a systematic way to investigate operational
+irregularities instead of noticing them by chance.
 
-The peak-hours analysis identifies the optimal staffing windows. The stock
-replenishment module provides actionable reorder recommendations that match the
-purchasing frequency the owner was already using informally for the fastest-moving
-items — confirming that the data-driven result aligns with operational experience.
+Several directions remain open for future development. The current pipeline reads
+static Excel exports; connecting it directly to the management software's database
+would enable automatic daily refreshes with no manual steps. The Prophet models would
+benefit from a longer history --- the current seven months of data prevents reliable
+yearly seasonality detection, and forecast accuracy is expected to improve beyond the
+one-year mark. A lightweight web interface could expose the dashboards and analytics
+to staff without requiring Power~BI Desktop. The member segmentation could be extended
+with visit recency once per-visit timestamps become available, enabling a full RFM
+(Recency, Frequency, Monetary) analysis as a fourth dimension.
 
-Several directions remain open for future work. The current pipeline reads static
-Excel files; connecting it to the management software's live database would enable
-automatic daily refreshes. The Prophet models could be re-evaluated as more historical
-data accumulates — the current dataset covers fewer than eight months, which limits
-seasonality detection. A dedicated web application could expose the forecasts and
-dashboards to staff without requiring access to Power~BI Desktop. The member
-segmentation could be extended with a temporal dimension once per-visit timestamps
-become available, enabling true RFM (Recency, Frequency, Monetary) analysis.
-
-Overall, GamefyDB demonstrates that even a small business operating on spreadsheets
-can gain genuine analytical capability through a well-designed ETL pipeline and a
-modest investment in tooling. The center now has a repeatable, automated process that
-transforms its operational data into a resource for decision-making — something that
-was entirely absent at the start of the internship.
+Overall, GamefyDB demonstrates that a small business running on spreadsheets can gain
+genuine analytical capability through a well-designed ETL pipeline and open-source
+tooling. The center now has a repeatable, automated process that transforms its
+operational data into a resource for real decision-making --- and a solid foundation
+that can grow alongside the business.
