@@ -1,7 +1,5 @@
 import pandas as pd
 import pytest
-from io import StringIO
-from unittest.mock import patch
 from pathlib import Path
 from chatbot.data_loader import DataContext, _build_schemas, _build_summary, recent_anomaly_count, load_data, CSV_MAP
 
@@ -57,7 +55,7 @@ def test_build_summary_includes_revenue():
 def test_build_summary_includes_member_count():
     tables = _make_tables()
     summary = _build_summary(tables)
-    assert "2" in summary
+    assert "Total members: 2" in summary
 
 
 def test_recent_anomaly_count_today():

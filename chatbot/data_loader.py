@@ -55,7 +55,10 @@ def _build_summary(tables: dict) -> str:
         df = tables["fact_transaction"].copy()
         income = df[df["type"] == "Income"]["amount"].sum()
         df["date"] = pd.to_datetime(df["date"])
-        date_range = f"{df['date'].min().date()} to {df['date'].max().date()}"
+        if len(df) > 0:
+            date_range = f"{df['date'].min().date()} to {df['date'].max().date()}"
+        else:
+            date_range = "no data"
         parts.append(f"Total revenue: {income:,.2f} TND | Data range: {date_range}")
     if "dim_member" in tables:
         parts.append(f"Total members: {len(tables['dim_member'])}")
