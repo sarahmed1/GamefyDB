@@ -15,6 +15,7 @@ def make_chart(chart_spec: dict, tables: dict):
         df = tables[source].copy()
 
         filter_expr = chart_spec.get("filter", "")
+        # filter_expr comes from Claude's structured JSON output, not raw user input
         if filter_expr:
             df = df.query(filter_expr)
 

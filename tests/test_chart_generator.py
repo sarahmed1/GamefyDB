@@ -1,5 +1,4 @@
 import pandas as pd
-import pytest
 from chatbot.chart_generator import make_chart
 
 
@@ -31,6 +30,7 @@ def test_filter_is_applied():
             "filter": "category == 'Computer Incomes'", "title": "Filtered"}
     fig = make_chart(spec, _tables())
     assert fig is not None
+    assert len(fig.data[0].x) == 2  # filter reduces 3 rows to 2
 
 
 def test_missing_source_returns_none():
