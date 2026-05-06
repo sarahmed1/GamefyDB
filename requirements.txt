@@ -5,3 +5,10 @@ pytest
 prophet
 scikit-learn
 pmdarima
+xgboost
+statsmodels
+streamlit
+plotly
+anthropic
+python-dotenv
+kaleido
