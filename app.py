@@ -24,6 +24,8 @@ STRINGS = {
         "no_chart": "Ask a question — a chart will appear here when relevant.",
         "greeting": "Hi! Ask me anything about your gaming center — revenue, members, forecasts, anomalies, or anything else.",
         "anomaly_greeting": "Hi! I noticed **{n} anomaly(ies)** in the past 7 days. Want me to show you?",
+        "thinking": "Thinking...",
+        "error": "Sorry, something went wrong: {e}",
     },
     "FR": {
         "title": "Assistant GamefyDB",
@@ -37,6 +39,8 @@ STRINGS = {
         "no_chart": "Posez une question — un graphique apparaîtra ici si pertinent.",
         "greeting": "Bonjour ! Posez-moi n'importe quelle question sur votre gaming center.",
         "anomaly_greeting": "Bonjour ! J'ai détecté **{n} anomalie(s)** ces 7 derniers jours. Voulez-vous voir ?",
+        "thinking": "En train de réfléchir...",
+        "error": "Désolé, une erreur s'est produite : {e}",
     },
     "AR": {
         "title": "مساعد GamefyDB",
@@ -50,6 +54,8 @@ STRINGS = {
         "no_chart": "اسأل سؤالاً — سيظهر الرسم البياني هنا عند الحاجة.",
         "greeting": "مرحباً! اسألني أي شيء عن بيانات مركز الألعاب.",
         "anomaly_greeting": "مرحباً! لاحظت **{n} شذوذ(ات)** في آخر 7 أيام. هل تريد أن أريك؟",
+        "thinking": "جارٍ التفكير...",
+        "error": "عذراً، حدث خطأ ما: {e}",
     },
 }
 
@@ -116,28 +122,28 @@ with col_chat:
     # Conversation history
     chat_container = st.container(height=400)
     with chat_container:
-        for msg in st.session_state.messages:
+        for msg_idx, msg in enumerate(st.session_state.messages):
             with st.chat_message(msg["role"], avatar="🤖" if msg["role"] == "assistant" else "👤"):
                 st.markdown(msg["content"])
                 # Suggestion chips after assistant messages
                 if msg["role"] == "assistant" and msg.get("suggestions"):
                     for i, sugg in enumerate(msg["suggestions"]):
-                        if st.button(sugg, key=f"sugg_{id(msg)}_{i}"):
+                        if st.button(sugg, key=f"sugg_{msg_idx}_{i}"):
                             st.session_state.voice_pending = sugg
                             st.rerun()
 
     # Quick action buttons
     qa_col1, qa_col2, qa_col3 = st.columns(3)
     with qa_col1:
-        if st.button(strings["summary_btn"], use_container_width=True):
+        if st.button(strings["summary_btn"], key="qa_summary", use_container_width=True):
             st.session_state.voice_pending = "Give me a full summary of everything"
             st.rerun()
     with qa_col2:
-        if st.button(strings["advice_btn"], use_container_width=True):
+        if st.button(strings["advice_btn"], key="qa_advice", use_container_width=True):
             st.session_state.voice_pending = "What should I focus on improving?"
             st.rerun()
     with qa_col3:
-        if st.button(strings["anomaly_btn"], use_container_width=True):
+        if st.button(strings["anomaly_btn"], key="qa_anomaly", use_container_width=True):
             st.session_state.voice_pending = "Show me recent anomalies"
             st.rerun()
 
@@ -152,13 +158,16 @@ with col_chat:
             st.rerun()
 
     with input_col:
+        if st.session_state.voice_pending:
+            st.session_state["user_input_field"] = st.session_state.voice_pending
         user_text = st.text_input(
             "",
-            value=st.session_state.voice_pending or "",
             placeholder=strings["placeholder"],
             label_visibility="collapsed",
             key="user_input_field",
         )
+        if st.session_state.voice_pending and user_text == st.session_state.voice_pending:
+            st.session_state.voice_pending = None
     with send_col:
         send_clicked = st.button(strings["send"], type="primary", use_container_width=True)
 
@@ -171,22 +180,28 @@ with col_chat:
 
     if query:
         st.session_state.voice_pending = None
-        # Add user message
         st.session_state.messages.append({"role": "user", "content": query, "chart_spec": None, "suggestions": []})
-        # Call agent
         from chatbot.agent import ask
-        with st.spinner("Thinking..."):
-            result = ask(ctx, [{"role": m["role"], "content": m["content"]} for m in st.session_state.messages[:-1]], query, st.session_state.language)
-        # Add assistant message
-        st.session_state.messages.append({
-            "role": "assistant",
-            "content": result["answer"],
-            "chart_spec": result["chart_spec"],
-            "suggestions": result["suggestions"],
-        })
-        # Update chart
-        if result["chart_spec"]:
-            from chatbot.chart_generator import make_chart
-            st.session_state.current_chart = make_chart(result["chart_spec"], ctx.tables)
-            st.session_state.last_chart_spec = result["chart_spec"]
-        st.rerun()
+        try:
+            with st.spinner(strings["thinking"]):
+                result = ask(ctx, [{"role": m["role"], "content": m["content"]} for m in st.session_state.messages[:-1]], query, st.session_state.language)
+        except Exception as e:
+            st.session_state.messages.append({
+                "role": "assistant",
+                "content": strings["error"].format(e=e),
+                "chart_spec": None,
+                "suggestions": [],
+            })
+            st.rerun()
+        else:
+            st.session_state.messages.append({
+                "role": "assistant",
+                "content": result["answer"],
+                "chart_spec": result["chart_spec"],
+                "suggestions": result["suggestions"],
+            })
+            if result["chart_spec"]:
+                from chatbot.chart_generator import make_chart
+                st.session_state.current_chart = make_chart(result["chart_spec"], ctx.tables)
+                st.session_state.last_chart_spec = result["chart_spec"]
+            st.rerun()
