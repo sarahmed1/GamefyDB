@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { margin: 0; background: transparent; font-family: sans-serif; }
+    #micBtn {
+      background: #374151; border: none; border-radius: 50%;
+      width: 36px; height: 36px; cursor: pointer; font-size: 16px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    #micBtn:hover { background: #4b5563; }
+    #micBtn.listening { background: #dc2626; }
+    #status { font-size: 11px; color: #9ca3af; margin-left: 8px; }
+    .row { display: flex; align-items: center; }
+  </style>
+</head>
+<body>
+  <div class="row">
+    <button id="micBtn" onclick="startListening()" title="Click to speak">🎤</button>
+    <span id="status"></span>
+  </div>
+  <script>
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    let lang = "en-US";
+
+    // Receive lang from Streamlit
+    window.addEventListener("message", (e) => {
+      if (e.data.type === "streamlit:render" && e.data.args && e.data.args.lang) {
+        lang = e.data.args.lang;
+      }
+    });
+
+    // Signal ready + height
+    window.parent.postMessage({ type: "streamlit:componentReady", apiVersion: 1 }, "*");
+    window.parent.postMessage({ type: "streamlit:setFrameHeight", height: 44 }, "*");
+
+    function sendValue(val) {
+      window.parent.postMessage({ type: "streamlit:setComponentValue", value: val }, "*");
+    }
+
+    function startListening() {
+      if (!SpeechRecognition) {
+        document.getElementById("status").textContent = "Not supported (use Chrome)";
+        return;
+      }
+      const recognition = new SpeechRecognition();
+      recognition.lang = lang;
+      recognition.continuous = false;
+      recognition.interimResults = false;
+
+      const btn = document.getElementById("micBtn");
+      const status = document.getElementById("status");
+
+      recognition.onstart = () => {
+        btn.textContent = "🔴";
+        btn.classList.add("listening");
+        status.textContent = "Listening...";
+      };
+      recognition.onresult = (e) => {
+        const text = e.results[0][0].transcript;
+        btn.textContent = "🎤";
+        btn.classList.remove("listening");
+        status.textContent = "✓ " + text;
+        sendValue(text);
+      };
+      recognition.onerror = () => {
+        btn.textContent = "🎤";
+        btn.classList.remove("listening");
+        status.textContent = "Could not hear — try again";
+      };
+      recognition.onend = () => {
+        btn.textContent = "🎤";
+        btn.classList.remove("listening");
+      };
+      recognition.start();
+    }
+  </script>
+</body>
+</html>
