@@ -25,7 +25,7 @@ def test_parse_chart_spec():
     assert result["chart_spec"] is not None
     assert result["chart_spec"]["type"] == "bar"
     assert result["chart_spec"]["source"] == "fact_transaction"
-    assert "Revenue" in result["answer"]
+    assert "revenue" in result["answer"].lower()
 
 
 def test_parse_suggestions():

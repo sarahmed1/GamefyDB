@@ -38,11 +38,16 @@ Instructions:
 
 
 def ask(ctx: DataContext, messages: list, user_message: str, language: str) -> dict:
-    client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
+    api_key = os.environ.get("ANTHROPIC_API_KEY")
+    if not api_key:
+        raise RuntimeError(
+            "ANTHROPIC_API_KEY is not set. Copy .env.example to .env and add your key."
+        )
+    client = anthropic.Anthropic(api_key=api_key)
     history = list(messages) + [{"role": "user", "content": user_message}]
     response = client.messages.create(
         model="claude-sonnet-4-6",
-        max_tokens=1024,
+        max_tokens=2048,
         system=build_system_prompt(ctx, language),
         messages=history,
     )
@@ -68,6 +73,4 @@ def _parse_response(text: str) -> dict:
             pass
 
     answer = re.sub(r'```json.*?```', '', text, flags=re.DOTALL).strip()
-    if chart_spec and "title" in chart_spec:
-        answer = f"{answer} [{chart_spec['title']}]" if answer else chart_spec["title"]
     return {"answer": answer, "chart_spec": chart_spec, "suggestions": suggestions}
