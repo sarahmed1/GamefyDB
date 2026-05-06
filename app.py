@@ -1,5 +1,6 @@
 import streamlit as st
 from dotenv import load_dotenv
+from chatbot.chart_generator import make_chart
 
 load_dotenv()
 
@@ -201,9 +202,10 @@ with col_chat:
                 "suggestions": result["suggestions"],
             })
             if result["chart_spec"]:
-                from chatbot.chart_generator import make_chart
-                st.session_state.current_chart = make_chart(result["chart_spec"], ctx.tables)
-                st.session_state.last_chart_spec = result["chart_spec"]
+                _chart = make_chart(result["chart_spec"], ctx.tables)
+                if _chart is not None:
+                    st.session_state.current_chart = _chart
+                    st.session_state.last_chart_spec = result["chart_spec"]
             st.rerun()
 
 # ── Chart panel (right column) ────────────────────────────────────
@@ -225,7 +227,6 @@ with col_chart:
         with ref_col:
             if st.button(strings["refresh"], key="chart_refresh", use_container_width=True):
                 if st.session_state.last_chart_spec:
-                    from chatbot.chart_generator import make_chart
                     st.session_state.current_chart = make_chart(st.session_state.last_chart_spec, ctx.tables)
                     st.rerun()
     else:
