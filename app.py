@@ -110,3 +110,83 @@ st.divider()
 
 # ── Main layout ────────────────────────────────────────────────────
 col_chat, col_chart = st.columns([1, 1.3])
+
+# ── Chat panel (left column) ───────────────────────────────────────
+with col_chat:
+    # Conversation history
+    chat_container = st.container(height=400)
+    with chat_container:
+        for msg in st.session_state.messages:
+            with st.chat_message(msg["role"], avatar="🤖" if msg["role"] == "assistant" else "👤"):
+                st.markdown(msg["content"])
+                # Suggestion chips after assistant messages
+                if msg["role"] == "assistant" and msg.get("suggestions"):
+                    for i, sugg in enumerate(msg["suggestions"]):
+                        if st.button(sugg, key=f"sugg_{id(msg)}_{i}"):
+                            st.session_state.voice_pending = sugg
+                            st.rerun()
+
+    # Quick action buttons
+    qa_col1, qa_col2, qa_col3 = st.columns(3)
+    with qa_col1:
+        if st.button(strings["summary_btn"], use_container_width=True):
+            st.session_state.voice_pending = "Give me a full summary of everything"
+            st.rerun()
+    with qa_col2:
+        if st.button(strings["advice_btn"], use_container_width=True):
+            st.session_state.voice_pending = "What should I focus on improving?"
+            st.rerun()
+    with qa_col3:
+        if st.button(strings["anomaly_btn"], use_container_width=True):
+            st.session_state.voice_pending = "Show me recent anomalies"
+            st.rerun()
+
+    # Voice + text input row
+    voice_col, input_col, send_col = st.columns([1, 6, 2])
+    with voice_col:
+        from chatbot.voice_component import voice_input
+        transcript = voice_input(language=st.session_state.language)
+        if transcript and transcript != st.session_state.get("_last_transcript"):
+            st.session_state["_last_transcript"] = transcript
+            st.session_state.voice_pending = transcript
+            st.rerun()
+
+    with input_col:
+        user_text = st.text_input(
+            "",
+            value=st.session_state.voice_pending or "",
+            placeholder=strings["placeholder"],
+            label_visibility="collapsed",
+            key="user_input_field",
+        )
+    with send_col:
+        send_clicked = st.button(strings["send"], type="primary", use_container_width=True)
+
+    # Handle send
+    query = None
+    if send_clicked and user_text.strip():
+        query = user_text.strip()
+    elif st.session_state.voice_pending and not user_text.strip():
+        query = st.session_state.voice_pending
+
+    if query:
+        st.session_state.voice_pending = None
+        # Add user message
+        st.session_state.messages.append({"role": "user", "content": query, "chart_spec": None, "suggestions": []})
+        # Call agent
+        from chatbot.agent import ask
+        with st.spinner("Thinking..."):
+            result = ask(ctx, [{"role": m["role"], "content": m["content"]} for m in st.session_state.messages[:-1]], query, st.session_state.language)
+        # Add assistant message
+        st.session_state.messages.append({
+            "role": "assistant",
+            "content": result["answer"],
+            "chart_spec": result["chart_spec"],
+            "suggestions": result["suggestions"],
+        })
+        # Update chart
+        if result["chart_spec"]:
+            from chatbot.chart_generator import make_chart
+            st.session_state.current_chart = make_chart(result["chart_spec"], ctx.tables)
+            st.session_state.last_chart_spec = result["chart_spec"]
+        st.rerun()
