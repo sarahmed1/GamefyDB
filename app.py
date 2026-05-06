@@ -205,3 +205,35 @@ with col_chat:
                 st.session_state.current_chart = make_chart(result["chart_spec"], ctx.tables)
                 st.session_state.last_chart_spec = result["chart_spec"]
             st.rerun()
+
+# ── Chart panel (right column) ────────────────────────────────────
+with col_chart:
+    st.markdown("**Chart**")
+    if st.session_state.current_chart is not None:
+        st.plotly_chart(st.session_state.current_chart, use_container_width=True)
+
+        dl_col, ref_col = st.columns(2)
+        with dl_col:
+            chart_html = st.session_state.current_chart.to_html(full_html=True, include_plotlyjs="cdn")
+            st.download_button(
+                label=strings["download"],
+                data=chart_html,
+                file_name="gamefydb_chart.html",
+                mime="text/html",
+                use_container_width=True,
+            )
+        with ref_col:
+            if st.button(strings["refresh"], key="chart_refresh", use_container_width=True):
+                if st.session_state.last_chart_spec:
+                    from chatbot.chart_generator import make_chart
+                    st.session_state.current_chart = make_chart(st.session_state.last_chart_spec, ctx.tables)
+                    st.rerun()
+    else:
+        st.markdown(
+            f"""<div style="display:flex;align-items:center;justify-content:center;
+            height:300px;color:#64748b;font-size:14px;text-align:center;
+            background:#1e293b;border-radius:8px;padding:2rem;">
+            {strings['no_chart']}
+            </div>""",
+            unsafe_allow_html=True,
+        )
