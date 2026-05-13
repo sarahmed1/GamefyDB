@@ -209,10 +209,19 @@ def _sarima_test_preds(df, split, m_period):
 def _mae(actual, pred): return float(np.abs(actual - pred).mean())
 def _rmse(actual, pred): return float(np.sqrt(((actual - pred) ** 2).mean()))
 def _mape(actual, pred):
-    nz = actual != 0
-    if not nz.any():
+    """Weighted MAPE = MAE / mean(actual) * 100.
+
+    Matches the wMAPE reported by forecaster._evaluate_* and the Chapter 6
+    table; arithmetic MAPE is unstable on near-zero days and was deliberately
+    replaced for this project.
+    """
+    actual = np.asarray(actual, dtype=float)
+    pred   = np.asarray(pred,   dtype=float)
+    mean_actual = float(actual.mean())
+    if mean_actual <= 0 or not np.isfinite(mean_actual):
         return float('nan')
-    return float(np.abs((actual[nz] - pred[nz]) / actual[nz]).mean() * 100)
+    mae = float(np.abs(actual - pred).mean())
+    return mae / mean_actual * 100
 
 
 def _naive_baseline(train, test):
