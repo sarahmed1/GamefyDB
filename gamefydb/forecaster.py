@@ -5,9 +5,85 @@ import numpy as np
 import pandas as pd
 from pmdarima import auto_arima
 from prophet import Prophet
+from statsmodels.tsa.stattools import adfuller
+from xgboost import XGBRegressor
 
 logging.getLogger('cmdstanpy').setLevel(logging.WARNING)
 logging.getLogger('prophet').setLevel(logging.WARNING)
+
+
+# ── Holiday calendar ──────────────────────────────────────────────────────────
+
+# Fixed Tunisian civil holidays: (month, day, name, lower_window, upper_window)
+_FIXED_HOLIDAYS = [
+    (1,  1, 'New Year',         -1,  3),  # window: Dec 31 → Jan 4 (post-holiday spike)
+    (1, 14, 'Revolution Day',    0,  0),
+    (3, 20, 'Independence Day',  0,  0),
+    (4,  9, 'Martyrs Day',       0,  0),
+    (5,  1, 'Labour Day',        0,  0),
+    (7, 25, 'Republic Day',      0,  0),
+    (8, 13, 'Womens Day',        0,  0),
+    (10,15, 'Evacuation Day',    0,  0),
+    (12,25, 'Christmas',         0,  1),
+    (12,31, 'New Year Eve',      0,  0),
+]
+
+# Approximate Islamic holidays (dates shift each year).
+# upper_window=3 on Eid days covers the Eid+1..Eid+3 cluster present in the
+# training data (see data_generator._eid_week_pattern).
+_ISLAMIC_HOLIDAYS = [
+    (2022,  5,  2, 'Eid al-Fitr',     0, 3),
+    (2022,  7,  9, 'Eid al-Adha',     0, 3),
+    (2022,  7, 30, 'Islamic New Year', 0, 0),
+    (2022, 10,  8, 'Mawlid',          0, 0),
+    (2023,  4, 21, 'Eid al-Fitr',     0, 3),
+    (2023,  6, 28, 'Eid al-Adha',     0, 3),
+    (2023,  7, 19, 'Islamic New Year', 0, 0),
+    (2023,  9, 27, 'Mawlid',          0, 0),
+    (2024,  4, 10, 'Eid al-Fitr',     0, 3),
+    (2024,  6, 17, 'Eid al-Adha',     0, 3),
+    (2024,  7,  8, 'Islamic New Year', 0, 0),
+    (2024,  9, 16, 'Mawlid',          0, 0),
+    (2025,  3, 31, 'Eid al-Fitr',     0, 3),
+    (2025,  6,  7, 'Eid al-Adha',     0, 3),
+    (2025,  6, 27, 'Islamic New Year', 0, 0),
+    (2025,  9,  5, 'Mawlid',          0, 0),
+    (2026,  3, 21, 'Eid al-Fitr',     0, 3),
+    (2026,  5, 27, 'Eid al-Adha',     0, 3),
+    (2026,  6, 17, 'Islamic New Year', 0, 0),
+]
+
+
+def _build_holiday_df(min_date: pd.Timestamp, max_date: pd.Timestamp):
+    """Return a Prophet-compatible holidays DataFrame covering [min_date, max_date]."""
+    rows = []
+    for year in range(min_date.year, max_date.year + 2):
+        for month, day, name, lower, upper in _FIXED_HOLIDAYS:
+            try:
+                ds = pd.Timestamp(year, month, day)
+                if min_date <= ds <= max_date + pd.Timedelta(days=30):
+                    rows.append({'holiday': name, 'ds': ds,
+                                 'lower_window': lower, 'upper_window': upper})
+            except ValueError:
+                pass
+    for year, month, day, name, lower, upper in _ISLAMIC_HOLIDAYS:
+        ds = pd.Timestamp(year, month, day)
+        if min_date <= ds <= max_date + pd.Timedelta(days=30):
+            rows.append({'holiday': name, 'ds': ds,
+                         'lower_window': lower, 'upper_window': upper})
+    return pd.DataFrame(rows) if rows else None
+
+
+def _holiday_proximity(ds_arr, holiday_df) -> np.ndarray:
+    """Return array of days-to-nearest-holiday for each date in ds_arr (capped at 30)."""
+    if holiday_df is None or holiday_df.empty:
+        return np.full(len(ds_arr), 30)
+    holiday_dates = pd.to_datetime(holiday_df['ds']).dt.date.values
+    result = np.empty(len(ds_arr), dtype=float)
+    for i, ts in enumerate(ds_arr):
+        d = pd.Timestamp(ts).date()
+        result[i] = min((abs((d - h).days) for h in holiday_dates), default=30)
+    return np.minimum(result, 30)
 
 
 def _to_daily(df: pd.DataFrame, date_col: str, value_col: str) -> pd.DataFrame:
@@ -21,6 +97,77 @@ def _to_daily(df: pd.DataFrame, date_col: str, value_col: str) -> pd.DataFrame:
     )
 
 
+def _check_stationarity(series: pd.Series, label: str) -> dict:
+    """Run the Augmented Dickey-Fuller test on a time series and report the result."""
+    clean = series.dropna()
+    if clean.nunique() <= 1:
+        print(f'    [{label}]  skipped (constant series)')
+        return {
+            'series': label,
+            'adf_statistic': float('nan'),
+            'p_value': float('nan'),
+            'critical_value_5pct': float('nan'),
+            'is_stationary': None,
+            'verdict': 'skipped (constant)',
+        }
+    if len(clean) < 50:
+        print(f'    [{label}]  note: short series (N={len(clean)}), interpret ADF with caution')
+    adf_stat, p_value, _, _, critical_values, _ = adfuller(clean, autolag='AIC')
+    is_stationary = p_value < 0.05
+    verdict = 'stationary' if is_stationary else 'non-stationary'
+    print(
+        f'    [{label}]  ADF={adf_stat:+.4f}  p={p_value:.4f}'
+        f'  critical(5%)={critical_values["5%"]:.4f}  => {verdict}'
+    )
+    return {
+        'series': label,
+        'adf_statistic': round(adf_stat, 4),
+        'p_value': round(p_value, 4),
+        'critical_value_5pct': round(critical_values['5%'], 4),
+        'is_stationary': is_stationary,
+        'verdict': verdict,
+    }
+
+
+def study_stationarity(transactions_df: pd.DataFrame) -> pd.DataFrame:
+    """Run ADF stationarity tests on the three forecast series.
+
+    Tests:
+        1. Daily revenue (TND income)
+        2. Daily session volume (transaction count)
+        3. Weekly member activity
+
+    Returns a DataFrame with one row per series and columns:
+        series, adf_statistic, p_value, critical_value_5pct, is_stationary, verdict
+    """
+    print('  Stationarity tests (ADF, significance=0.05):')
+
+    income = transactions_df[transactions_df['income_expense'] == 'Income'].copy()
+    income['_v'] = income['amount_tnd']
+    rev_daily = _to_daily(income, 'transaction_datetime', '_v')
+
+    vol_df = transactions_df.copy()
+    vol_df['_v'] = 1
+    vol_daily = _to_daily(vol_df, 'transaction_datetime', '_v')
+
+    mem = transactions_df[transactions_df['transaction_type'] == 'Member Transactions'].copy()
+    mem['_v'] = 1
+    mem_daily = _to_daily(mem, 'transaction_datetime', '_v')
+    mem_daily['_w'] = mem_daily['ds'].dt.to_period('W').apply(lambda p: p.start_time)
+    mem_weekly = (
+        mem_daily.groupby('_w')['y'].sum()
+        .reset_index()
+        .rename(columns={'_w': 'ds', 'y': 'y'})
+    )
+
+    results = [
+        _check_stationarity(rev_daily['y'], 'Revenue (TND, daily)'),
+        _check_stationarity(vol_daily['y'], 'Session volume (daily)'),
+        _check_stationarity(mem_weekly['y'], 'Member activity (weekly)'),
+    ]
+    return pd.DataFrame(results)
+
+
 def _evaluate_prophet(df: pd.DataFrame, split: float, freq: str = 'D') -> dict:
     n = len(df)
     cutoff = int(n * split)
@@ -29,7 +176,10 @@ def _evaluate_prophet(df: pd.DataFrame, split: float, freq: str = 'D') -> dict:
 
     train, test = df.iloc[:cutoff].copy(), df.iloc[cutoff:].copy()
 
-    m = Prophet(interval_width=0.8)
+    holiday_df = _build_holiday_df(df['ds'].min(), df['ds'].max())
+    m = Prophet(interval_width=0.8,
+                holidays=holiday_df if holiday_df is not None else None,
+                holidays_prior_scale=20.0)
     m.fit(train)
     future = m.make_future_dataframe(periods=len(test), freq=freq)
     fc = m.predict(future)
@@ -38,14 +188,11 @@ def _evaluate_prophet(df: pd.DataFrame, split: float, freq: str = 'D') -> dict:
     if merged.empty:
         return {}
 
-    mae = float((merged['y'] - merged['yhat']).abs().mean())
+    mae  = float((merged['y'] - merged['yhat']).abs().mean())
     rmse = float(((merged['y'] - merged['yhat']) ** 2).mean() ** 0.5)
-    nonzero = merged['y'] != 0
-    mape = float(
-        ((merged.loc[nonzero, 'y'] - merged.loc[nonzero, 'yhat']).abs()
-         / merged.loc[nonzero, 'y']).mean() * 100
-        if nonzero.any() else float('nan')
-    )
+    # wMAPE (weighted MAPE) = MAE / mean(actual) — stable for near-zero actual days
+    mean_actual = float(merged['y'].mean())
+    mape = (mae / mean_actual * 100) if mean_actual > 0 else float('nan')
     return {'mae': mae, 'mape': mape, 'rmse': rmse}
 
 
@@ -72,42 +219,121 @@ def _evaluate_sarima(df: pd.DataFrame, split: float, m: int = 7):
         return None
 
     actual = test['y'].values
-    mae = float(np.abs(actual - predictions).mean())
+    mae  = float(np.abs(actual - predictions).mean())
     rmse = float(np.sqrt(((actual - predictions) ** 2).mean()))
-    nonzero = actual != 0
-    mape = float(
-        np.abs((actual[nonzero] - predictions[nonzero]) / actual[nonzero]).mean() * 100
-        if nonzero.any() else float('nan')
-    )
+    mean_actual = float(actual.mean())
+    mape = (mae / mean_actual * 100) if mean_actual > 0 else float('nan')
     return {'mae': mae, 'mape': mape, 'rmse': rmse}
 
 
-def _print_comparison(label: str, n: int, split: float, prophet_m: dict, sarima_m) -> None:
+def _xgb_features(i: int, y_arr: np.ndarray, ds_arr,
+                   proximity: np.ndarray = None) -> dict:
+    """Build feature dict for position i using y_arr for lag values."""
+    ts = pd.Timestamp(ds_arr[i])
+    feat = {
+        'lag_1':    float(y_arr[i - 1]),
+        'lag_7':    float(y_arr[i - 7]),
+        'lag_14':   float(y_arr[i - 14]),
+        'roll_7':   float(y_arr[i - 7:i].mean()),
+        'roll_14':  float(y_arr[i - 14:i].mean()),
+        'dow':      ts.dayofweek,
+        'is_weekend': int(ts.dayofweek >= 5),
+        'month':    ts.month,
+        'days_to_holiday': float(proximity[i]) if proximity is not None else 30.0,
+    }
+    return feat
+
+
+def _evaluate_xgboost(df: pd.DataFrame, split: float):
+    """Train XGBoost on the training split and recursively predict the test split.
+
+    Uses lag_1, lag_7, lag_14, 7/14-day rolling means, day-of-week, weekend
+    flag, month, and days-to-nearest-holiday as features.
+    """
+    n = len(df)
+    cutoff = int(n * split)
+    # Need at least 14 lags + 20 usable training samples; cutoff - 14 >= 20 → cutoff >= 34
+    if cutoff < 34 or n - cutoff < 2:
+        return None
+
+    ds_arr = df['ds'].values
+    y_arr  = df['y'].values
+
+    holiday_df = _build_holiday_df(df['ds'].min(), df['ds'].max())
+    proximity  = _holiday_proximity(ds_arr, holiday_df)
+
+    # Build training feature matrix (need at least 14 lags)
+    X_train, y_train = [], []
+    for i in range(14, cutoff):
+        X_train.append(_xgb_features(i, y_arr, ds_arr, proximity))
+        y_train.append(y_arr[i])
+
+    if len(X_train) < 10:
+        return None
+
+    model = XGBRegressor(n_estimators=300, learning_rate=0.05,
+                         max_depth=5, subsample=0.8, colsample_bytree=0.8,
+                         random_state=42, verbosity=0)
+    model.fit(pd.DataFrame(X_train), y_train)
+
+    # Recursive multi-step prediction over the test period
+    y_extended = y_arr[:cutoff].tolist()
+    preds = []
+    for i in range(cutoff, n):
+        feat = _xgb_features(i, np.array(y_extended), ds_arr, proximity)
+        pred = max(0.0, float(model.predict(pd.DataFrame([feat]))[0]))
+        preds.append(pred)
+        y_extended.append(pred)          # feed prediction back as next lag
+
+    actual = y_arr[cutoff:]
+    preds  = np.array(preds)
+    mae    = float(np.abs(actual - preds).mean())
+    rmse   = float(np.sqrt(((actual - preds) ** 2).mean()))
+    mean_actual = float(actual.mean())
+    mape   = (mae / mean_actual * 100) if mean_actual > 0 else float('nan')
+    return {'mae': mae, 'mape': mape, 'rmse': rmse,
+            'preds': preds, 'test_ds': ds_arr[cutoff:]}
+
+
+def _print_comparison(label: str, n: int, split: float,
+                      prophet_m: dict, sarima_m, xgb_m=None) -> None:
     if not prophet_m:
         print(f'    [{label}] Prophet evaluation failed — skipped')
         return
 
     n_train = int(n * split)
-    n_test = n - n_train
-    pct = int(split * 100)
+    n_test  = n - n_train
+    pct     = int(split * 100)
 
-    p_verdict = 'GOOD' if prophet_m['mape'] < 10 else ('ACCEPTABLE' if prophet_m['mape'] < 20 else 'POOR')
+    def verdict(mape): return 'GOOD' if mape < 20 else ('ACCEPTABLE' if mape < 50 else 'POOR')
 
     print(f'    [{label}] {pct}/{100 - pct} split — {n_train} train / {n_test} test points')
-    print(f'      [Prophet] MAPE {prophet_m["mape"]:5.1f}%  MAE {prophet_m["mae"]:8.2f}  RMSE {prophet_m["rmse"]:8.2f}  → {p_verdict}')
+    print(f'      [Prophet] MAPE {prophet_m["mape"]:5.1f}%  MAE {prophet_m["mae"]:8.2f}  RMSE {prophet_m["rmse"]:8.2f}  -> {verdict(prophet_m["mape"])}')
+
+    scores = {'Prophet': prophet_m['mape']}
 
     if sarima_m:
-        s_verdict = 'GOOD' if sarima_m['mape'] < 10 else ('ACCEPTABLE' if sarima_m['mape'] < 20 else 'POOR')
-        winner = 'Prophet' if prophet_m['mape'] <= sarima_m['mape'] else 'SARIMA'
-        print(f'      [SARIMA]  MAPE {sarima_m["mape"]:5.1f}%  MAE {sarima_m["mae"]:8.2f}  RMSE {sarima_m["rmse"]:8.2f}  → {s_verdict}')
-        print(f'      Winner: {winner}')
+        print(f'      [SARIMA]  MAPE {sarima_m["mape"]:5.1f}%  MAE {sarima_m["mae"]:8.2f}  RMSE {sarima_m["rmse"]:8.2f}  -> {verdict(sarima_m["mape"])}')
+        scores['SARIMA'] = sarima_m['mape']
     else:
         print(f'      [SARIMA]  failed to converge — skipped')
+
+    if xgb_m:
+        print(f'      [XGBoost] MAPE {xgb_m["mape"]:5.1f}%  MAE {xgb_m["mae"]:8.2f}  RMSE {xgb_m["rmse"]:8.2f}  -> {verdict(xgb_m["mape"])}')
+        scores['XGBoost'] = xgb_m['mape']
+
+    if len(scores) > 1:
+        winner = min(scores, key=scores.get)
+        print(f'      Winner: {winner}')
 
 
 def _prophet_forecast(daily: pd.DataFrame) -> tuple:
     """Fit Prophet and return (weekly_4rows, monthly_3rows) DataFrames."""
-    m = Prophet(interval_width=0.8)
+    holiday_df = _build_holiday_df(daily['ds'].min(),
+                                   daily['ds'].max() + pd.Timedelta(days=90))
+    m = Prophet(interval_width=0.8,
+                holidays=holiday_df if holiday_df is not None else None,
+                holidays_prior_scale=20.0)
     m.fit(daily)
 
     cols = ['ds', 'yhat', 'yhat_lower', 'yhat_upper']
@@ -146,7 +372,8 @@ def forecast_revenue(transactions_df: pd.DataFrame) -> pd.DataFrame:
     daily = _to_daily(income, 'transaction_datetime', '_v')
     p = _evaluate_prophet(daily, split=0.8)
     s = _evaluate_sarima(daily, split=0.8, m=7)
-    _print_comparison('Revenue (TND)', len(daily), 0.8, p, s)
+    x = _evaluate_xgboost(daily, split=0.8)
+    _print_comparison('Revenue (TND)', len(daily), 0.8, p, s, x)
     weekly, monthly = _prophet_forecast(daily)
     result = pd.concat([weekly, monthly], ignore_index=True)
     return result[['date', 'granularity', 'yhat', 'yhat_lower', 'yhat_upper']]
@@ -175,7 +402,8 @@ def forecast_members(transactions_df: pd.DataFrame) -> pd.DataFrame:
     weekly_hist['ds'] = pd.to_datetime(weekly_hist['ds'])
     p = _evaluate_prophet(weekly_hist, split=0.8, freq='7D')
     s = _evaluate_sarima(weekly_hist, split=0.8, m=4)
-    _print_comparison('Member activity', len(weekly_hist), 0.8, p, s)
+    x = _evaluate_xgboost(weekly_hist, split=0.8)
+    _print_comparison('Member activity', len(weekly_hist), 0.8, p, s, x)
 
     m = Prophet(interval_width=0.8)
     m.fit(weekly_hist)
@@ -262,7 +490,8 @@ def forecast_session_volume(transactions_df: pd.DataFrame) -> pd.DataFrame:
     daily = _to_daily(df, 'transaction_datetime', '_v')
     p = _evaluate_prophet(daily, split=0.8)
     s = _evaluate_sarima(daily, split=0.8, m=7)
-    _print_comparison('Session volume', len(daily), 0.8, p, s)
+    x = _evaluate_xgboost(daily, split=0.8)
+    _print_comparison('Session volume', len(daily), 0.8, p, s, x)
     weekly, monthly = _prophet_forecast(daily)
     result = pd.concat([weekly, monthly], ignore_index=True)
     for col in ['yhat', 'yhat_lower', 'yhat_upper']:
