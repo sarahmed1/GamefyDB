@@ -1036,6 +1036,85 @@ improvement. Most of that gain came from honest data engineering (fixing the
 holiday signal, extending the training window) and from a deliberate choice
 of evaluation resolution, rather than from aggressive hyperparameter search.
 
+\subsection{Error Decomposition: Where Does the Residual Error Live?}
+
+A natural follow-up question, given how much of the work focused on Ramadan
+and Eid, is whether the residual headline wMAPE is concentrated in those
+weeks. To answer it, the test set was tagged with a binary
+\textit{holiday-cluster} label: any week containing a Ramadan day, an Eid day,
+or one of Eid+1, Eid+2, or Eid+3 was marked as holiday; all others as
+ordinary. The error was then recomputed on each subset separately while
+keeping the same trained model and the same predictions --- nothing was
+re-fit. The output is written to
+\texttt{output/forecasts/error\_decomposition.csv}.
+
+\begin{table}[H]
+  \centering
+  \caption{Error decomposition on the test set: ordinary weeks vs.\ holiday-cluster
+           weeks (Ramadan + Eid+0..+3). \emph{Share of total error} is the
+           share of absolute test-set error contributed by each
+           subset.\label{tab:error_decomposition}}
+  \begin{tabular}{llrrrrr}
+    \toprule
+    \textbf{Series} & \textbf{Model} &
+    \textbf{wMAPE} & \textbf{Ordinary} & \textbf{Holiday} &
+    \multicolumn{2}{c}{\textbf{Share of total error}} \\
+    \cmidrule(lr){6-7}
+    & & \textbf{(full)} & \textbf{(33 w.)} & \textbf{(6 w.)} &
+    \textbf{Ord.} & \textbf{Hol.} \\
+    \midrule
+    \multirow{3}{*}{Revenue}
+      & \textbf{Prophet} & 29.8\,\% & 34.4\,\% & \textbf{9.2\,\%}  & 94.2\,\% & 5.8\,\% \\
+      & SARIMA           & 37.0\,\% & 39.5\,\% & 26.1\,\% & 86.9\,\% & 13.1\,\% \\
+      & XGBoost          & 46.4\,\% & 52.4\,\% & 20.1\,\% & 92.0\,\% & 8.0\,\% \\
+    \midrule
+    \multirow{3}{*}{Session volume}
+      & \textbf{Prophet} & 36.8\,\% & 42.1\,\% & \textbf{11.1\,\%} & 94.9\,\% & 5.1\,\% \\
+      & SARIMA           & 36.4\,\% & 37.4\,\% & 31.4\,\% & 85.3\,\% & 14.7\,\% \\
+      & XGBoost          & 45.4\,\% & 52.7\,\% &  9.9\,\% & 96.3\,\% & 3.7\,\% \\
+    \midrule
+    \multirow{3}{*}{Member activity}
+      & Prophet & 52.5\,\% & 53.2\,\% & 50.2\,\% & 78.5\,\% & 21.5\,\% \\
+      & SARIMA  & 59.2\,\% & 63.3\,\% & 44.8\,\% & 83.1\,\% & 16.9\,\% \\
+      & XGBoost & 55.9\,\% & 59.0\,\% & 45.3\,\% & 82.0\,\% & 18.0\,\% \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+The result was the opposite of what was initially expected. The hypothesis
+going in was that holiday weeks would still dominate the residual error ---
+those are the spikes the model has to predict, and a small miss there
+translates to a large absolute number. In practice, after the data
+engineering and the calendar synchronisation, Prophet now fits holiday weeks
+\emph{better} than ordinary weeks: wMAPE on the six holiday-cluster weeks is
+9.2\,\% for revenue and 11.1\,\% for session volume, while ordinary weeks
+sit at 34.4\,\% and 42.1\,\% respectively. Across the full test set, only
+roughly 5--6\,\% of the absolute error on revenue and sessions comes from
+the holiday subset.
+
+This carries a useful diagnostic implication. The remaining headline
+wMAPE is no longer about holidays --- it is week-to-week base-rate noise.
+The kind of variation that drives an ordinary Saturday from 250\,TND to
+400\,TND for reasons the calendar cannot capture: a viral live stream, a
+local football match, a power outage, a popular tournament announced two
+days earlier. None of these are predictable from \texttt{ds} alone. Closing
+that gap further would require non-calendar regressors (external event
+flags, weather data, exogenous demand signals) rather than more
+holiday-engineering work, which has effectively reached diminishing returns.
+
+The member-activity decomposition tells a different story: ordinary and
+holiday-cluster wMAPE are both around 50\,\%, with no meaningful gap.
+This series is small-sample-limited, not signal-limited. A 39-week test
+horizon with a weekly mean of about ten transactions does not have enough
+data for any of the three algorithms to outperform a roughly trend-only
+fit. Adding a year or two of operational history would help more than any
+model change.
+
+A caveat on the holiday subset: with only six weeks in it, the wMAPE on
+that subset is statistically noisy --- one bad week swings the percentage
+visibly. The figures should be read as an order-of-magnitude diagnostic,
+not as precision measurements.
+
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.95\textwidth]{accuracy_revenue_prophet.png}
