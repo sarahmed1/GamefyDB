@@ -621,20 +621,24 @@ def write_members_xls(df: pd.DataFrame, path: str) -> None:
 
 # ── Augmentation (separate files, never touches extended_*.xlsx) ─────────────
 
-def generate_augment(excel_dir: str = 'excel', months_back: int = 12) -> None:
+def generate_augment(excel_dir: str = 'excel', months_back: int = 24) -> None:
     """Generate extra synthetic history and write to excel/augment/.
 
     Files are completely separate from extended_*.xlsx — real data is never
     touched. The pipeline loads augment files alongside the main files only
     in memory during training.
 
+    Default months_back is 24, producing Sep 2022 -> Aug 2024, which gives
+    Prophet 3 full Ramadan cycles to learn from (2023, 2024 in augment;
+    2025, 2026 in extended).
+
     Args:
         excel_dir:   Root excel directory (must already exist).
-        months_back: How many extra months to generate going backwards from
-                     the start of the existing synthetic window (Sep 2024).
-                     Default 12 produces Sep 2023 – Aug 2024, which includes
-                     a full Ramadan 2024 cycle for the model to learn from.
+        months_back: How many months to generate going backwards from
+                     the start of the synthetic window (Sep 2024).
     """
+    from gamefydb.pipeline import load_and_clean_cash
+
     augment_dir = os.path.join(excel_dir, 'augment')
     os.makedirs(augment_dir, exist_ok=True)
 
@@ -642,10 +646,21 @@ def generate_augment(excel_dir: str = 'excel', months_back: int = 12) -> None:
     start = (end + pd.Timedelta(days=1)) - pd.DateOffset(months=months_back)
     start = start.normalize()
 
+    # Build the same bootstrap pool used for extended_*.xlsx so the augment
+    # period inherits the real revenue distribution (instead of pure parametric).
+    cash_files = [os.path.join(excel_dir, f) for f in os.listdir(excel_dir)
+                  if f.lower().endswith('.xls') and 'cash' in f.lower()
+                  and 'extended' not in f.lower()]
+    daily_pool = None
+    if cash_files:
+        real_cash = _merge_real_files([(load_and_clean_cash, p) for p in cash_files])
+        daily_pool = _build_daily_pool(real_cash)
+        print(f'  Bootstrap pool built from {len(cash_files)} real cash file(s)')
+
     print(f'Generating augmentation data: {start.date()} -> {end.date()}')
 
     print('  Cash transactions...')
-    aug_cash = generate_cash(start, end)
+    aug_cash = generate_cash(start, end, daily_pool=daily_pool)
     print('  Sessions...')
     aug_sess = generate_sessions(start, end)
     print('  Stock movements...')
