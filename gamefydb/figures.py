@@ -165,13 +165,14 @@ def _prophet_test_preds(df, split, freq='D', log_y=False):
     n = len(df)
     cut = int(n * split)
     train, test = df.iloc[:cut].copy(), df.iloc[cut:].copy()
+    fit_train = train.copy()
     if log_y:
-        train['y'] = np.log1p(train['y'])
+        fit_train['y'] = np.log1p(fit_train['y'])
     holiday_df = _build_holiday_df(df['ds'].min(), df['ds'].max())
     m = Prophet(interval_width=0.8,
                 holidays=holiday_df if holiday_df is not None else None,
                 holidays_prior_scale=20.0)
-    m.fit(train)
+    m.fit(fit_train)
     future = m.make_future_dataframe(periods=len(test), freq=freq)
     fc = m.predict(future)
     if log_y:
