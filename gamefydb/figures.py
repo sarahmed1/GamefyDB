@@ -270,6 +270,59 @@ def _compute_all_predictions(tx: pd.DataFrame, split: float = 0.8) -> dict:
     return {'revenue': rev, 'sessions': ses, 'members': mem_r}
 
 
+def _plot_combined_models_accuracy(train, test, models, title, ylabel, out_path,
+                                    shade_ramadan=False):
+    """All-models-on-one-chart accuracy plot.
+
+    models: list of dicts, each with keys
+        name, color, linestyle, pred_ds, pred_actual, pred_values,
+        (optional) yhat_lower, yhat_upper
+    """
+    fig, ax = plt.subplots(figsize=(FIG_W, 5))
+
+    show_train = train.iloc[-60:] if len(train) > 60 else train
+    ax.plot(show_train['ds'], show_train['y'],
+            color='#AACFE4', linewidth=1.2, label='Historical (train)')
+
+    ax.plot(test['ds'], test['y'],
+            color='#333333', linewidth=2, label='Actual (test)')
+
+    naive = _naive_baseline(train, test)
+    ax.plot(test['ds'], naive,
+            color=C_NAIVE, linewidth=1.2, linestyle=':',
+            label=f'Naive baseline  (MAPE {_mape(test["y"].values, naive):.0f} %)')
+
+    for m in models:
+        if m.get('yhat_lower') is not None and m.get('yhat_upper') is not None:
+            ax.fill_between(m['pred_ds'], m['yhat_lower'], m['yhat_upper'],
+                            alpha=0.10, color=m['color'])
+        mae_v  = _mae(m['pred_actual'], m['pred_values'])
+        mape_v = _mape(m['pred_actual'], m['pred_values'])
+        ax.plot(m['pred_ds'], m['pred_values'],
+                color=m['color'], linewidth=1.8, linestyle=m['linestyle'],
+                label=f"{m['name']}  MAPE {mape_v:.0f} %  MAE {mae_v:.1f}")
+
+    ylim_top = ax.get_ylim()[1]
+    split_date = test['ds'].iloc[0]
+    ax.axvline(split_date, color='#AAAAAA', linestyle='--', linewidth=1)
+    ax.text(split_date, ylim_top * 0.98, '  train | test',
+            fontsize=8.5, color='#888888', va='top')
+
+    if shade_ramadan:
+        r_start = pd.Timestamp('2026-02-18')
+        r_end   = pd.Timestamp('2026-03-19')
+        ax.axvspan(r_start, r_end, alpha=0.07, color='#9B59B6', zorder=0)
+        ax.text(r_start, ylim_top * 0.90, ' Ramadan\n 2026',
+                fontsize=8, color='#9B59B6', va='top')
+
+    ax.set_title(title)
+    ax.set_ylabel(ylabel)
+    ax.legend(fontsize=8.5, loc='upper left')
+    ax.tick_params(axis='x', rotation=25)
+    plt.tight_layout()
+    _save(fig, out_path)
+
+
 def _plot_single_model_accuracy(train, test, model_name, color, linestyle,
                                 pred_ds, pred_actual, pred_values,
                                 yhat_lower=None, yhat_upper=None,
@@ -358,6 +411,29 @@ def plot_accuracy_revenue(out_dir: str, preds: dict, split: float = 0.8) -> None
             title=f'{base} — XGBoost',
             out_path=os.path.join(out_dir, 'accuracy_revenue_xgboost.png'), **kw)
 
+    models = []
+    if not p_merged.empty:
+        models.append(dict(name='Prophet', color=C_PRED, linestyle='-',
+                           pred_ds=p_merged['ds'].values,
+                           pred_actual=p_merged['y'].values,
+                           pred_values=p_merged['yhat'].values,
+                           yhat_lower=p_merged['yhat_lower'].values,
+                           yhat_upper=p_merged['yhat_upper'].values))
+    if s_preds is not None:
+        models.append(dict(name='SARIMA', color=C_SARIMA, linestyle='--',
+                           pred_ds=s_test['ds'].values,
+                           pred_actual=s_test['y'].values,
+                           pred_values=s_preds))
+    if x_preds is not None:
+        models.append(dict(name='XGBoost', color=C_XGB, linestyle=(0, (4, 2)),
+                           pred_ds=x_test['ds'].values,
+                           pred_actual=x_test['y'].values,
+                           pred_values=x_preds))
+    if models:
+        _plot_combined_models_accuracy(
+            train, test, models, title=base,
+            out_path=os.path.join(out_dir, 'accuracy_revenue.png'), **kw)
+
 
 def plot_accuracy_session_volume(out_dir: str, preds: dict, split: float = 0.8) -> None:
     train, test     = preds['train'], preds['test']
@@ -394,6 +470,29 @@ def plot_accuracy_session_volume(out_dir: str, preds: dict, split: float = 0.8) 
             title=f'{base} — XGBoost',
             out_path=os.path.join(out_dir, 'accuracy_session_volume_xgboost.png'), **kw)
 
+    models = []
+    if not p_merged.empty:
+        models.append(dict(name='Prophet', color=C_PRED, linestyle='-',
+                           pred_ds=p_merged['ds'].values,
+                           pred_actual=p_merged['y'].values,
+                           pred_values=p_merged['yhat'].values,
+                           yhat_lower=p_merged['yhat_lower'].values,
+                           yhat_upper=p_merged['yhat_upper'].values))
+    if s_preds is not None:
+        models.append(dict(name='SARIMA', color=C_SARIMA, linestyle='--',
+                           pred_ds=s_test['ds'].values,
+                           pred_actual=s_test['y'].values,
+                           pred_values=s_preds))
+    if x_preds is not None:
+        models.append(dict(name='XGBoost', color=C_XGB, linestyle=(0, (4, 2)),
+                           pred_ds=x_test['ds'].values,
+                           pred_actual=x_test['y'].values,
+                           pred_values=x_preds))
+    if models:
+        _plot_combined_models_accuracy(
+            train, test, models, title=base,
+            out_path=os.path.join(out_dir, 'accuracy_session_volume.png'), **kw)
+
 
 def plot_accuracy_members(out_dir: str, preds: dict, split: float = 0.8) -> None:
     train, test     = preds['train'], preds['test']
@@ -429,6 +528,29 @@ def plot_accuracy_members(out_dir: str, preds: dict, split: float = 0.8) -> None
             pred_values=x_preds,
             title=f'{base} — XGBoost',
             out_path=os.path.join(out_dir, 'accuracy_members_xgboost.png'), **kw)
+
+    models = []
+    if not p_merged.empty:
+        models.append(dict(name='Prophet', color=C_PRED, linestyle='-',
+                           pred_ds=p_merged['ds'].values,
+                           pred_actual=p_merged['y'].values,
+                           pred_values=p_merged['yhat'].values,
+                           yhat_lower=p_merged['yhat_lower'].values,
+                           yhat_upper=p_merged['yhat_upper'].values))
+    if s_preds is not None:
+        models.append(dict(name='SARIMA', color=C_SARIMA, linestyle='--',
+                           pred_ds=s_test['ds'].values,
+                           pred_actual=s_test['y'].values,
+                           pred_values=s_preds))
+    if x_preds is not None:
+        models.append(dict(name='XGBoost', color=C_XGB, linestyle=(0, (4, 2)),
+                           pred_ds=x_test['ds'].values,
+                           pred_actual=x_test['y'].values,
+                           pred_values=x_preds))
+    if models:
+        _plot_combined_models_accuracy(
+            train, test, models, title=base,
+            out_path=os.path.join(out_dir, 'accuracy_members.png'), **kw)
 
 
 # ── 4. Model comparison grouped bar ───────────────────────────────────────────
