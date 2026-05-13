@@ -84,6 +84,26 @@ def _in_ramadan(date: pd.Timestamp) -> bool:
             return True
     return False
 
+
+def _ramadan_daily_mul(date: pd.Timestamp) -> float:
+    """Multiplicative daily shape inside Ramadan.
+
+    Ramps from 0.85 in the first 40 % of the month -> 1.0 -> 1.10 across the
+    middle -> 1.50 in the last 25 % (Layilatul Qadr + pre-Eid prep).
+    Returns 1.0 outside any Ramadan period.
+    """
+    for start, end in _RAMADAN_PERIODS:
+        if start <= date <= end:
+            total = max((end - start).days, 1)
+            pos   = (date - start).days / total          # 0.0 -> 1.0
+            if pos < 0.40:
+                return 0.85 + 0.15 * (pos / 0.40)        # 0.85 -> 1.00
+            elif pos < 0.75:
+                return 1.00 + 0.10 * ((pos - 0.40) / 0.35)  # 1.00 -> 1.10
+            else:
+                return 1.10 + 0.40 * ((pos - 0.75) / 0.25)  # 1.10 -> 1.50
+    return 1.0
+
 # Monthly revenue multiplier relative to September baseline.
 MONTHLY_MUL = {
     1: 1.03,   # Jan   (New Year holiday week spikes)
