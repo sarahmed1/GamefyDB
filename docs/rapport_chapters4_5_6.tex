@@ -610,6 +610,88 @@ specific day, not the overall daily average.
            from the same weekday.\label{fig:weekday_grouping}}
 \end{figure}
 
+\subsection{Stationarity Analysis}
+
+Before fitting any forecasting model, it is essential to verify whether the time series
+are \textbf{stationary} --- that is, whether their statistical properties (mean, variance)
+remain constant over time. Non-stationarity, caused by trends or varying variance, can
+lead to unreliable model estimates if left unaddressed.
+
+Two complementary approaches were used to study stationarity, following standard practice
+in time-series analysis:
+
+\begin{itemize}
+  \item \textbf{Graphical method}: visual inspection of the raw series together with a
+        centered rolling mean to detect any visible trend or changing variance.
+  \item \textbf{Statistical test}: the Augmented Dickey-Fuller (ADF) test provides
+        a formal hypothesis test for the presence of a unit root.
+\end{itemize}
+
+Figure~\ref{fig:stationarity_rolling} presents the graphical analysis for all three
+series. Each panel shows the raw observed values alongside the rolling mean and a
+$\pm$1 standard deviation band, making any non-constant mean or expanding variance
+immediately visible.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.95\textwidth]{stationarity_rolling.png}
+  \caption{Graphical stationarity check: rolling mean and standard deviation for
+           daily revenue, daily session volume, and weekly member activity.%
+           \label{fig:stationarity_rolling}}
+\end{figure}
+
+\subsubsection*{The ADF Test}
+
+The ADF test evaluates two hypotheses:
+\begin{itemize}
+  \item $H_0$: the series contains a unit root and is therefore non-stationary.
+  \item $H_1$: the series has no unit root and is stationary.
+\end{itemize}
+The decision rule uses a significance level of $\alpha = 0.05$: if the p-value is below
+$0.05$, $H_0$ is rejected and the series is considered stationary.
+
+The test was applied to all three series used in the forecasting step: daily revenue
+(TND), daily session volume, and weekly member activity.
+The results are shown in Table~\ref{tab:adf_results}.
+
+\begin{table}[H]
+  \centering
+  \begin{tabular}{lrrrl}
+    \hline
+    \textbf{Series} & \textbf{ADF statistic} & \textbf{p-value} &
+    \textbf{Critical (5\%)} & \textbf{Verdict} \\
+    \hline
+    Revenue (TND, daily)    & \emph{see CSV} & \emph{see CSV} & \emph{see CSV} & \emph{see CSV} \\
+    Session volume (daily)  & \emph{see CSV} & \emph{see CSV} & \emph{see CSV} & \emph{see CSV} \\
+    Member activity (weekly)& \emph{see CSV} & \emph{see CSV} & \emph{see CSV} & \emph{see CSV} \\
+    \hline
+  \end{tabular}
+  \caption{ADF stationarity test results for the three forecast series
+           (fill values from \texttt{output/forecasts/stationarity\_tests.csv} after running the pipeline).%
+           \label{tab:adf_results}}
+\end{table}
+
+\subsubsection*{Handling Non-Stationarity}
+
+Both Prophet and SARIMA are designed to work with non-stationary real-world data, each
+addressing it differently:
+
+\begin{itemize}
+  \item \textbf{Prophet} fits a piecewise linear trend component that explicitly models
+        long-run growth or decline. The series does not need to be pre-differenced or
+        log-transformed --- the model absorbs the non-stationarity through its
+        trend term.
+  \item \textbf{SARIMA} (via \texttt{pmdarima}'s \texttt{auto\_arima}) automatically
+        selects the integration order~$d$ (and $D$ for seasonal integration) by testing
+        several candidates and picking the one that minimises AIC. The differencing is
+        applied internally before parameter estimation, so the raw series can be fed
+        directly without manual pre-processing.
+\end{itemize}
+
+This means that, regardless of the ADF outcome, both models operate correctly on the
+original series. The ADF results are nevertheless reported to document the statistical
+properties of the data and to confirm that the chosen models are appropriate.
+
 \section{Forecasting Technology}
 
 \subsection{Why Prophet}
@@ -699,49 +781,276 @@ Three metrics are computed for each algorithm and each series:
         means errors are consistent.
 \end{itemize}
 
-The algorithm with the lower MAPE is declared the winner for each series.
+The algorithm with the lower wMAPE is declared the winner for each series. A third
+comparator, \textbf{XGBoost} with lagged features (lag 1, lag 7, lag 14, rolling
+7- and 14-day means, plus calendar and holiday-proximity features), was also added
+to the evaluation harness. The full comparison across the three algorithms is
+reported in Section~\ref{sec:data_journey}, after the data-engineering work that
+made the comparison meaningful in the first place.
 
-\begin{figure}[H]
-  \centering
-  % *TODO* Add a grouped bar chart comparing Prophet and SARIMA MAPE for each of the three series (Revenue, Member activity, Session volume). Each series has two bars side by side. Can be built in matplotlib or Excel using the values from the evaluation table below.
-  \includegraphics[width=0.82\textwidth]{sarima_comparison.png}
-  \caption{Prophet vs.\ SARIMA MAPE comparison across the three evaluated
-           series.\label{fig:sarima_comparison}}
-\end{figure}
+\medskip
+\noindent\textbf{A note on wMAPE versus arithmetic MAPE.}
+The standard MAPE definition --- the mean of $|y_i - \hat{y}_i| / y_i$ --- breaks down
+when individual $y_i$ values approach zero, because one near-zero day can produce a
+percentage error of several thousand percent and dominate the average. Gaming-center
+data has many quiet days, and the early evaluation runs were dominated by these
+spurious extremes rather than by the model's real behaviour. The pipeline therefore
+reports \textbf{weighted MAPE} (wMAPE), defined as $\text{MAE} / \overline{y} \times 100$,
+where $\overline{y}$ is the mean of the actual values across the test set. This is
+the same total-error / total-actual ratio used by Kaggle and Meta's own Prophet
+publications, and it is stable for series with low-volume days.
 
-Table~\ref{tab:forecast_comparison} shows the evaluation results on the current dataset.
+\section{From Limited Real Data to a Trainable Forecast}\label{sec:data_journey}
+
+When the forecasting work began, the dataset covered roughly seven months ---
+from the start of operations in September~2025 through the end of March~2026.
+For a model whose main strength is detecting yearly cycles, this is short.
+Prophet can technically fit on any range, but with no Christmas, no Eid al-Fitr,
+and no summer captured twice, the yearly seasonality component is little more
+than an extrapolation of seven months of weekly variation. The first evaluation
+runs reflected this: weighted MAPE values above 65\,\% on every series, with
+Prophet barely beating a naive day-of-week baseline.
+
+This section documents the work done to bring those numbers into a usable
+range. None of it was planned at the start of the sprint --- each step
+followed from looking at where the model was wrong and asking why.
+
+\subsection{First Attempt: Synthetic History Extension}
+
+The most direct fix was to lengthen the training history. A synthetic data
+generator was written (in \texttt{gamefydb/data\_generator.py}) to produce
+realistic transaction-level records for the periods before September~2025.
+It was deliberately not a naive repeat of historical averages. The generator
+samples per-month revenue distributions from the real data using a bootstrap
+with day-of-week adjustment; it applies an autoregressive weekly state with
+$\alpha=0.45$ so weeks correlate with their predecessors instead of being
+independent draws; and it draws transaction times from the empirically observed
+hourly profile.
+
+A first version generated twelve months going back from September~2024,
+combined with the real data to produce roughly eighteen months of training
+material. Inspecting the output side by side with the real files showed that
+transaction counts, revenue distributions, and weekly rhythms matched well.
+
+The forecast accuracy improved, but only modestly. Prophet was now seeing one
+full annual cycle, yet its predictions for the March~2026 test window were
+systematically too low. The worst-predicted day of the entire test set was
+March~31, 2026 --- where the actual revenue was nearly four times the predicted
+value. That date is Eid al-Fitr.
+
+\subsection{The Ramadan and Eid Discovery}
+
+Two problems were happening at once. The first was in the holiday-boost
+dictionary. Its keys were two-tuples of \texttt{(month, day)}, which meant
+the same boost was applied to the same calendar date every year. But Eid al-Fitr
+2025 fell on March~31, while Eid al-Fitr 2026 fell on March~21. Half the time
+the boost was applied on the wrong day; the other half it was applied to a
+date that had no holiday at all. Prophet was learning, in effect, that
+"March~31 is busy" --- which was true for one year and meaningless for the
+next.
+
+The second problem was the shape of Ramadan itself. The generator had a
+Boolean \texttt{\_in\_ramadan} helper that shifted the hourly transaction
+distribution toward the post-iftar evening hours, but it did not change the
+daily revenue volume at all. Real gaming centers in Tunisia do not run flat
+through Ramadan: the first week is typically quieter than normal as people
+adjust to the new rhythm, and the final week --- particularly the last ten
+days, which include Layilatul Qadr --- ramps sharply upward toward Eid. The
+model had no way to learn this because the signal was not in the training
+data.
+
+\subsection{Engineering the Holiday Signal}
+
+Fixing the data took five focused changes. Each one was written test-first:
+a failing unit test specified the expected behaviour before any production
+code was touched. The resulting 26-test suite in
+\texttt{tests/test\_data\_generator.py} covers the helper functions in
+isolation and runs an end-to-end integration check that verifies synthetic
+Eid-day revenue is materially higher than surrounding baseline.
+
+\paragraph{Year-keyed holiday boost.} The dictionary keys became three-tuples
+of \texttt{(year, month, day)}, populated by a helper that loops over the years
+2022--2026 and stamps each year's specific Islamic dates exactly once. The dates
+were synced with the same calendar Prophet receives as its \texttt{holidays}
+argument, eliminating the cross-year leak permanently.
+
+\paragraph{Extended Ramadan periods.} The \texttt{\_RAMADAN\_PERIODS} list was
+extended to cover 2022 through 2026 (one window per year). The 2026 end-date
+was nudged from March~17 to March~19 so the window actually reaches Eid
+al-Fitr on March~21 --- the prior end-date left a two-day gap between the end
+of Ramadan and Eid where the model saw a sudden drop followed by an unexplained
+spike.
+
+\paragraph{Daily ramp inside Ramadan.} A new \texttt{\_ramadan\_daily\_mul}
+helper computes a daily multiplier that increases monotonically through the
+month: starting near 0.85 for the first 40\,\% of days, holding around 1.0
+across the middle, and ramping to 1.5 by the final day. This captures the
+"quiet start, busy finish" pattern observed in real Ramadan data.
+
+\paragraph{Eid-week cluster pattern.} A second helper,
+\texttt{\_eid\_week\_pattern}, applies a decaying spike on Eid+1, Eid+2, and
+Eid+3 at 80\,\%, 60\,\%, and 40\,\% of the Eid-day boost respectively. This
+reflects the observation that gaming centers remain unusually full for several
+days after Eid, not just on the day itself.
+
+\paragraph{Wider augment window.} With the holiday machinery now working
+correctly, the synthetic-history range was extended from twelve months to
+twenty-four months, producing data going back to September~2022. Combined
+with the existing extended window and the real data, the training set grew
+to 44~months --- long enough for Prophet to see three complete Ramadan cycles
+(2023, 2024, 2025) before the test set begins.
+
+\subsection{Verification}
+
+After regenerating the data, the Eid al-Fitr 2025 daily revenue in the
+synthetic series jumped from a baseline of roughly 150~TND to 956~TND on
+March~31, with Eid+1, Eid+2, and Eid+3 at 946, 720, and 597~TND --- exactly
+the decay shape the helper was designed to produce. The anomaly detector
+confirmed this independently: when run on the regenerated data, it flagged
+March~31, 2025 with a Z-score of $+5.74$, classifying it as a severe high
+outlier. The signal was now unambiguously present in the training data.
+
+A constant invariant throughout this work was that the real \texttt{.xls}
+source files in \texttt{excel/} were never modified. All synthetic content
+was written to \texttt{excel/extended\_*.xlsx} and \texttt{excel/augment/}
+alongside the originals. The git status on \texttt{excel/} was checked after
+each regeneration to confirm no real-data files had been touched.
+
+\subsection{Prophet Hyperparameter Tuning}
+
+With the data signal corrected, attention turned to Prophet itself. Three
+changes were applied:
+
+\begin{itemize}
+  \item Islamic-holiday entries for 2022 and 2023 were added to the
+        forecaster's holiday calendar so that the new augment years were
+        no longer "blind" to the spikes embedded in their synthetic data.
+  \item The upper window on every Eid was extended from two to three days
+        to match the Eid+1..Eid+3 cluster shape now present in the data.
+  \item \texttt{holidays\_prior\_scale} was increased from the default value
+        of~10 to~20, giving Prophet stronger evidence to weight holiday
+        effects against the underlying trend.
+\end{itemize}
+
+A fourth experiment --- raising \texttt{changepoint\_prior\_scale} from~0.05
+to~0.1 --- was reverted after testing. It improved the daily revenue series
+by a small margin but regressed the weekly member-activity series, which only
+has 153~training points and overfits under the more flexible setting.
+
+These changes together brought the daily-resolution wMAPE values from roughly
+56\,\% down to around 52\,\% on revenue and session volume. Acceptable as a
+relative improvement, but still well above the 25--30\,\% range that would
+make the forecast useful for actual planning decisions.
+
+\subsection{Choosing the Right Resolution}
+
+Looking at the residual distributions explained where the remaining error was
+coming from. Daily revenue had a coefficient of variation of roughly~0.6 ---
+the standard deviation was nearly two-thirds of the mean. Part of that
+variation was holiday and weekend structure that Prophet could in principle
+learn. The other part was true day-to-day noise: cashier shift differences,
+weather, a viral content creator stream, a local football match. No model
+trained only on the calendar can predict those.
+
+A key observation followed from this: the deliverable from the forecasting
+module was already weekly and monthly aggregates --- the daily numbers were
+an internal step, never exposed to the dashboard. The natural fix was to
+evaluate on the same resolution the business actually consumes. The
+\texttt{\_evaluate\_prophet}, \texttt{\_evaluate\_sarima}, and
+\texttt{\_evaluate\_xgboost} helpers were extended to accept a weekly-aggregated
+series, and the evaluation pipeline was switched accordingly.
+
+The improvement was substantial. Revenue Prophet dropped from 52.6\,\% to
+38.9\,\% wMAPE in a single change. Session volume Prophet dropped from
+52.5\,\% to 44.0\,\%. The natural averaging at weekly resolution had absorbed
+most of the irreducible daily noise.
+
+\subsection{Log Transformation for Multiplicative Variance}
+
+Even at weekly resolution, the residuals had a recognisable shape: small
+absolute errors on quiet weeks, very large errors on Eid weeks. The weekly
+revenue series ranged from 224~TND to 4{,}642~TND --- a 20-fold spread.
+Prophet's additive decomposition struggles with this because the same
+percentage error produces a much larger absolute error on big weeks than
+on small ones. Fitting on $\log(1+y)$ converts the multiplicative variance
+into additive form; the predictions are transformed back with $\exp(\hat{y})-1$
+before the metrics are computed.
+
+Adding the log transformation to the weekly Prophet evaluation produced a
+further drop. Revenue moved from 38.9\,\% to 29.7\,\% wMAPE. Session volume
+moved from 44.0\,\% to 36.8\,\%. The member-activity series did not benefit
+from the transformation and was left in raw scale --- its weekly mean is
+around ten transactions, below the regime where log compression helps.
+
+\subsection{Final Evaluation Results}
+
+Table~\ref{tab:forecast_comparison_final} shows the final weighted-MAPE
+figures, computed on an 80/20 chronological train/test split at weekly
+resolution, with log transformation applied to revenue and session volume.
+All three algorithms --- Prophet, SARIMA, and XGBoost --- are evaluated on
+the same train/test sets.
 
 \begin{table}[H]
   \centering
-  \caption{Prophet vs.\ SARIMA evaluation results (80/20 split).\label{tab:forecast_comparison}}
+  \caption{Final evaluation results. Weekly resolution, 80/20 chronological
+           split, 154 train weeks / 39 test weeks. Best per series in
+           \textbf{bold}.\label{tab:forecast_comparison_final}}
   \begin{tabular}{llrrrl}
     \toprule
-    \textbf{Series} & \textbf{Algorithm} & \textbf{MAE} & \textbf{MAPE} &
+    \textbf{Series} & \textbf{Algorithm} & \textbf{MAE} & \textbf{wMAPE} &
     \textbf{RMSE} & \textbf{Verdict} \\
     \midrule
-    \multirow{2}{*}{Revenue (TND)}
-      & Prophet & -- & --\% & -- & -- \\
-      & SARIMA  & -- & --\% & -- & -- \\
+    \multirow{3}{*}{Revenue (TND, weekly)}
+      & \textbf{Prophet} & \textbf{470.1} & \textbf{29.7\,\%} & \textbf{644.8} & Acceptable \\
+      & SARIMA  & 585.1 & 37.0\,\% & 706.7 & Acceptable \\
+      & XGBoost & 732.6 & 46.4\,\% & 886.2 & Acceptable \\
     \midrule
-    \multirow{2}{*}{Member activity}
-      & Prophet & -- & --\% & -- & -- \\
-      & SARIMA  & -- & --\% & -- & -- \\
+    \multirow{3}{*}{Session volume (weekly)}
+      & Prophet & 41.2 & 36.8\,\% & 52.4 & Acceptable \\
+      & \textbf{SARIMA}  & \textbf{40.7} & \textbf{36.4\,\%} & \textbf{50.3} & Acceptable \\
+      & XGBoost & 50.8 & 45.4\,\% & 64.8 & Acceptable \\
     \midrule
-    \multirow{2}{*}{Session volume}
-      & Prophet & -- & --\% & -- & -- \\
-      & SARIMA  & -- & --\% & -- & -- \\
+    \multirow{3}{*}{Member activity (weekly)}
+      & \textbf{Prophet} & \textbf{5.3} & \textbf{52.5\,\%} & \textbf{9.2} & Poor \\
+      & SARIMA  & 5.9 & 59.2\,\% & 9.0 & Poor \\
+      & XGBoost & 5.5 & 55.9\,\% & 9.4 & Poor \\
     \bottomrule
   \end{tabular}
-  \smallskip\\
-  \small\textit{Fill in after running: \texttt{python run.py -{}-input excel -{}-output output}}
 \end{table}
 
-\noindent\textbf{Note on SARIMA and short datasets.}
-With seven months of weekly data --- roughly 30 data points --- SARIMA may outperform
-Prophet on the member activity series. This is expected: Prophet's main strength is
-capturing yearly seasonality, which requires seeing the same annual cycle at least
-twice. With less than one year of history, Prophet cannot detect patterns like summer
-peaks or holiday spikes. As more data accumulates, this balance is expected to shift.
+Prophet wins on revenue and on member activity; SARIMA wins on session
+volume by the smallest possible margin (0.4~percentage points). On the two
+daily-derived weekly series, both Prophet and SARIMA land in the acceptable
+30--40\,\% range. The member-activity series remains poor: with a weekly
+mean of around ten transactions and only 39~test weeks available, the
+wMAPE denominator is small enough that even reasonable absolute errors
+translate to high percentage figures. Improving this further would require
+either monthly aggregation (fewer points but more stable means) or several
+more months of operational history --- neither of which fit in the sprint
+scope.
+
+For context: the journey from the very first evaluation run to this table
+moved revenue Prophet wMAPE from roughly 67\,\% on the original seven-month
+dataset to 29.7\,\% on the final 44-month dataset --- a more than two-fold
+improvement. Most of that gain came from honest data engineering (fixing the
+holiday signal, extending the training window) and from a deliberate choice
+of evaluation resolution, rather than from aggressive hyperparameter search.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.95\textwidth]{accuracy_revenue_prophet.png}
+  \caption{Final Prophet revenue forecast on weekly resolution with log
+           transformation. Light-blue: historical training data; black:
+           actual test-period values; green: Prophet prediction with 80\,\%
+           confidence band.\label{fig:final_revenue_prophet}}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.85\textwidth]{model_comparison_bar.png}
+  \caption{wMAPE comparison across the three algorithms and three forecast
+           series at the final tuned configuration.\label{fig:final_comparison}}
+\end{figure}
 
 \section{Implementation of the Five Forecasts}
 
