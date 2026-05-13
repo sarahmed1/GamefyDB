@@ -132,3 +132,47 @@ class TestEidWeekPattern:
         """Eid al-Adha 2025 is Jun 7; Jun 8 should be elevated."""
         val = dg._eid_week_pattern(pd.Timestamp('2025-06-08'))
         assert val > 1.0
+
+
+class TestGeneratorsApplyMultipliers:
+    """Generate two short windows and check that synthetic revenue on
+    holiday-cluster days is materially higher than on neighbouring days."""
+
+    @pytest.fixture(scope='class')
+    def synthetic_cash(self):
+        """One year covering Ramadan 2025 + Eid al-Fitr 2025."""
+        start = pd.Timestamp('2025-02-01')
+        end   = pd.Timestamp('2025-04-15')
+        return dg.generate_cash(start, end)  # no daily_pool -> parametric path
+
+    def test_eid_al_fitr_2025_spikes_revenue(self, synthetic_cash):
+        """Mar 31 2025 (Eid al-Fitr) should average materially higher than
+        a baseline week earlier in March."""
+        df = synthetic_cash.copy()
+        df['day'] = df['date'].dt.normalize()
+        daily = df.groupby('day')['amount'].sum()
+        eid_rev = daily.get(pd.Timestamp('2025-03-31'), 0.0)
+        baseline = daily.loc['2025-02-15':'2025-02-21'].mean()
+        assert eid_rev > 1.5 * baseline, (
+            f'Eid al-Fitr revenue ({eid_rev:.0f}) should be >1.5x baseline '
+            f'({baseline:.0f})'
+        )
+
+    def test_eid_plus_1_still_elevated(self, synthetic_cash):
+        """Apr 1 2025 (Eid+1) should be above baseline (decaying spike)."""
+        df = synthetic_cash.copy()
+        df['day'] = df['date'].dt.normalize()
+        daily = df.groupby('day')['amount'].sum()
+        eid_p1 = daily.get(pd.Timestamp('2025-04-01'), 0.0)
+        baseline = daily.loc['2025-02-15':'2025-02-21'].mean()
+        assert eid_p1 > 1.2 * baseline
+
+    def test_last_week_of_ramadan_is_elevated(self, synthetic_cash):
+        """Last week of Ramadan 2025 (Mar 23-29) should beat first week
+        (Mar 01-07) thanks to the ramp."""
+        df = synthetic_cash.copy()
+        df['day'] = df['date'].dt.normalize()
+        daily = df.groupby('day')['amount'].sum()
+        first  = daily.loc['2025-03-01':'2025-03-07'].mean()
+        last   = daily.loc['2025-03-23':'2025-03-29'].mean()
+        assert last > first

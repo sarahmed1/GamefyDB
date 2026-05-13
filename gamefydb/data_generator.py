@@ -350,12 +350,15 @@ def generate_cash(start: pd.Timestamp, end: pd.Timestamp,
             new_sample = _sample_base_rev(day.month, daily_pool or {}, all_vals, ref_mul)
             week_level = 0.45 * week_level + 0.55 * new_sample
 
-        holiday_mul = _HOLIDAY_BOOST.get((day.month, day.day), 1.0)
+        holiday_mul  = _HOLIDAY_BOOST.get((day.year, day.month, day.day), 1.0)
+        ramadan_mul  = _ramadan_daily_mul(day)
+        eid_week_mul = _eid_week_pattern(day)
+        event_mul    = holiday_mul * ramadan_mul * eid_week_mul
 
         if daily_pool:
-            target_rev = max(5.0, week_level * DOW_MUL[day.dayofweek] * holiday_mul)
+            target_rev = max(5.0, week_level * DOW_MUL[day.dayofweek] * event_mul)
         else:
-            mul        = MONTHLY_MUL[day.month] * DOW_MUL[day.dayofweek] * holiday_mul
+            mul        = MONTHLY_MUL[day.month] * DOW_MUL[day.dayofweek] * event_mul
             day_factor = max(0.1, float(RNG.lognormal(-0.10, 0.45)))
             target_rev = max(5.0, BASE_DAILY_TX * mul * day_factor * _MEAN_TX_AMT)
 
@@ -401,8 +404,11 @@ def generate_sessions(start: pd.Timestamp, end: pd.Timestamp) -> pd.DataFrame:
     while day <= end:
         if day.dayofweek == 0:
             week_mul = 0.45 * week_mul + 0.55 * max(0.2, float(RNG.lognormal(0, 0.28)))
-        holiday_mul = _HOLIDAY_BOOST.get((day.month, day.day), 1.0)
-        mul = MONTHLY_MUL[day.month] * DOW_MUL[day.dayofweek] * week_mul * holiday_mul
+        holiday_mul  = _HOLIDAY_BOOST.get((day.year, day.month, day.day), 1.0)
+        ramadan_mul  = _ramadan_daily_mul(day)
+        eid_week_mul = _eid_week_pattern(day)
+        event_mul    = holiday_mul * ramadan_mul * eid_week_mul
+        mul = MONTHLY_MUL[day.month] * DOW_MUL[day.dayofweek] * week_mul * event_mul
         n_sess = max(1, int(RNG.poisson(32 * mul)))
         cashier_day = RNG.choice(CASHIERS, p=CASHIER_P)
 
@@ -454,7 +460,11 @@ def generate_stock(start: pd.Timestamp, end: pd.Timestamp) -> pd.DataFrame:
     rows = []
     day = start
     while day <= end:
-        mul = MONTHLY_MUL[day.month] * DOW_MUL[day.dayofweek]
+        holiday_mul  = _HOLIDAY_BOOST.get((day.year, day.month, day.day), 1.0)
+        ramadan_mul  = _ramadan_daily_mul(day)
+        eid_week_mul = _eid_week_pattern(day)
+        event_mul    = holiday_mul * ramadan_mul * eid_week_mul
+        mul = MONTHLY_MUL[day.month] * DOW_MUL[day.dayofweek] * event_mul
         n_ev = max(0, int(RNG.poisson(10 * mul)))
         cashier_day = RNG.choice(CASHIERS, p=CASHIER_P)
         ramadan_day = _in_ramadan(day)
