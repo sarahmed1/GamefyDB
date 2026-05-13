@@ -121,30 +121,65 @@ MONTHLY_MUL = {
 }
 
 # Holiday / event boost applied on top of the monthly multiplier.
-# Keys are (month, day); values are revenue multipliers.
-# Covers both fixed civil holidays and approximate Islamic holidays for 2024-2025.
-_HOLIDAY_BOOST = {
-    # Tunisian civil holidays
-    (1,  1): 2.8,  # New Year's Day
-    (1, 14): 1.6,  # Revolution Day
-    (3, 20): 1.8,  # Independence Day
-    (4,  9): 1.5,  # Martyrs' Day
-    (5,  1): 1.5,  # Labour Day
-    (7, 25): 1.8,  # Republic Day
-    (8, 13): 1.5,  # Women's Day
-    (10,15): 1.5,  # Evacuation Day
-    (12,25): 2.0,  # Christmas / school holiday peak
-    (12,31): 2.5,  # New Year's Eve
-    # Islamic holidays 2024 (approximate)
-    (6, 17): 2.5,  # Eid al-Adha 2024
-    (7,  8): 1.8,  # Islamic New Year 2024
-    (9, 16): 1.8,  # Mawlid 2024
-    # Islamic holidays 2025 (approximate)
-    (3, 30): 2.5,  # Eid al-Fitr 2025 (end of Ramadan)
-    (3, 31): 2.0,  # Day after Eid
-    (6,  7): 2.5,  # Eid al-Adha 2025
-    (6,  8): 2.0,  # Day after Eid
-}
+# Keys are (year, month, day); values are revenue multipliers.
+# Year-keyed so Islamic holidays (which shift each year) get the correct boost
+# on the correct day, and so a calendar mismatch in one year does not leak into
+# another (the old (month, day) keys leaked 2025 Eid dates into 2026, etc.).
+_HOLIDAY_BOOST: dict = {}
+
+# Civil holidays — repeat every year 2022..2026
+_CIVIL_BOOSTS = [
+    (1,  1, 3.2),  # New Year's Day  (lifted from 2.8)
+    (1, 14, 1.6),  # Revolution Day
+    (3, 20, 1.8),  # Independence Day
+    (4,  9, 1.5),  # Martyrs' Day
+    (5,  1, 1.5),  # Labour Day
+    (7, 25, 1.8),  # Republic Day
+    (8, 13, 1.5),  # Women's Day
+    (10, 15, 1.5), # Evacuation Day
+    (12, 25, 2.5), # Christmas (lifted from 2.0)
+    (12, 31, 2.7), # New Year's Eve (lifted from 2.5)
+]
+
+# Islamic holidays — synced with forecaster.py::_ISLAMIC_HOLIDAYS dates
+# Each tuple: (year, month, day, name, boost)
+_ISLAMIC_BOOSTS = [
+    (2022,  5,  2, 'Eid al-Fitr',     3.0),
+    (2022,  7,  9, 'Eid al-Adha',     3.0),
+    (2022,  7, 30, 'Islamic New Year', 1.8),
+    (2022, 10,  8, 'Mawlid',          1.8),
+    (2023,  4, 21, 'Eid al-Fitr',     3.0),
+    (2023,  6, 28, 'Eid al-Adha',     3.0),
+    (2023,  7, 19, 'Islamic New Year', 1.8),
+    (2023,  9, 27, 'Mawlid',          1.8),
+    (2024,  4, 10, 'Eid al-Fitr',     3.0),
+    (2024,  6, 17, 'Eid al-Adha',     3.0),
+    (2024,  7,  8, 'Islamic New Year', 1.8),
+    (2024,  9, 16, 'Mawlid',          1.8),
+    (2025,  3, 31, 'Eid al-Fitr',     3.0),
+    (2025,  6,  7, 'Eid al-Adha',     3.0),
+    (2025,  6, 27, 'Islamic New Year', 1.8),
+    (2025,  9,  5, 'Mawlid',          1.8),
+    (2026,  3, 21, 'Eid al-Fitr',     3.0),
+    (2026,  5, 27, 'Eid al-Adha',     3.0),
+    (2026,  6, 17, 'Islamic New Year', 1.8),
+]
+
+
+def _init_holiday_boost() -> None:
+    """Populate _HOLIDAY_BOOST with civil (repeat every year) + Islamic entries."""
+    for year in range(2022, 2027):
+        for m, d, boost in _CIVIL_BOOSTS:
+            try:
+                pd.Timestamp(year, m, d)  # validate the date
+                _HOLIDAY_BOOST[(year, m, d)] = boost
+            except ValueError:
+                pass
+    for year, m, d, _name, boost in _ISLAMIC_BOOSTS:
+        _HOLIDAY_BOOST[(year, m, d)] = boost
+
+
+_init_holiday_boost()
 
 # Baseline daily transaction count (scaled to match real data mean ~274 TND/day)
 BASE_DAILY_TX = 17.6

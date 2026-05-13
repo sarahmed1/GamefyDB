@@ -55,3 +55,47 @@ class TestRamadanDailyMul:
         dates = pd.date_range('2025-03-01', '2025-03-29')
         vals = [dg._ramadan_daily_mul(d) for d in dates]
         assert vals == sorted(vals)
+
+
+class TestHolidayBoost:
+    def test_keys_are_3_tuples(self):
+        """All keys must be (year, month, day)."""
+        for k in dg._HOLIDAY_BOOST.keys():
+            assert isinstance(k, tuple) and len(k) == 3
+            year, month, day = k
+            assert 2022 <= year <= 2026
+            assert 1 <= month <= 12
+            assert 1 <= day <= 31
+
+    def test_eid_al_fitr_2024_present(self):
+        """Eid al-Fitr 2024 was Apr 10 — missing in the old dict."""
+        assert dg._HOLIDAY_BOOST[(2024, 4, 10)] >= 2.5
+
+    def test_eid_al_fitr_2025_present(self):
+        """Eid al-Fitr 2025 is Mar 31 per Prophet's holiday calendar."""
+        assert dg._HOLIDAY_BOOST[(2025, 3, 31)] >= 2.5
+
+    def test_eid_al_fitr_2026_present(self):
+        """Eid al-Fitr 2026 is Mar 21 — critical for test-set predictions."""
+        assert dg._HOLIDAY_BOOST[(2026, 3, 21)] >= 2.5
+
+    def test_eid_al_adha_dates_present(self):
+        """Eid al-Adha dates for 2022..2026."""
+        expected = [(2022, 7, 9), (2023, 6, 28), (2024, 6, 17),
+                    (2025, 6, 7), (2026, 5, 27)]
+        for key in expected:
+            assert key in dg._HOLIDAY_BOOST, f'Missing Eid al-Adha {key}'
+
+    def test_new_year_lifted(self):
+        """New Year's Day was 2.8 in the old dict; spec lifts to 3.2."""
+        assert dg._HOLIDAY_BOOST[(2024, 1, 1)] >= 3.0
+        assert dg._HOLIDAY_BOOST[(2026, 1, 1)] >= 3.0
+
+    def test_christmas_lifted(self):
+        """Christmas was 2.0; spec lifts to 2.5."""
+        assert dg._HOLIDAY_BOOST[(2025, 12, 25)] >= 2.4
+
+    def test_civil_holiday_repeats_every_year(self):
+        """Republic Day (Jul 25) is fixed-date — present every year."""
+        for year in range(2022, 2027):
+            assert (year, 7, 25) in dg._HOLIDAY_BOOST
