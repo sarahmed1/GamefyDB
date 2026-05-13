@@ -97,6 +97,15 @@ def _to_daily(df: pd.DataFrame, date_col: str, value_col: str) -> pd.DataFrame:
     )
 
 
+def _to_weekly(daily: pd.DataFrame) -> pd.DataFrame:
+    """Aggregate a daily (ds, y) series to weekly sums, ds = week-start (Mon)."""
+    d = daily.copy()
+    d['_w'] = d['ds'].dt.to_period('W').apply(lambda p: p.start_time)
+    weekly = d.groupby('_w')['y'].sum().reset_index().rename(columns={'_w': 'ds'})
+    weekly['ds'] = pd.to_datetime(weekly['ds'])
+    return weekly
+
+
 def _check_stationarity(series: pd.Series, label: str) -> dict:
     """Run the Augmented Dickey-Fuller test on a time series and report the result."""
     clean = series.dropna()
@@ -168,13 +177,17 @@ def study_stationarity(transactions_df: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(results)
 
 
-def _evaluate_prophet(df: pd.DataFrame, split: float, freq: str = 'D') -> dict:
+def _evaluate_prophet(df: pd.DataFrame, split: float, freq: str = 'D',
+                       log_y: bool = False) -> dict:
     n = len(df)
     cutoff = int(n * split)
     if cutoff < 2 or n - cutoff < 2:
         return {}
 
     train, test = df.iloc[:cutoff].copy(), df.iloc[cutoff:].copy()
+
+    if log_y:
+        train['y'] = np.log1p(train['y'])
 
     holiday_df = _build_holiday_df(df['ds'].min(), df['ds'].max())
     m = Prophet(interval_width=0.8,
@@ -183,6 +196,9 @@ def _evaluate_prophet(df: pd.DataFrame, split: float, freq: str = 'D') -> dict:
     m.fit(train)
     future = m.make_future_dataframe(periods=len(test), freq=freq)
     fc = m.predict(future)
+
+    if log_y:
+        fc['yhat'] = np.expm1(fc['yhat'])
 
     merged = test.merge(fc[['ds', 'yhat']], on='ds', how='inner')
     if merged.empty:
@@ -370,10 +386,11 @@ def forecast_revenue(transactions_df: pd.DataFrame) -> pd.DataFrame:
     income = transactions_df[transactions_df['income_expense'] == 'Income'].copy()
     income['_v'] = income['amount_tnd']
     daily = _to_daily(income, 'transaction_datetime', '_v')
-    p = _evaluate_prophet(daily, split=0.8)
-    s = _evaluate_sarima(daily, split=0.8, m=7)
-    x = _evaluate_xgboost(daily, split=0.8)
-    _print_comparison('Revenue (TND)', len(daily), 0.8, p, s, x)
+    weekly_eval = _to_weekly(daily)
+    p = _evaluate_prophet(weekly_eval, split=0.8, freq='7D', log_y=True)
+    s = _evaluate_sarima(weekly_eval, split=0.8, m=4)
+    x = _evaluate_xgboost(weekly_eval, split=0.8)
+    _print_comparison('Revenue (TND, weekly)', len(weekly_eval), 0.8, p, s, x)
     weekly, monthly = _prophet_forecast(daily)
     result = pd.concat([weekly, monthly], ignore_index=True)
     return result[['date', 'granularity', 'yhat', 'yhat_lower', 'yhat_upper']]
@@ -488,10 +505,11 @@ def forecast_session_volume(transactions_df: pd.DataFrame) -> pd.DataFrame:
     df = transactions_df.copy()
     df['_v'] = 1
     daily = _to_daily(df, 'transaction_datetime', '_v')
-    p = _evaluate_prophet(daily, split=0.8)
-    s = _evaluate_sarima(daily, split=0.8, m=7)
-    x = _evaluate_xgboost(daily, split=0.8)
-    _print_comparison('Session volume', len(daily), 0.8, p, s, x)
+    weekly_eval = _to_weekly(daily)
+    p = _evaluate_prophet(weekly_eval, split=0.8, freq='7D', log_y=True)
+    s = _evaluate_sarima(weekly_eval, split=0.8, m=4)
+    x = _evaluate_xgboost(weekly_eval, split=0.8)
+    _print_comparison('Session volume (weekly)', len(weekly_eval), 0.8, p, s, x)
     weekly, monthly = _prophet_forecast(daily)
     result = pd.concat([weekly, monthly], ignore_index=True)
     for col in ['yhat', 'yhat_lower', 'yhat_upper']:
