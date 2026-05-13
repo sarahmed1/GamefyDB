@@ -332,6 +332,83 @@ def _plot_combined_models_accuracy(train, test, models, title, ylabel, out_path,
     _save(fig, out_path)
 
 
+def _print_error_decomposition(all_preds: dict, forecasts_dir: str) -> None:
+    """Decompose each model's headline test-set error into ordinary vs
+    holiday-cluster (Ramadan + Eid+0..+3) week subsets. Prints a table and
+    writes ``error_decomposition.csv``."""
+    from gamefydb.forecaster import holiday_week_starts
+
+    rows = []
+    for series_name, preds in all_preds.items():
+        test = preds['test']
+        if test is None or test.empty:
+            continue
+        hweeks = holiday_week_starts(test['ds'].min(), test['ds'].max())
+        for model_name, key in [('Prophet', 'prophet'),
+                                ('SARIMA',  'sarima'),
+                                ('XGBoost', 'xgb')]:
+            entry = preds.get(key)
+            if entry is None:
+                continue
+            if model_name == 'Prophet':
+                if entry.empty:
+                    continue
+                merged = entry[['ds', 'y', 'yhat']].copy()
+                merged.columns = ['ds', 'actual', 'pred']
+            else:
+                t, p = entry
+                if p is None:
+                    continue
+                merged = pd.DataFrame({'ds':     t['ds'].values,
+                                       'actual': t['y'].values,
+                                       'pred':   np.asarray(p)})
+            merged['is_holiday'] = merged['ds'].isin(hweeks)
+
+            def _wmape(df):
+                if df.empty or df['actual'].mean() <= 0:
+                    return float('nan')
+                return float(np.abs(df['actual'] - df['pred']).mean()
+                             / df['actual'].mean() * 100)
+
+            full_w = _wmape(merged)
+            ord_df = merged[~merged['is_holiday']]
+            hol_df = merged[ merged['is_holiday']]
+            ord_w  = _wmape(ord_df)
+            hol_w  = _wmape(hol_df)
+            total_mae = float(np.abs(merged['actual'] - merged['pred']).sum())
+            ord_share = (float(np.abs(ord_df['actual'] - ord_df['pred']).sum())
+                         / total_mae * 100) if total_mae > 0 else float('nan')
+            hol_share = (float(np.abs(hol_df['actual'] - hol_df['pred']).sum())
+                         / total_mae * 100) if total_mae > 0 else float('nan')
+
+            rows.append({
+                'series':   series_name,
+                'model':    model_name,
+                'n_total':  len(merged),
+                'n_ordinary': len(ord_df),
+                'n_holiday':  len(hol_df),
+                'wmape_full':     round(full_w, 2),
+                'wmape_ordinary': round(ord_w,  2),
+                'wmape_holiday':  round(hol_w,  2),
+                'pct_total_err_from_ordinary': round(ord_share, 1),
+                'pct_total_err_from_holiday':  round(hol_share, 1),
+            })
+
+    if not rows:
+        return
+    df = pd.DataFrame(rows)
+    out_path = os.path.join(forecasts_dir, 'error_decomposition.csv')
+    df.to_csv(out_path, index=False)
+
+    print('    {:11s} {:8s} {:>6s} {:>6s} {:>7s} {:>7s} {:>7s} {:>10s}'.format(
+        'series', 'model', 'n_ord', 'n_hol', 'wMAPE', 'wM(ord)', 'wM(hol)', 'err_hol_%'))
+    for r in rows:
+        print('    {:11s} {:8s} {:6d} {:6d} {:6.1f}% {:6.1f}% {:6.1f}% {:9.1f}%'.format(
+            r['series'][:11], r['model'], r['n_ordinary'], r['n_holiday'],
+            r['wmape_full'], r['wmape_ordinary'], r['wmape_holiday'],
+            r['pct_total_err_from_holiday']))
+
+
 def _plot_single_model_accuracy(train, test, model_name, color, linestyle,
                                 pred_ds, pred_actual, pred_values,
                                 yhat_lower=None, yhat_upper=None,
@@ -869,6 +946,9 @@ def generate_all_figures(transactions_df: pd.DataFrame, dim_member: pd.DataFrame
 
     print('  Computing model evaluations (Prophet / SARIMA / XGBoost — runs once)...')
     all_preds = _compute_all_predictions(transactions_df)
+
+    print('  Error decomposition: ordinary weeks vs Ramadan/Eid weeks...')
+    _print_error_decomposition(all_preds, forecasts_dir)
 
     print('  Accuracy — revenue (Prophet / SARIMA / XGBoost, one PNG each)...')
     plot_accuracy_revenue(figures_dir, all_preds['revenue'])

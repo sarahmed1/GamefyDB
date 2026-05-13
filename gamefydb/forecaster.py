@@ -106,6 +106,32 @@ def _to_weekly(daily: pd.DataFrame) -> pd.DataFrame:
     return weekly
 
 
+def holiday_week_starts(min_date: pd.Timestamp, max_date: pd.Timestamp) -> set:
+    """Week-start (Monday) timestamps covered by Ramadan, Eid, or the Eid+1..Eid+3
+    cluster. Used by the error-decomposition analysis to separate "ordinary"
+    weeks from "holiday-cluster" weeks in the test set.
+    """
+    from gamefydb.data_generator import _RAMADAN_PERIODS
+    days = set()
+    for start, end in _RAMADAN_PERIODS:
+        if end < min_date or start > max_date:
+            continue
+        for d in pd.date_range(max(start, min_date), min(end, max_date)):
+            days.add(d)
+    for year, month, day, name, lower, upper in _ISLAMIC_HOLIDAYS:
+        if 'Eid' not in name:
+            continue
+        try:
+            eid = pd.Timestamp(year, month, day)
+        except ValueError:
+            continue
+        for offset in range(lower, upper + 1):
+            d = eid + pd.Timedelta(days=offset)
+            if min_date <= d <= max_date:
+                days.add(d)
+    return {pd.Timestamp(d).to_period('W').start_time for d in days}
+
+
 def _check_stationarity(series: pd.Series, label: str) -> dict:
     """Run the Augmented Dickey-Fuller test on a time series and report the result."""
     clean = series.dropna()
