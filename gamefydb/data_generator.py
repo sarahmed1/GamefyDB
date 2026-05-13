@@ -104,6 +104,38 @@ def _ramadan_daily_mul(date: pd.Timestamp) -> float:
                 return 1.10 + 0.40 * ((pos - 0.75) / 0.25)  # 1.10 -> 1.50
     return 1.0
 
+
+# Eid dates per year — must match the Islamic boost entries above.
+_EID_DATES: dict[int, list[pd.Timestamp]] = {
+    2022: [pd.Timestamp('2022-05-02'), pd.Timestamp('2022-07-09')],
+    2023: [pd.Timestamp('2023-04-21'), pd.Timestamp('2023-06-28')],
+    2024: [pd.Timestamp('2024-04-10'), pd.Timestamp('2024-06-17')],
+    2025: [pd.Timestamp('2025-03-31'), pd.Timestamp('2025-06-07')],
+    2026: [pd.Timestamp('2026-03-21'), pd.Timestamp('2026-05-27')],
+}
+
+# Eid+N day boost as a fraction of the Eid day boost: 80 %, 60 %, 40 %.
+_EID_DAY_OFFSET_RATIO = {1: 0.8, 2: 0.6, 3: 0.4}
+
+
+def _eid_week_pattern(date: pd.Timestamp) -> float:
+    """Boost multiplier for the 3 days following an Eid (Eid+1..Eid+3).
+
+    The Eid day itself is handled by _HOLIDAY_BOOST. For Eid+N (N=1..3),
+    apply a decaying fraction of the same boost so the cluster appears as
+    a multi-day spike (matches real behaviour — gaming centres stay full
+    for several days post-Eid).
+
+    Returns 1.0 outside the Eid+1..Eid+3 window.
+    """
+    eids = _EID_DATES.get(date.year, [])
+    for eid in eids:
+        delta = (date - eid).days
+        if delta in _EID_DAY_OFFSET_RATIO:
+            eid_boost = _HOLIDAY_BOOST.get((eid.year, eid.month, eid.day), 3.0)
+            return 1.0 + (eid_boost - 1.0) * _EID_DAY_OFFSET_RATIO[delta]
+    return 1.0
+
 # Monthly revenue multiplier relative to September baseline.
 MONTHLY_MUL = {
     1: 1.03,   # Jan   (New Year holiday week spikes)

@@ -99,3 +99,36 @@ class TestHolidayBoost:
         """Republic Day (Jul 25) is fixed-date — present every year."""
         for year in range(2022, 2027):
             assert (year, 7, 25) in dg._HOLIDAY_BOOST
+
+
+class TestEidWeekPattern:
+    def test_outside_eid_window_returns_one(self):
+        assert dg._eid_week_pattern(pd.Timestamp('2025-07-15')) == 1.0
+        assert dg._eid_week_pattern(pd.Timestamp('2025-12-31')) == 1.0
+
+    def test_eid_day_itself_returns_one(self):
+        """Eid day boost comes from _HOLIDAY_BOOST, not from this function."""
+        assert dg._eid_week_pattern(pd.Timestamp('2025-03-31')) == 1.0  # Eid al-Fitr 2025
+        assert dg._eid_week_pattern(pd.Timestamp('2026-03-21')) == 1.0  # Eid al-Fitr 2026
+
+    def test_eid_plus_1_is_80_percent_of_eid_boost(self):
+        """Day after Eid al-Fitr 2026: 1.0 + (3.0 - 1.0) * 0.8 = 2.6."""
+        val = dg._eid_week_pattern(pd.Timestamp('2026-03-22'))
+        assert abs(val - 2.6) < 0.01
+
+    def test_eid_plus_2_is_60_percent_of_eid_boost(self):
+        val = dg._eid_week_pattern(pd.Timestamp('2026-03-23'))
+        assert abs(val - 2.2) < 0.01
+
+    def test_eid_plus_3_is_40_percent_of_eid_boost(self):
+        val = dg._eid_week_pattern(pd.Timestamp('2026-03-24'))
+        assert abs(val - 1.8) < 0.01
+
+    def test_eid_plus_4_returns_one(self):
+        """Window is Eid+1..Eid+3 only."""
+        assert dg._eid_week_pattern(pd.Timestamp('2026-03-25')) == 1.0
+
+    def test_eid_al_adha_window_also_works(self):
+        """Eid al-Adha 2025 is Jun 7; Jun 8 should be elevated."""
+        val = dg._eid_week_pattern(pd.Timestamp('2025-06-08'))
+        assert val > 1.0
