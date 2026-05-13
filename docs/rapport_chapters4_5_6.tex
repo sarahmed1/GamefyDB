@@ -1052,6 +1052,54 @@ of evaluation resolution, rather than from aggressive hyperparameter search.
            series at the final tuned configuration.\label{fig:final_comparison}}
 \end{figure}
 
+\subsection{Why the SARIMA Line Looks Flat}
+
+A visible feature of the combined accuracy charts (Figure~\ref{fig:final_revenue_prophet}
+and its companions) is that the SARIMA prediction line stays close to a horizontal
+band around the training-set mean, even when the actual revenue spikes sharply during
+Eid or holiday weeks. This is not a bug --- it is a direct consequence of the algorithm
+itself, and it is worth explaining because a reader unfamiliar with classical time-series
+methods may otherwise assume the model failed.
+
+SARIMA is a purely autoregressive linear model. It can only learn patterns that repeat
+at its declared seasonal period~$m$, which is set to~$m=4$ for the weekly series
+(approximating a monthly cycle). A yearly seasonality at $m=52$ would in principle let
+SARIMA see annual cycles, but with only roughly four years of history the higher-order
+seasonal terms are unstable and \texttt{auto\_arima} typically refuses to fit them.
+The model therefore has no internal mechanism to detect that a particular week is the
+one containing Eid al-Fitr, which is exactly the kind of one-off event whose date
+shifts by about eleven days each year.
+
+Three additional factors push the predictions toward the mean:
+
+\begin{itemize}
+  \item \textbf{No exogenous holiday calendar.} Prophet receives the explicit list of
+        Tunisian civil and Islamic holiday dates as its \texttt{holidays=} argument and
+        learns a coefficient for each. SARIMA, in this implementation, receives only
+        the raw series with no calendar features. A SARIMAX extension with exogenous
+        regressors would close part of the gap.
+  \item \textbf{Recursive forecast horizon.} SARIMA predicts one step at a time and uses
+        its own previous prediction as input for the next step. Each step pulls slightly
+        toward the long-run mean; after twenty or thirty steps the forecast has decayed
+        to a near-constant level even if the early predictions were lively.
+  \item \textbf{Differencing.} \texttt{auto\_arima} typically selects $d=1$ to make the
+        series stationary. Forecasting the differenced series and integrating back
+        produces a smooth extrapolation rather than a spiky one.
+\end{itemize}
+
+The flat SARIMA line is therefore the model's honest answer: "I cannot identify which
+week contains the next holiday, so I will predict the average revenue." It is a
+serious limitation for revenue forecasting, where holiday weeks are the most
+operationally important to predict. But it also explains why SARIMA's overall wMAPE
+remains competitive on session volume (36.4\,\%, marginally beating Prophet's
+36.8\,\%): the session-volume series is less spiky than revenue, and a "predict the
+mean" strategy is genuinely close to optimal when the mean is stable.
+
+In thesis terms, SARIMA's flatness is exactly the result that justifies the choice
+of Prophet for the production forecast. Prophet's additive decomposition with an
+explicit holiday calendar is the component SARIMA lacks, and the accuracy charts
+make that lack visible at a glance.
+
 \section{Implementation of the Five Forecasts}
 
 \subsection{Revenue Forecast}
