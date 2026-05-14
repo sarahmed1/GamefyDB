@@ -1,6 +1,7 @@
 import streamlit as st
 from dotenv import load_dotenv
 from chatbot.chart_generator import make_chart
+from chatbot.voice_component import voice_input
 
 load_dotenv(override=True)
 
@@ -158,7 +159,13 @@ with col_chat:
         st.session_state.voice_pending = None
 
     # Input row
-    input_col, send_col = st.columns([6, 2])
+    voice_col, input_col, send_col = st.columns([1, 5, 2])
+    with voice_col:
+        transcript = voice_input(language=st.session_state.language)
+        if transcript and transcript != st.session_state._last_transcript:
+            st.session_state._last_transcript = transcript
+            st.session_state.voice_pending = transcript
+            st.rerun()
     with input_col:
         user_text = st.text_input(
             "",
