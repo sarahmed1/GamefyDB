@@ -67,12 +67,40 @@ def _build_summary(tables: dict) -> str:
         top5 = tables["member_loyalty"].nlargest(5, "total_tnd")[["username", "total_tnd"]].to_dict("records")
         parts.append(f"Loyalty tiers: {dist}")
         parts.append(f"Top 5 members by revenue: {top5}")
+    if "forecast_revenue" in tables:
+        df = tables["forecast_revenue"]
+        parts.append(_forecast_highlight(df, label="Revenue forecast", unit="TND"))
+    if "session_volume" in tables:
+        df = tables["session_volume"]
+        parts.append(_forecast_highlight(df, label="Session volume forecast", unit="sessions"))
+        parts.append("NOTE: fact_session has NO date column — use session_volume for trends over time.")
+    if "fact_session" in tables:
+        df = tables["fact_session"]
+        avg_dur = df["duration_min"].mean() if "duration_min" in df.columns else 0
+        types = df["session_type"].value_counts().to_dict() if "session_type" in df.columns else {}
+        parts.append(f"Sessions (historical, no date column): {len(df)} total sessions, avg duration {avg_dur:.0f} min, types: {types}. Use for duration/type stats, NOT time-series charts.")
     if "anomalies" in tables:
         df = tables["anomalies"].copy()
         df["date"] = pd.to_datetime(df["date"])
         recent = df[df["date"] >= pd.Timestamp.now() - pd.Timedelta(days=7)]
         parts.append(f"Recent anomalies (last 7 days): {len(recent)}")
     return "\n".join(parts)
+
+
+def _forecast_highlight(df: pd.DataFrame, label: str, unit: str) -> str:
+    granularities = df["granularity"].unique().tolist() if "granularity" in df.columns else []
+    bits = [f"{label} (future predictions only, {len(df)} rows, granularities={granularities}, columns: date, yhat, yhat_lower, yhat_upper)."]
+    if "granularity" in df.columns and "yhat" in df.columns:
+        weekly = df[df["granularity"] == "weekly"].sort_values("date").head(4)
+        if len(weekly) > 0:
+            vals = ", ".join(f"{row['date']}: {row['yhat']:.0f}" for _, row in weekly.iterrows())
+            avg = weekly["yhat"].mean()
+            bits.append(f"Next {len(weekly)} weeks ({unit}): {vals}. Avg ~{avg:.0f} {unit}/week.")
+        monthly = df[df["granularity"] == "monthly"].sort_values("date").head(3)
+        if len(monthly) > 0:
+            vals = ", ".join(f"{row['date']}: {row['yhat']:.0f}" for _, row in monthly.iterrows())
+            bits.append(f"Next {len(monthly)} months ({unit}): {vals}.")
+    return " ".join(bits)
 
 
 def recent_anomaly_count(ctx: DataContext) -> int:

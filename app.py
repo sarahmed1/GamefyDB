@@ -20,6 +20,7 @@ STRINGS = {
         "summary_btn": "📊 Full summary",
         "advice_btn": "💡 Give me advice",
         "anomaly_btn": "⚠️ Any anomalies?",
+        "forecast_btn": "🔮 Forecast",
         "send": "Send",
         "download": "⬇ Download chart",
         "refresh": "🔄 Refresh",
@@ -35,6 +36,7 @@ STRINGS = {
         "summary_btn": "📊 Résumé complet",
         "advice_btn": "💡 Conseils",
         "anomaly_btn": "⚠️ Anomalies récentes?",
+        "forecast_btn": "🔮 Prévisions",
         "send": "Envoyer",
         "download": "⬇ Télécharger",
         "refresh": "🔄 Actualiser",
@@ -50,6 +52,7 @@ STRINGS = {
         "summary_btn": "📊 ملخص شامل",
         "advice_btn": "💡 نصائح",
         "anomaly_btn": "⚠️ أي شذوذات؟",
+        "forecast_btn": "🔮 التوقعات",
         "send": "إرسال",
         "download": "⬇ تحميل",
         "refresh": "🔄 تحديث",
@@ -137,7 +140,7 @@ with col_chat:
                             st.rerun()
 
     # Quick action buttons
-    qa_col1, qa_col2, qa_col3 = st.columns(3)
+    qa_col1, qa_col2, qa_col3, qa_col4 = st.columns(4)
     with qa_col1:
         if st.button(strings["summary_btn"], key="qa_summary", use_container_width=True):
             st.session_state.voice_pending = "Give me a full summary of everything"
@@ -149,6 +152,10 @@ with col_chat:
     with qa_col3:
         if st.button(strings["anomaly_btn"], key="qa_anomaly", use_container_width=True):
             st.session_state.voice_pending = "Show me recent anomalies"
+            st.rerun()
+    with qa_col4:
+        if st.button(strings["forecast_btn"], key="qa_forecast", use_container_width=True):
+            st.session_state.voice_pending = "Show me the revenue forecast for the next 4 weeks as a line chart"
             st.rerun()
 
     # Promote a pending value (from voice, suggestion chip, or quick action)

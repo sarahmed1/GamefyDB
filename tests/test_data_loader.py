@@ -68,6 +68,27 @@ def test_recent_anomaly_count_no_anomalies_table():
     assert recent_anomaly_count(ctx) == 0
 
 
+def test_build_summary_includes_forecast_highlights():
+    tables = _make_tables()
+    tables["forecast_revenue"] = pd.DataFrame({
+        "date": ["2026-05-12", "2026-05-19", "2026-06-04"],
+        "granularity": ["weekly", "weekly", "monthly"],
+        "yhat": [1554.9, 1422.3, 8661.5],
+        "yhat_lower": [573.7, 445.6, 4379.7],
+        "yhat_upper": [2532.6, 2405.8, 12894.8],
+    })
+    summary = _build_summary(tables)
+    assert "Revenue forecast" in summary
+    assert "1555" in summary or "1554" in summary
+    assert "8661" in summary or "8662" in summary
+
+
+def test_build_summary_forecast_handles_missing_granularity():
+    tables = {"forecast_revenue": pd.DataFrame({"date": ["2026-05-12"], "yhat": [100.0]})}
+    summary = _build_summary(tables)
+    assert "Revenue forecast" in summary
+
+
 def test_load_data_skips_missing_files(tmp_path):
     ctx = load_data(base_dir=str(tmp_path))
     assert isinstance(ctx, DataContext)
