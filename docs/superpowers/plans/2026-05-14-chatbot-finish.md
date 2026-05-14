@@ -23,71 +23,85 @@ No new files. No test files touched. Reference spec: `docs/superpowers/specs/202
 
 ---
 
-## Task 1: Refactor voice_pending → chat_input_value state flow
+## Task 1: Refactor voice_pending state flow
 
-The current code in `app.py:152-163` mutates `st.session_state["user_input_field"]` directly and uses a brittle equality check to clear `voice_pending`. Replace with a clean pattern where `voice_pending` is a one-shot signal that gets copied into a dedicated input-value key, then cleared immediately.
+The current code in `app.py:152-163` uses a brittle equality check (`user_text == st.session_state.voice_pending`) to clear `voice_pending` *after* the widget renders. If the user edits the prefilled text before sending, the equality fails and `voice_pending` stays set across reruns. The fix: clear `voice_pending` *before* the widget renders, right after copying it into the widget's state key.
 
 **Files:**
-- Modify: `app.py:64-75` (session state init)
-- Modify: `app.py:152-172` (input row + send-handling logic)
+- Modify: `app.py:64-75` (session state init — add `_last_transcript` for Task 2)
+- Modify: `app.py:151-172` (input row + send-handling logic)
 
-- [ ] **Step 1: Add `chat_input_value` to session state init**
+- [ ] **Step 1: Add `_last_transcript` to session state init (used in Task 2)**
 
-Open `app.py`. Find the session state init block (currently around line 64-75 — contains `if "language" not in st.session_state:` through `if "voice_pending" not in st.session_state:`).
-
-After the `voice_pending` init, add:
+Find the session state init block (currently around `app.py:64-75`, ending with `if "voice_pending" not in st.session_state:`). After that block, append:
 
 ```python
-if "chat_input_value" not in st.session_state:
-    st.session_state.chat_input_value = ""
 if "_last_transcript" not in st.session_state:
     st.session_state._last_transcript = None
 ```
 
-- [ ] **Step 2: Apply `voice_pending` before rendering the text input**
+- [ ] **Step 2: Move the voice_pending clear to before the widget renders**
 
-Find the "Input row" block (currently `app.py:152` onwards: `input_col, send_col = st.columns([6, 2])`).
-
-Replace the entire block from `# Input row` through the `with send_col:` block (about lines 151-165) with:
+Find the `with input_col:` block (currently `app.py:153-163`):
 
 ```python
-    # Promote a pending value (from voice, suggestion chip, or quick action)
-    # into the input field BEFORE the widget is rendered, then clear the signal.
-    if st.session_state.voice_pending is not None:
-        st.session_state.chat_input_value = st.session_state.voice_pending
-        st.session_state.voice_pending = None
-
-    # Input row
-    input_col, send_col = st.columns([6, 2])
     with input_col:
+        if st.session_state.voice_pending:
+            st.session_state["user_input_field"] = st.session_state.voice_pending
         user_text = st.text_input(
             "",
-            value=st.session_state.chat_input_value,
             placeholder=strings["placeholder"],
             label_visibility="collapsed",
             key="user_input_field",
         )
-    with send_col:
-        send_clicked = st.button(strings["send"], type="primary", use_container_width=True)
+        if st.session_state.voice_pending and user_text == st.session_state.voice_pending:
+            st.session_state.voice_pending = None
 ```
 
-Note: Task 2 will insert `voice_col` into the `st.columns(...)` line — leave it at `[6, 2]` for now.
+Replace with:
+
+```python
+    # Promote a pending value (from voice, suggestion chip, or quick action)
+    # into the input widget's state key, then clear the signal so it can't
+    # re-inject on the next rerun.
+    if st.session_state.voice_pending is not None:
+        st.session_state["user_input_field"] = st.session_state.voice_pending
+        st.session_state.voice_pending = None
+
+    with input_col:
+        user_text = st.text_input(
+            "",
+            placeholder=strings["placeholder"],
+            label_visibility="collapsed",
+            key="user_input_field",
+        )
+```
 
 - [ ] **Step 3: Simplify the send handler**
 
-Find the `# Handle send` block (currently around `app.py:167-172`). Replace it with:
+Find the `# Handle send` block (currently `app.py:167-172`):
 
 ```python
     # Handle send
     query = None
     if send_clicked and user_text.strip():
         query = user_text.strip()
-        st.session_state.chat_input_value = ""
+    elif st.session_state.voice_pending and not user_text.strip():
+        query = st.session_state.voice_pending
 ```
 
-(Removes the dead `elif st.session_state.voice_pending and not user_text.strip():` branch — `voice_pending` is now consumed before the widget renders, so it can't reach this point.)
+Replace with:
 
-Also remove the line `st.session_state.voice_pending = None` from inside the `if query:` block (currently `app.py:175`) — it's a no-op now.
+```python
+    # Handle send
+    query = None
+    if send_clicked and user_text.strip():
+        query = user_text.strip()
+```
+
+(The `elif` branch is dead — `voice_pending` is now always `None` by the time we reach here.)
+
+Also, inside the `if query:` block just below, remove the line `st.session_state.voice_pending = None` (currently `app.py:175`) — it's a no-op now.
 
 - [ ] **Step 4: Verify existing tests still pass**
 
