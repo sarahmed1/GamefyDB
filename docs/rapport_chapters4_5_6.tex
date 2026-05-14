@@ -661,13 +661,13 @@ The results are shown in Table~\ref{tab:adf_results}.
     \textbf{Series} & \textbf{ADF statistic} & \textbf{p-value} &
     \textbf{Critical (5\%)} & \textbf{Verdict} \\
     \hline
-    Revenue (TND, daily)    & \emph{see CSV} & \emph{see CSV} & \emph{see CSV} & \emph{see CSV} \\
-    Session volume (daily)  & \emph{see CSV} & \emph{see CSV} & \emph{see CSV} & \emph{see CSV} \\
-    Member activity (weekly)& \emph{see CSV} & \emph{see CSV} & \emph{see CSV} & \emph{see CSV} \\
+    Revenue (TND, daily)    & $-5.213$ & $<0.001$ & $-2.864$ & stationary \\
+    Session volume (daily)  & $-4.973$ & $<0.001$ & $-2.864$ & stationary \\
+    Member activity (weekly)& $-5.957$ & $<0.001$ & $-2.877$ & stationary \\
     \hline
   \end{tabular}
   \caption{ADF stationarity test results for the three forecast series
-           (fill values from \texttt{output/forecasts/stationarity\_tests.csv} after running the pipeline).%
+           Source: \texttt{output/forecasts/stationarity\_tests.csv}.%
            \label{tab:adf_results}}
 \end{table}
 
