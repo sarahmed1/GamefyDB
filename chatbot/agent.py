@@ -1,7 +1,8 @@
 import json
 import os
 import re
-import anthropic
+from google import genai
+from google.genai import types
 from chatbot.data_loader import DataContext
 
 _LANG_INSTRUCTIONS = {
@@ -34,24 +35,43 @@ Instructions:
 ```
 4. If the question cannot be answered from the available data, say so clearly.
 5. Never invent data.
+
+Source selection rules — pick the right table for the question:
+- Revenue or income trend over time → `fact_transaction` (filter `type == 'Income'`, x=`date`, y=`amount`).
+- Future revenue projections → `forecast_revenue` (use `filter "granularity == 'weekly'"` or `'monthly'`, y=`yhat`).
+- Future session counts → `session_volume` (same granularity filter, y=`yhat`).
+- Session duration / type breakdown → `fact_session` (NO date column — never plot it over time).
+- Anomalies / unusual days → `anomalies` only when the user asks about anomalies; do NOT use it as a generic revenue source.
+- Member rankings, top spenders → `member_loyalty` or `dim_member`.
+- Loyalty tier distribution → `member_loyalty` (x=`loyalty_tier`).
+- Segments / clusters → `member_segments` (x=`segment_label`).
+- Hourly / daily activity patterns → `peak_hours_by_hour` or `peak_hours_by_day`.
+
+Only include a chart when one is genuinely useful. Don't add a chart to a pure-text question.
 """
 
 
 def ask(ctx: DataContext, messages: list, user_message: str, language: str) -> dict:
-    api_key = os.environ.get("ANTHROPIC_API_KEY")
+    api_key = os.environ.get("GEMINI_API_KEY")
     if not api_key:
-        raise RuntimeError(
-            "ANTHROPIC_API_KEY is not set. Copy .env.example to .env and add your key."
+        raise RuntimeError("GEMINI_API_KEY is not set. Add it to your .env file.")
+    client = genai.Client(api_key=api_key)
+    history = [
+        types.Content(
+            role="model" if m["role"] == "assistant" else "user",
+            parts=[types.Part(text=m["content"])],
         )
-    client = anthropic.Anthropic(api_key=api_key)
-    history = list(messages) + [{"role": "user", "content": user_message}]
-    response = client.messages.create(
-        model="claude-sonnet-4-6",
-        max_tokens=2048,
-        system=build_system_prompt(ctx, language),
-        messages=history,
+        for m in messages
+    ]
+    history.append(types.Content(role="user", parts=[types.Part(text=user_message)]))
+    response = client.models.generate_content(
+        model="gemini-3-flash-preview",
+        contents=history,
+        config=types.GenerateContentConfig(
+            system_instruction=build_system_prompt(ctx, language),
+        ),
     )
-    return _parse_response(response.content[0].text)
+    return _parse_response(response.text)
 
 
 def _parse_response(text: str) -> dict:
