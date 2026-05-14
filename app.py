@@ -2,7 +2,7 @@ import streamlit as st
 from dotenv import load_dotenv
 from chatbot.chart_generator import make_chart
 
-load_dotenv()
+load_dotenv(override=True)
 
 st.set_page_config(
     page_title="GamefyDB Assistant",
@@ -73,6 +73,8 @@ if "last_chart_spec" not in st.session_state:
     st.session_state.last_chart_spec = None
 if "voice_pending" not in st.session_state:
     st.session_state.voice_pending = None
+if "_last_transcript" not in st.session_state:
+    st.session_state._last_transcript = None
 
 # ── Load data (once) ───────────────────────────────────────────────
 @st.cache_resource
@@ -148,27 +150,22 @@ with col_chat:
             st.session_state.voice_pending = "Show me recent anomalies"
             st.rerun()
 
-    # Voice + text input row
-    voice_col, input_col, send_col = st.columns([1, 6, 2])
-    with voice_col:
-        from chatbot.voice_component import voice_input
-        transcript = voice_input(language=st.session_state.language)
-        if transcript and transcript != st.session_state.get("_last_transcript"):
-            st.session_state["_last_transcript"] = transcript
-            st.session_state.voice_pending = transcript
-            st.rerun()
+    # Promote a pending value (from voice, suggestion chip, or quick action)
+    # into the input widget's state key, then clear the signal so it can't
+    # re-inject on the next rerun.
+    if st.session_state.voice_pending is not None:
+        st.session_state["user_input_field"] = st.session_state.voice_pending
+        st.session_state.voice_pending = None
 
+    # Input row
+    input_col, send_col = st.columns([6, 2])
     with input_col:
-        if st.session_state.voice_pending:
-            st.session_state["user_input_field"] = st.session_state.voice_pending
         user_text = st.text_input(
             "",
             placeholder=strings["placeholder"],
             label_visibility="collapsed",
             key="user_input_field",
         )
-        if st.session_state.voice_pending and user_text == st.session_state.voice_pending:
-            st.session_state.voice_pending = None
     with send_col:
         send_clicked = st.button(strings["send"], type="primary", use_container_width=True)
 
@@ -176,11 +173,8 @@ with col_chat:
     query = None
     if send_clicked and user_text.strip():
         query = user_text.strip()
-    elif st.session_state.voice_pending and not user_text.strip():
-        query = st.session_state.voice_pending
 
     if query:
-        st.session_state.voice_pending = None
         st.session_state.messages.append({"role": "user", "content": query, "chart_spec": None, "suggestions": []})
         from chatbot.agent import ask
         try:
