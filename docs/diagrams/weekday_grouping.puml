@@ -1,0 +1,62 @@
+@startuml weekday_grouping
+title Day-of-Week Grouping for Anomaly Detection
+
+skinparam shadowing false
+skinparam ArrowColor #333
+skinparam rectangle {
+  RoundCorner 8
+  FontSize 11
+}
+
+' --- Top: two weeks of daily revenue bars, colored by weekday ---
+together {
+  rectangle "Mon\nweek 1" as M1 #BBDEFB
+  rectangle "Tue\nweek 1" as T1 #FFE082
+  rectangle "Wed\nweek 1" as W1 #C8E6C9
+  rectangle "Thu\nweek 1" as H1 #E1BEE7
+  rectangle "Fri\nweek 1" as F1 #FFCCBC
+  rectangle "Sat\nweek 1" as S1 #F8BBD0
+  rectangle "Sun\nweek 1" as U1 #B3E5FC
+}
+
+together {
+  rectangle "Mon\nweek 2" as M2 #BBDEFB
+  rectangle "Tue\nweek 2" as T2 #FFE082
+  rectangle "Wed\nweek 2" as W2 #C8E6C9
+  rectangle "Thu\nweek 2" as H2 #E1BEE7
+  rectangle "Fri\nweek 2" as F2 #FFCCBC
+  rectangle "Sat\nweek 2" as S2 #F8BBD0
+  rectangle "Sun\nweek 2" as U2 #B3E5FC
+}
+
+' --- Bottom: same-DOW pools after grouping ---
+package "Pool: all Mondays" as PM #BBDEFB
+package "Pool: all Tuesdays" as PT #FFE082
+package "Pool: all Saturdays" as PS #F8BBD0
+package "..." as PX #EEEEEE
+
+M1 --> PM
+M2 --> PM
+T1 --> PT
+T2 --> PT
+S1 --> PS
+S2 --> PS
+
+' --- Compare today vs its own DOW pool ---
+rectangle "Today\n(a Saturday)" as TODAY #FFCDD2
+rectangle "Z-score vs\nall Saturdays" as Z #FFF59D
+rectangle "Anomaly?\n|z| > 2.5" as ANOM #FFAB91
+
+TODAY --> Z
+PS --> Z
+Z --> ANOM
+
+note bottom of ANOM
+  Each day is compared only against
+  historical values for the **same**
+  day of week — a Saturday spike
+  is judged against other Saturdays,
+  not against quiet Tuesdays.
+end note
+
+@enduml

@@ -1,0 +1,53 @@
+@startuml pipeline
+title GamefyDB ETL Pipeline Architecture
+
+skinparam componentStyle rectangle
+skinparam shadowing false
+skinparam ArrowColor #333
+skinparam component {
+  BackgroundColor<<stage>> #E3F2FD
+  BorderColor<<stage>> #1565C0
+}
+skinparam folder {
+  BackgroundColor #FFF8E1
+  BorderColor #F9A825
+}
+
+folder "excel/" as input {
+  file "Cash DATA\n01-09-2025.xls" as cash
+  file "DATA session\nreports 01-09-2025.xls" as sess
+  file "Stock DATA\n01-09-2025.xls" as stock
+  file "memeber DATA\n01-09-2025.xls" as mem
+}
+
+component "ingestor.py\n(xlrd → DataFrames)" as ing <<stage>>
+component "cleaner.py\n(typing, artifacts)" as cln <<stage>>
+component "transformer.py\n(star schema)" as trans <<stage>>
+component "writer.py\n(CSV / Excel)" as wrt <<stage>>
+
+folder "output/" as outdir {
+  folder "dims/" {
+    file "dim_cashier.csv" as d1
+    file "dim_terminal.csv" as d2
+    file "dim_item.csv" as d3
+    file "dim_member.csv" as d4
+  }
+  folder "facts/" {
+    file "fact_cash_transactions.csv" as f1
+    file "fact_sessions.csv" as f2
+    file "fact_stock_movements.csv" as f3
+    file "fact_member_stats.csv" as f4
+  }
+}
+
+cash  --> ing
+sess  --> ing
+stock --> ing
+mem   --> ing
+
+ing   --> cln   : raw DataFrames\n(strings)
+cln   --> trans : typed DataFrames
+trans --> wrt   : 4 dims + 4 facts
+wrt   --> outdir
+
+@enduml

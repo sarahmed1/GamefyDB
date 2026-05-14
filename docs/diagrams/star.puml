@@ -1,0 +1,90 @@
+@startuml star
+title GamefyDB Star Schema (4 dimensions + 4 facts)
+
+hide circle
+skinparam linetype ortho
+skinparam shadowing false
+skinparam class {
+  BackgroundColor<<dim>>  #E8F5E9
+  BorderColor<<dim>>      #2E7D32
+  BackgroundColor<<fact>> #FFF3E0
+  BorderColor<<fact>>     #E65100
+}
+
+entity "dim_cashier" as dc <<dim>> {
+  * cashier_id : int <<PK>>
+  --
+  name
+  role
+}
+
+entity "dim_terminal" as dt <<dim>> {
+  * terminal_id : int <<PK>>
+  --
+  name
+  type
+  zone
+}
+
+entity "dim_item" as di <<dim>> {
+  * item_id : int <<PK>>
+  --
+  name
+  category
+  unit_price
+}
+
+entity "dim_member" as dm <<dim>> {
+  * member_id : int <<PK>>
+  --
+  username
+  firstname
+  lastname
+  registration_date
+}
+
+entity "fact_cash_transactions" as fct <<fact>> {
+  * tx_id : int <<PK>>
+  --
+  cashier_id : int <<FK>>
+  terminal_id : int <<FK>>
+  date : date
+  type : string
+  amount : decimal
+}
+
+entity "fact_sessions" as fs <<fact>> {
+  * session_id : int <<PK>>
+  --
+  terminal_id : int <<FK>>
+  member_id : int <<FK>>
+  start_time
+  duration_min
+  session_type
+}
+
+entity "fact_stock_movements" as fsm <<fact>> {
+  * movement_id : int <<PK>>
+  --
+  item_id : int <<FK>>
+  date
+  qty_in
+  qty_out
+}
+
+entity "fact_member_stats" as fms <<fact>> {
+  --
+  member_id : int <<FK>>
+  total_tnd : decimal
+  duration_min : int
+  visit_count : int
+}
+
+dc  ||--o{ fct
+dt  ||--o{ fct
+dt  ||--o{ fs
+dm  ||--o{ fs
+dm  ||--o{ fms
+di  ||--o{ fsm
+
+@enduml

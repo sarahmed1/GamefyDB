@@ -1,0 +1,66 @@
+@startuml ml_workflow
+title Sprint 4 — ML Analytics Workflow
+
+skinparam shadowing false
+skinparam ArrowColor #333
+skinparam activity {
+  BackgroundColor<<input>>  #FFF8E1
+  BorderColor<<input>>      #F9A825
+  BackgroundColor<<model>>  #E3F2FD
+  BorderColor<<model>>      #1565C0
+  BackgroundColor<<output>> #E8F5E9
+  BorderColor<<output>>     #2E7D32
+  BackgroundColor<<vis>>    #FCE4EC
+  BorderColor<<vis>>        #AD1457
+}
+
+start
+
+:**Star Schema CSVs**
+fact_transaction
+fact_session
+dim_member; <<input>>
+
+fork
+  :forecaster.py
+  Prophet · SARIMA · XGBoost
+  (44 months, weekly + monthly); <<model>>
+  :forecast_revenue.csv
+  session_volume.csv
+  forecast_members.csv; <<output>>
+fork again
+  :segmenter.py
+  K-means (k=4)
+  + loyalty scoring; <<model>>
+  :member_segments.csv
+  member_loyalty.csv; <<output>>
+fork again
+  :anomaly_detector.py
+  per-day-of-week
+  Z-score detection; <<model>>
+  :anomalies.csv; <<output>>
+fork again
+  :peak_hours / stock
+  recommenders; <<model>>
+  :peak_hours_by_hour.csv
+  peak_hours_by_day.csv
+  stock_replenishment.csv; <<output>>
+end fork
+
+:figures.py
+generates accuracy plots
++ thesis figures; <<model>>
+
+fork
+  :**Power BI dashboard**
+  4 pages: Revenue,
+  Members, Live Ops, Shift; <<vis>>
+fork again
+  :**Streamlit chatbot**
+  Gemini-powered NL Q&A
+  + dynamic Plotly charts; <<vis>>
+end fork
+
+stop
+
+@enduml

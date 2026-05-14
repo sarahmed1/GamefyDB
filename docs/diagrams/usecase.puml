@@ -1,0 +1,63 @@
+@startuml usecase
+title GamefyDB — Use Case Diagram
+
+left to right direction
+skinparam shadowing false
+skinparam usecase {
+  BackgroundColor #E3F2FD
+  BorderColor     #1565C0
+}
+skinparam actor {
+  BackgroundColor #FFF3E0
+  BorderColor     #E65100
+}
+
+actor "Gaming Center\nOwner" as owner
+actor "Cashier" as cashier
+actor "Data Analyst" as analyst
+
+rectangle "GamefyDB System" {
+  package "ETL & Data" {
+    usecase "Run ETL pipeline\non daily exports" as UC_ETL
+    usecase "Browse star-schema\nCSVs" as UC_CSV
+  }
+  package "Power BI Dashboards" {
+    usecase "View revenue\ndashboard" as UC_REV
+    usecase "View member\nrankings" as UC_RANK
+    usecase "Monitor live\noperations" as UC_LIVE
+    usecase "Review shift\nperformance" as UC_SHIFT
+  }
+  package "Analytics" {
+    usecase "View revenue\nforecast" as UC_FCAST
+    usecase "Check anomaly\nalerts" as UC_ANOM
+    usecase "View member\nsegments + loyalty" as UC_SEG
+  }
+  package "Conversational" {
+    usecase "Ask the chatbot\n(text or voice)" as UC_CHAT
+    usecase "Switch language\nEN / FR / AR" as UC_LANG
+  }
+}
+
+owner --> UC_ETL
+owner --> UC_REV
+owner --> UC_RANK
+owner --> UC_LIVE
+owner --> UC_SHIFT
+owner --> UC_FCAST
+owner --> UC_ANOM
+owner --> UC_SEG
+owner --> UC_CHAT
+owner --> UC_LANG
+
+cashier --> UC_ETL : provides\ndaily exports
+cashier --> UC_LIVE
+
+analyst --> UC_CSV
+analyst --> UC_FCAST
+analyst --> UC_ANOM
+
+UC_CHAT ..> UC_FCAST : <<include>>
+UC_CHAT ..> UC_ANOM  : <<include>>
+UC_CHAT ..> UC_SEG   : <<include>>
+
+@enduml
