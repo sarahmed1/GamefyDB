@@ -10,5 +10,8 @@ statsmodels
 streamlit
 plotly
 anthropic
+google-genai
 python-dotenv
 kaleido
+requests
+pyarrow
