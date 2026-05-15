@@ -750,13 +750,14 @@ def generate_all(excel_dir: str = 'excel') -> None:
 
     print(f'Generating synthetic data: {synth_start.date()} -> {synth_end.date()}')
 
-    print('  Fetching Tunis weather for synthetic window...')
-    weather = _weather_lookup(synth_start, synth_end)
-
+    # Weather-correlated synthetic data is supported via the `weather=` kwarg on
+    # generate_cash / generate_sessions, but disabled by default — the weather
+    # regressor experiment (chapter 6) showed it does not help wMAPE at weekly
+    # resolution. Re-enable by passing weather=_weather_lookup(...) below.
     print('  Cash transactions...')
-    synth_cash = generate_cash(synth_start, synth_end, daily_pool=daily_pool, weather=weather)
+    synth_cash = generate_cash(synth_start, synth_end, daily_pool=daily_pool)
     print('  Sessions...')
-    synth_sess = generate_sessions(synth_start, synth_end, weather=weather)
+    synth_sess = generate_sessions(synth_start, synth_end)
     print('  Stock movements...')
     synth_stock = generate_stock(synth_start, synth_end)
 
