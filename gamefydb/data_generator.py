@@ -20,6 +20,8 @@ import pandas as pd
 import openpyxl
 from openpyxl.styles import Font
 
+from gamefydb.weather import fetch_weather, weather_multiplier
+
 # ── Seed for reproducibility ──────────────────────────────────────────────────
 RNG = np.random.default_rng(42)
 random.seed(42)
@@ -319,8 +321,15 @@ def _sample_base_rev(month: int, pool: dict, all_vals: np.ndarray,
 
 # ── Cash generation ───────────────────────────────────────────────────────────
 
+def _weather_lookup(start: pd.Timestamp, end: pd.Timestamp) -> dict:
+    """Return {date -> (temp_max_c, precip_mm)} dict for the range."""
+    w = fetch_weather(start, end)
+    return {pd.Timestamp(r.ds).normalize(): (float(r.temp_max_c), float(r.precip_mm))
+            for r in w.itertuples()}
+
+
 def generate_cash(start: pd.Timestamp, end: pd.Timestamp,
-                  daily_pool=None) -> pd.DataFrame:
+                  daily_pool=None, weather: dict | None = None) -> pd.DataFrame:
     """Generate cash transactions for [start, end].
 
     When *daily_pool* is supplied the daily revenue target is driven by an
@@ -354,6 +363,12 @@ def generate_cash(start: pd.Timestamp, end: pd.Timestamp,
         ramadan_mul  = _ramadan_daily_mul(day)
         eid_week_mul = _eid_week_pattern(day)
         event_mul    = holiday_mul * ramadan_mul * eid_week_mul
+
+        if weather is not None:
+            wkey = day.normalize()
+            if wkey in weather:
+                t, p = weather[wkey]
+                event_mul *= weather_multiplier(t, p)
 
         if daily_pool:
             target_rev = max(5.0, week_level * DOW_MUL[day.dayofweek] * event_mul)
@@ -397,7 +412,8 @@ def generate_cash(start: pd.Timestamp, end: pd.Timestamp,
 
 # ── Session generation ────────────────────────────────────────────────────────
 
-def generate_sessions(start: pd.Timestamp, end: pd.Timestamp) -> pd.DataFrame:
+def generate_sessions(start: pd.Timestamp, end: pd.Timestamp,
+                      weather: dict | None = None) -> pd.DataFrame:
     rows = []
     week_mul = 1.0  # AR(1) weekly multiplier, initialised at neutral
     day = start
@@ -408,6 +424,11 @@ def generate_sessions(start: pd.Timestamp, end: pd.Timestamp) -> pd.DataFrame:
         ramadan_mul  = _ramadan_daily_mul(day)
         eid_week_mul = _eid_week_pattern(day)
         event_mul    = holiday_mul * ramadan_mul * eid_week_mul
+        if weather is not None:
+            wkey = day.normalize()
+            if wkey in weather:
+                t, p = weather[wkey]
+                event_mul *= weather_multiplier(t, p)
         mul = MONTHLY_MUL[day.month] * DOW_MUL[day.dayofweek] * week_mul * event_mul
         n_sess = max(1, int(RNG.poisson(32 * mul)))
         cashier_day = RNG.choice(CASHIERS, p=CASHIER_P)
@@ -729,10 +750,13 @@ def generate_all(excel_dir: str = 'excel') -> None:
 
     print(f'Generating synthetic data: {synth_start.date()} -> {synth_end.date()}')
 
+    print('  Fetching Tunis weather for synthetic window...')
+    weather = _weather_lookup(synth_start, synth_end)
+
     print('  Cash transactions...')
-    synth_cash = generate_cash(synth_start, synth_end, daily_pool=daily_pool)
+    synth_cash = generate_cash(synth_start, synth_end, daily_pool=daily_pool, weather=weather)
     print('  Sessions...')
-    synth_sess = generate_sessions(synth_start, synth_end)
+    synth_sess = generate_sessions(synth_start, synth_end, weather=weather)
     print('  Stock movements...')
     synth_stock = generate_stock(synth_start, synth_end)
 
