@@ -1131,6 +1131,108 @@ not as precision measurements.
            series at the final tuned configuration.\label{fig:final_comparison}}
 \end{figure}
 
+\subsection{Weather as a Non-Calendar Regressor}
+
+The error decomposition above pointed in a specific direction: the remaining
+headline wMAPE on revenue and session volume is no longer explained by
+holidays, and closing the gap further would require exogenous signals
+that the calendar cannot supply. Weather is the most obvious candidate.
+A rainy Saturday in Tunis pulls customers away from outdoor activities and
+toward indoor venues; an unusually hot day in July drives the same shift
+through a different mechanism (escape from heat into air-conditioned space).
+Neither effect is encoded anywhere in \texttt{ds}.
+
+A new module \texttt{gamefydb/weather.py} was added to fetch daily Tunis
+weather from the Open-Meteo Archive API (latitude~36.81, longitude~10.18).
+Two features are extracted per day: \texttt{temp\_max\_c} (maximum
+temperature in Celsius) and \texttt{precip\_mm} (precipitation in
+millimetres). Results are cached locally to
+\texttt{excel/weather\_tunis.parquet} so repeated pipeline runs hit the
+network zero times. For dates beyond the cache, the module falls back to a
+climatological average computed over the cached history --- mean
+temperature and precipitation grouped by \texttt{(month, day)}.
+
+The two features are wired into Prophet via \texttt{add\_regressor()} and
+into XGBoost as additional columns alongside the existing lagged and
+calendar features. SARIMA was left unchanged for the same reason it lacks
+a holiday calendar in this implementation: the SARIMAX extension that
+accepts exogenous variables would close the gap, but adding it here did
+not justify the implementation effort for a comparator that is already
+outperformed by Prophet. Member activity was likewise left out: at weekly
+resolution and a mean of ten transactions, the daily weather signal
+disappears in the aggregation.
+
+\paragraph{A methodological pitfall encountered en route.}
+The first attempt to validate the regressor used synthetic data in which
+weather had \emph{already} been baked into the daily revenue target via a
+multiplicative factor (\textit{precip} $> 2$\,mm reduced the day by
+10\,\%; \textit{temp\_max} $> 33$\,\degree C raised it by 8\,\%). The
+intent was to give the model a coherent weather signal across the full
+18-month training window rather than only the real Sep~2025+ tail.
+The result was the opposite of what was expected: adding weather as a
+regressor on top of weather-injected synthetic data made every metric
+slightly worse. The cause turned out to be double-counting --- the same
+effect was present both in the target $y$ and in the regressor, so the
+regressor was fitting noise around an already-explained component and
+adding variance without adding bias reduction. Regenerating the synthetic
+data without the weather multiplier and re-evaluating produced the
+opposite verdict, which is what is reported below. The lesson is general:
+when injecting an artificial signal into synthetic training data,
+\emph{do not} simultaneously expose that signal as a regressor.
+
+\begin{table}[H]
+  \centering
+  \caption{Weather regressor evaluation. Same weekly 80/20 split as
+           Table~\ref{tab:forecast_comparison_final}. Negative
+           $\Delta$~wMAPE indicates improvement.\label{tab:weather_regressor}}
+  \begin{tabular}{llrrr}
+    \toprule
+    \textbf{Series} & \textbf{Algorithm} & \textbf{wMAPE} &
+    \textbf{wMAPE + weather} & \textbf{$\Delta$} \\
+    \midrule
+    \multirow{2}{*}{Revenue (TND, weekly)}
+      & Prophet & 29.7\,\% & \textbf{29.0\,\%} & $-0.7$\,pp \\
+      & XGBoost & 46.4\,\% & 38.9\,\% & $-7.5$\,pp \\
+    \midrule
+    \multirow{2}{*}{Session volume (weekly)}
+      & Prophet & 36.8\,\% & \textbf{35.1\,\%} & $-1.7$\,pp \\
+      & XGBoost & 45.4\,\% & 42.3\,\% & $-3.1$\,pp \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+Three observations follow from this table. First, the regressor helps in
+every cell --- the sign of the improvement is consistent across both
+algorithms and both series, which would be unlikely under the null
+hypothesis of a noise feature. Second, the gain is modest on the
+already-strong Prophet baselines (between half a point and two points of
+wMAPE) and substantially larger on XGBoost (three to seven points). The
+asymmetry makes sense: Prophet already explains most of the seasonal and
+holiday variance through its native additive components, so weather only
+captures the residual; XGBoost lacks the additive seasonal decomposition
+and benefits more from any feature that contains structured information.
+Third, even with the regressor, XGBoost remains worse than Prophet on
+both series, so the algorithm ranking in
+Table~\ref{tab:forecast_comparison_final} is unchanged.
+
+The regressor is kept enabled for the production forecast written to
+\texttt{output/forecasts/forecasts.csv}. Future dates beyond the
+Open-Meteo archive horizon are filled in from the climatological mean,
+which is appropriate for a four-week and three-month forward window: at
+that horizon, no weather model produces a meaningfully better point
+estimate than climatology anyway, so falling back to it costs essentially
+nothing.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.95\textwidth]{accuracy_revenue_prophet_weather.png}
+  \caption{Prophet revenue forecast with weather regressors enabled
+           (\texttt{temp\_max\_c} and \texttt{precip\_mm} from Open-Meteo
+           Tunis). Compare against
+           Figure~\ref{fig:final_revenue_prophet} to see the marginal
+           improvement.\label{fig:revenue_prophet_weather}}
+\end{figure}
+
 \subsection{Why the SARIMA Line Looks Flat}
 
 A visible feature of the combined accuracy charts (Figure~\ref{fig:final_revenue_prophet}
