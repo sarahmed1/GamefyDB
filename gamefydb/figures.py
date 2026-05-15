@@ -160,10 +160,14 @@ def plot_train_test_split(transactions_df: pd.DataFrame, out_dir: str,
 
 # ── 3. Actual vs predicted helpers ────────────────────────────────────────────
 
-def _prophet_test_preds(df, split, freq='D', log_y=False):
-    from gamefydb.forecaster import _build_holiday_df
+def _prophet_test_preds(df, split, freq='D', log_y=False,
+                         use_weather=False, weekly_weather=False):
+    from gamefydb.forecaster import (_build_holiday_df, _attach_weather,
+                                      _attach_weather_weekly)
     n = len(df)
     cut = int(n * split)
+    if use_weather:
+        df = (_attach_weather_weekly(df) if weekly_weather else _attach_weather(df))
     train, test = df.iloc[:cut].copy(), df.iloc[cut:].copy()
     fit_train = train.copy()
     if log_y:
@@ -172,8 +176,15 @@ def _prophet_test_preds(df, split, freq='D', log_y=False):
     m = Prophet(interval_width=0.8,
                 holidays=holiday_df if holiday_df is not None else None,
                 holidays_prior_scale=20.0)
+    if use_weather:
+        m.add_regressor('temp_max_c')
+        m.add_regressor('precip_mm')
     m.fit(fit_train)
     future = m.make_future_dataframe(periods=len(test), freq=freq)
+    if use_weather:
+        future = future.merge(df[['ds', 'temp_max_c', 'precip_mm']], on='ds', how='left')
+        future['temp_max_c'] = future['temp_max_c'].fillna(df['temp_max_c'].mean())
+        future['precip_mm']  = future['precip_mm'].fillna(0.0)
     fc = m.predict(future)
     if log_y:
         for col in ('yhat', 'yhat_lower', 'yhat_upper'):
@@ -182,9 +193,11 @@ def _prophet_test_preds(df, split, freq='D', log_y=False):
     return train, test, merged
 
 
-def _xgboost_test_preds(df, split):
+def _xgboost_test_preds(df, split, use_weather=False, weekly_weather=False):
     from gamefydb.forecaster import _evaluate_xgboost
-    result = _evaluate_xgboost(df, split)
+    result = _evaluate_xgboost(df, split,
+                                use_weather=use_weather,
+                                weekly_weather=weekly_weather)
     if result is None:
         return df.iloc[int(len(df) * split):], None
     n = len(df)
@@ -259,21 +272,29 @@ def _compute_all_predictions(tx: pd.DataFrame, split: float = 0.8) -> dict:
     mem_d = _to_daily(mem, 'transaction_datetime', '_v')
     mem_w = _to_weekly(mem_d)
 
-    def _eval(df, freq, m_period, log_y=False):
+    def _eval(df, freq, m_period, log_y=False, with_weather=False):
         train, test, p_merged = _prophet_test_preds(df, split, freq=freq, log_y=log_y)
         s_test, s_preds       = _sarima_test_preds(df, split, m_period)
         x_test, x_preds       = _xgboost_test_preds(df, split)
-        return {
+        result = {
             'train': train, 'test': test,
             'prophet': p_merged,
             'sarima':  (s_test, s_preds),
             'xgb':     (x_test, x_preds),
         }
+        if with_weather:
+            _, _, pw_merged = _prophet_test_preds(df, split, freq=freq, log_y=log_y,
+                                                   use_weather=True, weekly_weather=True)
+            xw_test, xw_preds = _xgboost_test_preds(df, split,
+                                                     use_weather=True, weekly_weather=True)
+            result['prophet_weather'] = pw_merged
+            result['xgb_weather']     = (xw_test, xw_preds)
+        return result
 
     print('    Revenue series (weekly, log)...')
-    rev = _eval(rev_weekly, '7D', 4, log_y=True)
+    rev = _eval(rev_weekly, '7D', 4, log_y=True, with_weather=True)
     print('    Session volume series (weekly, log)...')
-    ses = _eval(vol_weekly, '7D', 4, log_y=True)
+    ses = _eval(vol_weekly, '7D', 4, log_y=True, with_weather=True)
     print('    Member activity series (weekly)...')
     mem_r = _eval(mem_w, '7D', 4)
     return {'revenue': rev, 'sessions': ses, 'members': mem_r}
@@ -497,6 +518,27 @@ def plot_accuracy_revenue(out_dir: str, preds: dict, split: float = 0.8) -> None
             title=f'{base} — XGBoost',
             out_path=os.path.join(out_dir, 'accuracy_revenue_xgboost.png'), **kw)
 
+    pw_merged = preds.get('prophet_weather')
+    if pw_merged is not None and not pw_merged.empty:
+        _plot_single_model_accuracy(
+            train, test, model_name='Prophet+weather', color=C_PRED, linestyle='-',
+            pred_ds=pw_merged['ds'].values, pred_actual=pw_merged['y'].values,
+            pred_values=pw_merged['yhat'].values,
+            yhat_lower=pw_merged['yhat_lower'].values,
+            yhat_upper=pw_merged['yhat_upper'].values,
+            title=f'{base} — Prophet + weather',
+            out_path=os.path.join(out_dir, 'accuracy_revenue_prophet_weather.png'), **kw)
+
+    xw_entry = preds.get('xgb_weather')
+    if xw_entry is not None and xw_entry[1] is not None:
+        xw_test, xw_preds = xw_entry
+        _plot_single_model_accuracy(
+            train, test, model_name='XGBoost+weather', color=C_XGB, linestyle=(0, (4, 2)),
+            pred_ds=xw_test['ds'].values, pred_actual=xw_test['y'].values,
+            pred_values=xw_preds,
+            title=f'{base} — XGBoost + weather',
+            out_path=os.path.join(out_dir, 'accuracy_revenue_xgboost_weather.png'), **kw)
+
     models = []
     if not p_merged.empty:
         models.append(dict(name='Prophet', color=C_PRED, linestyle='-',
@@ -555,6 +597,27 @@ def plot_accuracy_session_volume(out_dir: str, preds: dict, split: float = 0.8) 
             pred_values=x_preds,
             title=f'{base} — XGBoost',
             out_path=os.path.join(out_dir, 'accuracy_session_volume_xgboost.png'), **kw)
+
+    pw_merged = preds.get('prophet_weather')
+    if pw_merged is not None and not pw_merged.empty:
+        _plot_single_model_accuracy(
+            train, test, model_name='Prophet+weather', color=C_PRED, linestyle='-',
+            pred_ds=pw_merged['ds'].values, pred_actual=pw_merged['y'].values,
+            pred_values=pw_merged['yhat'].values,
+            yhat_lower=pw_merged['yhat_lower'].values,
+            yhat_upper=pw_merged['yhat_upper'].values,
+            title=f'{base} — Prophet + weather',
+            out_path=os.path.join(out_dir, 'accuracy_session_volume_prophet_weather.png'), **kw)
+
+    xw_entry = preds.get('xgb_weather')
+    if xw_entry is not None and xw_entry[1] is not None:
+        xw_test, xw_preds = xw_entry
+        _plot_single_model_accuracy(
+            train, test, model_name='XGBoost+weather', color=C_XGB, linestyle=(0, (4, 2)),
+            pred_ds=xw_test['ds'].values, pred_actual=xw_test['y'].values,
+            pred_values=xw_preds,
+            title=f'{base} — XGBoost + weather',
+            out_path=os.path.join(out_dir, 'accuracy_session_volume_xgboost_weather.png'), **kw)
 
     models = []
     if not p_merged.empty:

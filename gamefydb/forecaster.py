@@ -8,6 +8,8 @@ from prophet import Prophet
 from statsmodels.tsa.stattools import adfuller
 from xgboost import XGBRegressor
 
+from gamefydb.weather import fetch_weather
+
 logging.getLogger('cmdstanpy').setLevel(logging.WARNING)
 logging.getLogger('prophet').setLevel(logging.WARNING)
 
@@ -84,6 +86,37 @@ def _holiday_proximity(ds_arr, holiday_df) -> np.ndarray:
         d = pd.Timestamp(ts).date()
         result[i] = min((abs((d - h).days) for h in holiday_dates), default=30)
     return np.minimum(result, 30)
+
+
+# ── Weather regressor helpers ─────────────────────────────────────────────────
+
+def _attach_weather(df: pd.DataFrame, horizon_days: int = 0) -> pd.DataFrame:
+    """Left-merge daily temp_max_c / precip_mm onto df['ds']."""
+    start = pd.Timestamp(df['ds'].min())
+    end   = pd.Timestamp(df['ds'].max()) + pd.Timedelta(days=horizon_days)
+    w = fetch_weather(start, end)
+    out = df.merge(w, on='ds', how='left')
+    out['temp_max_c'] = out['temp_max_c'].fillna(out['temp_max_c'].mean() if out['temp_max_c'].notna().any() else 20.0)
+    out['precip_mm']  = out['precip_mm'].fillna(0.0)
+    return out
+
+
+def _attach_weather_weekly(df: pd.DataFrame, horizon_days: int = 0) -> pd.DataFrame:
+    """Aggregate weather to weekly (mean temp, sum precip) keyed by week-start ds."""
+    start = pd.Timestamp(df['ds'].min())
+    end   = pd.Timestamp(df['ds'].max()) + pd.Timedelta(days=horizon_days + 7)
+    w = fetch_weather(start, end)
+    w['_w'] = w['ds'].dt.to_period('W').apply(lambda p: p.start_time)
+    w_weekly = (
+        w.groupby('_w').agg(temp_max_c=('temp_max_c', 'mean'),
+                            precip_mm=('precip_mm', 'sum'))
+        .reset_index()
+        .rename(columns={'_w': 'ds'})
+    )
+    out = df.merge(w_weekly, on='ds', how='left')
+    out['temp_max_c'] = out['temp_max_c'].fillna(out['temp_max_c'].mean() if out['temp_max_c'].notna().any() else 20.0)
+    out['precip_mm']  = out['precip_mm'].fillna(0.0)
+    return out
 
 
 def _to_daily(df: pd.DataFrame, date_col: str, value_col: str) -> pd.DataFrame:
@@ -204,11 +237,15 @@ def study_stationarity(transactions_df: pd.DataFrame) -> pd.DataFrame:
 
 
 def _evaluate_prophet(df: pd.DataFrame, split: float, freq: str = 'D',
-                       log_y: bool = False) -> dict:
+                       log_y: bool = False, use_weather: bool = False,
+                       weekly_weather: bool = False) -> dict:
     n = len(df)
     cutoff = int(n * split)
     if cutoff < 2 or n - cutoff < 2:
         return {}
+
+    if use_weather:
+        df = (_attach_weather_weekly(df) if weekly_weather else _attach_weather(df))
 
     train, test = df.iloc[:cutoff].copy(), df.iloc[cutoff:].copy()
 
@@ -219,8 +256,15 @@ def _evaluate_prophet(df: pd.DataFrame, split: float, freq: str = 'D',
     m = Prophet(interval_width=0.8,
                 holidays=holiday_df if holiday_df is not None else None,
                 holidays_prior_scale=20.0)
+    if use_weather:
+        m.add_regressor('temp_max_c')
+        m.add_regressor('precip_mm')
     m.fit(train)
     future = m.make_future_dataframe(periods=len(test), freq=freq)
+    if use_weather:
+        future = future.merge(df[['ds', 'temp_max_c', 'precip_mm']], on='ds', how='left')
+        future['temp_max_c'] = future['temp_max_c'].fillna(df['temp_max_c'].mean())
+        future['precip_mm']  = future['precip_mm'].fillna(0.0)
     fc = m.predict(future)
 
     if log_y:
@@ -269,7 +313,9 @@ def _evaluate_sarima(df: pd.DataFrame, split: float, m: int = 7):
 
 
 def _xgb_features(i: int, y_arr: np.ndarray, ds_arr,
-                   proximity: np.ndarray = None) -> dict:
+                   proximity: np.ndarray = None,
+                   temp_arr: np.ndarray = None,
+                   precip_arr: np.ndarray = None) -> dict:
     """Build feature dict for position i using y_arr for lag values."""
     ts = pd.Timestamp(ds_arr[i])
     feat = {
@@ -283,14 +329,19 @@ def _xgb_features(i: int, y_arr: np.ndarray, ds_arr,
         'month':    ts.month,
         'days_to_holiday': float(proximity[i]) if proximity is not None else 30.0,
     }
+    if temp_arr is not None:
+        feat['temp_max_c'] = float(temp_arr[i])
+        feat['precip_mm']  = float(precip_arr[i])
     return feat
 
 
-def _evaluate_xgboost(df: pd.DataFrame, split: float):
+def _evaluate_xgboost(df: pd.DataFrame, split: float,
+                      use_weather: bool = False, weekly_weather: bool = False):
     """Train XGBoost on the training split and recursively predict the test split.
 
     Uses lag_1, lag_7, lag_14, 7/14-day rolling means, day-of-week, weekend
-    flag, month, and days-to-nearest-holiday as features.
+    flag, month, and days-to-nearest-holiday as features. Optionally adds
+    temp_max_c + precip_mm.
     """
     n = len(df)
     cutoff = int(n * split)
@@ -298,8 +349,13 @@ def _evaluate_xgboost(df: pd.DataFrame, split: float):
     if cutoff < 34 or n - cutoff < 2:
         return None
 
+    if use_weather:
+        df = (_attach_weather_weekly(df) if weekly_weather else _attach_weather(df))
+
     ds_arr = df['ds'].values
     y_arr  = df['y'].values
+    temp_arr   = df['temp_max_c'].values if use_weather else None
+    precip_arr = df['precip_mm'].values  if use_weather else None
 
     holiday_df = _build_holiday_df(df['ds'].min(), df['ds'].max())
     proximity  = _holiday_proximity(ds_arr, holiday_df)
@@ -307,7 +363,7 @@ def _evaluate_xgboost(df: pd.DataFrame, split: float):
     # Build training feature matrix (need at least 14 lags)
     X_train, y_train = [], []
     for i in range(14, cutoff):
-        X_train.append(_xgb_features(i, y_arr, ds_arr, proximity))
+        X_train.append(_xgb_features(i, y_arr, ds_arr, proximity, temp_arr, precip_arr))
         y_train.append(y_arr[i])
 
     if len(X_train) < 10:
@@ -322,7 +378,7 @@ def _evaluate_xgboost(df: pd.DataFrame, split: float):
     y_extended = y_arr[:cutoff].tolist()
     preds = []
     for i in range(cutoff, n):
-        feat = _xgb_features(i, np.array(y_extended), ds_arr, proximity)
+        feat = _xgb_features(i, np.array(y_extended), ds_arr, proximity, temp_arr, precip_arr)
         pred = max(0.0, float(model.predict(pd.DataFrame([feat]))[0]))
         preds.append(pred)
         y_extended.append(pred)          # feed prediction back as next lag
@@ -338,7 +394,8 @@ def _evaluate_xgboost(df: pd.DataFrame, split: float):
 
 
 def _print_comparison(label: str, n: int, split: float,
-                      prophet_m: dict, sarima_m, xgb_m=None) -> None:
+                      prophet_m: dict, sarima_m, xgb_m=None,
+                      prophet_w: dict = None, xgb_w=None) -> None:
     if not prophet_m:
         print(f'    [{label}] Prophet evaluation failed — skipped')
         return
@@ -350,37 +407,60 @@ def _print_comparison(label: str, n: int, split: float,
     def verdict(mape): return 'GOOD' if mape < 20 else ('ACCEPTABLE' if mape < 50 else 'POOR')
 
     print(f'    [{label}] {pct}/{100 - pct} split — {n_train} train / {n_test} test points')
-    print(f'      [Prophet] MAPE {prophet_m["mape"]:5.1f}%  MAE {prophet_m["mae"]:8.2f}  RMSE {prophet_m["rmse"]:8.2f}  -> {verdict(prophet_m["mape"])}')
+    print(f'      [Prophet]          MAPE {prophet_m["mape"]:5.1f}%  MAE {prophet_m["mae"]:8.2f}  RMSE {prophet_m["rmse"]:8.2f}  -> {verdict(prophet_m["mape"])}')
 
     scores = {'Prophet': prophet_m['mape']}
 
+    if prophet_w:
+        print(f'      [Prophet+weather]  MAPE {prophet_w["mape"]:5.1f}%  MAE {prophet_w["mae"]:8.2f}  RMSE {prophet_w["rmse"]:8.2f}  -> {verdict(prophet_w["mape"])}')
+        scores['Prophet+weather'] = prophet_w['mape']
+
     if sarima_m:
-        print(f'      [SARIMA]  MAPE {sarima_m["mape"]:5.1f}%  MAE {sarima_m["mae"]:8.2f}  RMSE {sarima_m["rmse"]:8.2f}  -> {verdict(sarima_m["mape"])}')
+        print(f'      [SARIMA]           MAPE {sarima_m["mape"]:5.1f}%  MAE {sarima_m["mae"]:8.2f}  RMSE {sarima_m["rmse"]:8.2f}  -> {verdict(sarima_m["mape"])}')
         scores['SARIMA'] = sarima_m['mape']
     else:
-        print(f'      [SARIMA]  failed to converge — skipped')
+        print(f'      [SARIMA]           failed to converge — skipped')
 
     if xgb_m:
-        print(f'      [XGBoost] MAPE {xgb_m["mape"]:5.1f}%  MAE {xgb_m["mae"]:8.2f}  RMSE {xgb_m["rmse"]:8.2f}  -> {verdict(xgb_m["mape"])}')
+        print(f'      [XGBoost]          MAPE {xgb_m["mape"]:5.1f}%  MAE {xgb_m["mae"]:8.2f}  RMSE {xgb_m["rmse"]:8.2f}  -> {verdict(xgb_m["mape"])}')
         scores['XGBoost'] = xgb_m['mape']
+
+    if xgb_w:
+        print(f'      [XGBoost+weather]  MAPE {xgb_w["mape"]:5.1f}%  MAE {xgb_w["mae"]:8.2f}  RMSE {xgb_w["rmse"]:8.2f}  -> {verdict(xgb_w["mape"])}')
+        scores['XGBoost+weather'] = xgb_w['mape']
 
     if len(scores) > 1:
         winner = min(scores, key=scores.get)
         print(f'      Winner: {winner}')
 
 
-def _prophet_forecast(daily: pd.DataFrame) -> tuple:
+def _prophet_forecast(daily: pd.DataFrame, use_weather: bool = False) -> tuple:
     """Fit Prophet and return (weekly_4rows, monthly_3rows) DataFrames."""
+    if use_weather:
+        daily = _attach_weather(daily, horizon_days=90)
+
     holiday_df = _build_holiday_df(daily['ds'].min(),
                                    daily['ds'].max() + pd.Timedelta(days=90))
     m = Prophet(interval_width=0.8,
                 holidays=holiday_df if holiday_df is not None else None,
                 holidays_prior_scale=20.0)
+    if use_weather:
+        m.add_regressor('temp_max_c')
+        m.add_regressor('precip_mm')
     m.fit(daily)
 
     cols = ['ds', 'yhat', 'yhat_lower', 'yhat_upper']
 
+    def _add_weather(future):
+        w = fetch_weather(future['ds'].min(), future['ds'].max())
+        out = future.merge(w, on='ds', how='left')
+        out['temp_max_c'] = out['temp_max_c'].fillna(daily['temp_max_c'].mean())
+        out['precip_mm']  = out['precip_mm'].fillna(0.0)
+        return out
+
     future_w = m.make_future_dataframe(periods=28)
+    if use_weather:
+        future_w = _add_weather(future_w)
     fc_w = m.predict(future_w)[cols].tail(28).reset_index(drop=True)
     fc_w['_b'] = fc_w.index // 7
     weekly = (
@@ -392,6 +472,8 @@ def _prophet_forecast(daily: pd.DataFrame) -> tuple:
     weekly['granularity'] = 'weekly'
 
     future_m = m.make_future_dataframe(periods=90)
+    if use_weather:
+        future_m = _add_weather(future_m)
     fc_m = m.predict(future_m)[cols].tail(90).reset_index(drop=True)
     fc_m['_b'] = fc_m.index // 30
     monthly = (
@@ -413,11 +495,16 @@ def forecast_revenue(transactions_df: pd.DataFrame) -> pd.DataFrame:
     income['_v'] = income['amount_tnd']
     daily = _to_daily(income, 'transaction_datetime', '_v')
     weekly_eval = _to_weekly(daily)
-    p = _evaluate_prophet(weekly_eval, split=0.8, freq='7D', log_y=True)
-    s = _evaluate_sarima(weekly_eval, split=0.8, m=4)
-    x = _evaluate_xgboost(weekly_eval, split=0.8)
-    _print_comparison('Revenue (TND, weekly)', len(weekly_eval), 0.8, p, s, x)
-    weekly, monthly = _prophet_forecast(daily)
+    p   = _evaluate_prophet(weekly_eval, split=0.8, freq='7D', log_y=True)
+    p_w = _evaluate_prophet(weekly_eval, split=0.8, freq='7D', log_y=True,
+                            use_weather=True, weekly_weather=True)
+    s   = _evaluate_sarima(weekly_eval, split=0.8, m=4)
+    x   = _evaluate_xgboost(weekly_eval, split=0.8)
+    x_w = _evaluate_xgboost(weekly_eval, split=0.8,
+                            use_weather=True, weekly_weather=True)
+    _print_comparison('Revenue (TND, weekly)', len(weekly_eval), 0.8,
+                      p, s, x, prophet_w=p_w, xgb_w=x_w)
+    weekly, monthly = _prophet_forecast(daily, use_weather=True)
     result = pd.concat([weekly, monthly], ignore_index=True)
     return result[['date', 'granularity', 'yhat', 'yhat_lower', 'yhat_upper']]
 
@@ -532,11 +619,16 @@ def forecast_session_volume(transactions_df: pd.DataFrame) -> pd.DataFrame:
     df['_v'] = 1
     daily = _to_daily(df, 'transaction_datetime', '_v')
     weekly_eval = _to_weekly(daily)
-    p = _evaluate_prophet(weekly_eval, split=0.8, freq='7D', log_y=True)
-    s = _evaluate_sarima(weekly_eval, split=0.8, m=4)
-    x = _evaluate_xgboost(weekly_eval, split=0.8)
-    _print_comparison('Session volume (weekly)', len(weekly_eval), 0.8, p, s, x)
-    weekly, monthly = _prophet_forecast(daily)
+    p   = _evaluate_prophet(weekly_eval, split=0.8, freq='7D', log_y=True)
+    p_w = _evaluate_prophet(weekly_eval, split=0.8, freq='7D', log_y=True,
+                            use_weather=True, weekly_weather=True)
+    s   = _evaluate_sarima(weekly_eval, split=0.8, m=4)
+    x   = _evaluate_xgboost(weekly_eval, split=0.8)
+    x_w = _evaluate_xgboost(weekly_eval, split=0.8,
+                            use_weather=True, weekly_weather=True)
+    _print_comparison('Session volume (weekly)', len(weekly_eval), 0.8,
+                      p, s, x, prophet_w=p_w, xgb_w=x_w)
+    weekly, monthly = _prophet_forecast(daily, use_weather=True)
     result = pd.concat([weekly, monthly], ignore_index=True)
     for col in ['yhat', 'yhat_lower', 'yhat_upper']:
         result[col] = result[col].clip(lower=0).round().astype(int)
