@@ -1,0 +1,296 @@
+-- ============================================================
+-- GamefyDB — Power BI DAX Measures
+-- 4-Page Dashboard: Revenue Overview | Rankings | Live Ops | Shift Report
+-- ============================================================
+-- Tables:  fact_cash_transactions, fact_sessions,
+--          fact_stock_movements, fact_member_stats
+--          dim_cashier, dim_terminal, dim_item, dim_member
+-- ============================================================
+
+
+-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+-- STEP 1 — CREATE dim_date  (New Table in Power BI)
+-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+dim_date =
+ADDCOLUMNS(
+    CALENDAR(
+        MIN(fact_cash_transactions[transaction_datetime]),
+        MAX(fact_cash_transactions[transaction_datetime])
+    ),
+    "Year",       YEAR([Date]),
+    "Month Num",  MONTH([Date]),
+    "Month Name", FORMAT([Date], "MMMM"),
+    "Day",        DAY([Date]),
+    "Weekday",    FORMAT([Date], "dddd"),
+    "Week Num",   WEEKNUM([Date])
+)
+
+-- After creating dim_date:
+--   1. Right-click dim_date → Mark as date table → select [Date] column
+--   2. Model view → drag relationships:
+--        dim_date[Date] → fact_cash_transactions[transaction_datetime]  (Many:1)
+--        dim_date[Date] → fact_stock_movements[movement_datetime]       (Many:1)
+--   Note: fact_sessions has no datetime column — it cannot be filtered by date.
+--         If you need date filtering on sessions, add a session_date column
+--         to the pipeline (gamefydb/transformer.py).
+
+
+-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+-- STEP 2 — CALCULATED COLUMNS (New Column, not New Measure)
+-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+-- In table: fact_cash_transactions
+Transaction Hour =
+    HOUR(fact_cash_transactions[transaction_datetime])
+
+Transaction Date =
+    DATE(
+        YEAR(fact_cash_transactions[transaction_datetime]),
+        MONTH(fact_cash_transactions[transaction_datetime]),
+        DAY(fact_cash_transactions[transaction_datetime])
+    )
+
+
+-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+-- PAGE 1 — REVENUE OVERVIEW
+-- Visuals: KPI cards, line chart over time, bar by hour,
+--          donut by payment_method
+-- Slicers: dim_date[Month Name], dim_date[Year]
+-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Total Revenue =
+CALCULATE(
+    SUM(fact_cash_transactions[amount_tnd]),
+    fact_cash_transactions[income_expense] = "Income"
+)
+
+Total Expenses =
+CALCULATE(
+    SUM(fact_cash_transactions[amount_tnd]),
+    fact_cash_transactions[income_expense] = "Expense"
+)
+
+Net Income =
+    [Total Revenue] - [Total Expenses]
+
+Revenue MoM % =
+VAR curr = [Total Revenue]
+VAR prev =
+    CALCULATE(
+        [Total Revenue],
+        DATEADD(dim_date[Date], -1, MONTH)
+    )
+RETURN
+    IF(
+        ISBLANK(prev) || prev = 0,
+        BLANK(),
+        DIVIDE(curr - prev, prev)
+    )
+
+Revenue vs Last Month =
+VAR curr = [Total Revenue]
+VAR prev =
+    CALCULATE(
+        [Total Revenue],
+        DATEADD(dim_date[Date], -1, MONTH)
+    )
+RETURN curr - prev
+
+Transaction Count =
+CALCULATE(
+    COUNTROWS(fact_cash_transactions),
+    fact_cash_transactions[income_expense] = "Income"
+)
+
+Avg Ticket =
+    DIVIDE([Total Revenue], [Transaction Count])
+
+Avg Daily Revenue =
+DIVIDE(
+    [Total Revenue],
+    CALCULATE(DISTINCTCOUNT(fact_cash_transactions[Transaction Date]))
+)
+
+-- Suggested visuals using this page's measures:
+--   KPI cards  → Total Revenue, Total Expenses, Net Income, Revenue MoM %
+--   Line chart → axis: dim_date[Date], values: Total Revenue
+--   Bar chart  → axis: Transaction Hour (calculated column), values: Total Revenue
+--   Donut      → legend: fact_cash_transactions[payment_method], values: Total Revenue
+
+
+-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+-- PAGE 2 — RANKINGS
+-- Visuals: bar charts for cashiers, items, terminal types
+-- Slicers: dim_date[Month Name], dim_cashier[cashier_name]
+-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+-- CASHIER RANKINGS
+-- Use with axis: dim_cashier[cashier_name]
+-- [Total Revenue] already filters by cashier context automatically —
+-- no extra measure needed. Just drop [Total Revenue] on the chart.
+
+Cashier Avg Ticket =
+    DIVIDE([Total Revenue], [Transaction Count])
+
+-- ITEM RANKINGS
+-- Use with axis: dim_item[item_name] or dim_item[category]
+
+Item Sales Revenue =
+CALCULATE(
+    SUM(fact_stock_movements[total_amount_tnd]),
+    fact_stock_movements[in_out] = "Out"
+)
+
+Item Units Sold =
+CALCULATE(
+    SUM(fact_stock_movements[quantity]),
+    fact_stock_movements[in_out] = "Out"
+)
+
+Item Avg Unit Price =
+    DIVIDE([Item Sales Revenue], [Item Units Sold])
+
+-- TERMINAL TYPE RANKINGS
+-- Use with axis: dim_terminal[terminal_type] or dim_terminal[terminal_name]
+
+Session Revenue =
+    SUM(fact_sessions[total_amount_tnd])
+
+Session Count =
+    COUNTROWS(fact_sessions)
+
+Avg Session Duration (min) =
+    AVERAGE(fact_sessions[duration_minutes])
+
+Avg Session Revenue =
+    DIVIDE([Session Revenue], [Session Count])
+
+Discount Total =
+    SUM(fact_sessions[discount_tnd])
+
+-- Note: fact_sessions[is_free_time] and [is_paused] are booleans.
+-- If your CSV output stores them as text ("True"/"False"), change TRUE() to "True".
+
+Free Time Sessions % =
+DIVIDE(
+    CALCULATE(
+        COUNTROWS(fact_sessions),
+        fact_sessions[is_free_time] = TRUE()
+    ),
+    [Session Count]
+)
+
+Paid Sessions % =
+    1 - [Free Time Sessions %]
+
+-- Suggested visuals using this page's measures:
+--   Horizontal bar → dim_cashier[cashier_name] | Total Revenue (sorted desc)
+--   Horizontal bar → dim_item[item_name]        | Item Sales Revenue (sorted desc)
+--   Clustered bar  → dim_terminal[terminal_type] | Session Revenue
+--   Table          → dim_terminal[terminal_name] | Session Count, Session Revenue
+
+
+-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+-- PAGE 3 — LIVE OPS
+-- Visuals: KPI cards for today, stock table, session summary
+-- Slicers: none (today-only by design); add date slicer to unlock history
+-- Note: "today" measures require Transaction Date calculated column (Step 2)
+-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Revenue Today =
+CALCULATE(
+    [Total Revenue],
+    fact_cash_transactions[Transaction Date] = TODAY()
+)
+
+Expenses Today =
+CALCULATE(
+    [Total Expenses],
+    fact_cash_transactions[Transaction Date] = TODAY()
+)
+
+Net Income Today =
+    [Revenue Today] - [Expenses Today]
+
+Transactions Today =
+CALCULATE(
+    [Transaction Count],
+    fact_cash_transactions[Transaction Date] = TODAY()
+)
+
+Stock Out Today =
+CALCULATE(
+    SUM(fact_stock_movements[quantity]),
+    fact_stock_movements[in_out] = "Out",
+    DATESINPERIOD(dim_date[Date], TODAY(), -1, DAY)
+)
+
+Stock In Today =
+CALCULATE(
+    SUM(fact_stock_movements[quantity]),
+    fact_stock_movements[in_out] = "In",
+    DATESINPERIOD(dim_date[Date], TODAY(), -1, DAY)
+)
+
+-- Current stock level per item (use with axis: dim_item[item_name])
+-- Shows net inventory across all time, not just today.
+Current Stock =
+CALCULATE(
+    SUM(fact_stock_movements[quantity]),
+    fact_stock_movements[in_out] = "In"
+) -
+CALCULATE(
+    SUM(fact_stock_movements[quantity]),
+    fact_stock_movements[in_out] = "Out"
+)
+
+Paused Sessions =
+CALCULATE(
+    COUNTROWS(fact_sessions),
+    fact_sessions[is_paused] = TRUE()
+)
+
+-- Suggested visuals using this page's measures:
+--   KPI cards → Revenue Today, Expenses Today, Net Income Today, Transactions Today
+--   KPI cards → Stock In Today, Stock Out Today, Paused Sessions
+--   Table     → dim_item[item_name], Current Stock (highlight negatives with conditional formatting)
+--   Bar chart → dim_terminal[terminal_type], Session Count
+
+
+-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+-- PAGE 4 — SHIFT REPORT
+-- Visuals: table + KPI cards filtered by cashier and date
+-- Slicers: dim_cashier[cashier_name] (single select), dim_date[Date]
+-- All measures on this page reuse page 1-2 measures — they respect
+-- whatever cashier + date slicers are active automatically.
+-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+-- Drop these measures on KPI cards with cashier + date slicers active:
+--   [Total Revenue]      → cash collected this shift
+--   [Total Expenses]     → expenses recorded this shift
+--   [Transaction Count]  → number of income transactions
+--   [Session Count]      → sessions handled
+--   [Session Revenue]    → session income
+--   [Item Units Sold]    → units of stock sold
+--   [Item Sales Revenue] → stock sales revenue
+--   [Discount Total]     → discounts given on sessions
+
+-- Additional shift-specific measures:
+
+Shift Net =
+    [Total Revenue] - [Total Expenses]
+
+Shift Revenue Breakdown =
+-- Use in a pie/donut: shows how revenue splits across cash tx vs sessions vs stock
+-- Create a separate table visual for each source, or use a disconnected table.
+-- (Power BI does not support cross-table aggregation natively in a single visual)
+    [Total Revenue] + [Session Revenue] + [Item Sales Revenue]
+
+-- Suggested visuals using this page's measures:
+--   Slicer     → dim_cashier[cashier_name] (single-select dropdown)
+--   Slicer     → dim_date[Date] (between / relative date)
+--   KPI cards  → Total Revenue, Session Revenue, Item Sales Revenue, Shift Net
+--   KPI cards  → Transaction Count, Session Count, Item Units Sold, Discount Total
+--   Bar chart  → axis: dim_item[item_name] | values: Item Units Sold (top 10 filter)
+--   Bar chart  → axis: dim_terminal[terminal_type] | values: Session Revenue

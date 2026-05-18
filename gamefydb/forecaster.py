@@ -165,13 +165,14 @@ def holiday_week_starts(min_date: pd.Timestamp, max_date: pd.Timestamp) -> set:
     return {pd.Timestamp(d).to_period('W').start_time for d in days}
 
 
-def _check_stationarity(series: pd.Series, label: str) -> dict:
+def _check_stationarity(series: pd.Series, label: str, stage: str = 'raw') -> dict:
     """Run the Augmented Dickey-Fuller test on a time series and report the result."""
     clean = series.dropna()
     if clean.nunique() <= 1:
-        print(f'    [{label}]  skipped (constant series)')
+        print(f'    [{label} / {stage}]  skipped (constant series)')
         return {
             'series': label,
+            'stage': stage,
             'adf_statistic': float('nan'),
             'p_value': float('nan'),
             'critical_value_5pct': float('nan'),
@@ -179,16 +180,17 @@ def _check_stationarity(series: pd.Series, label: str) -> dict:
             'verdict': 'skipped (constant)',
         }
     if len(clean) < 50:
-        print(f'    [{label}]  note: short series (N={len(clean)}), interpret ADF with caution')
+        print(f'    [{label} / {stage}]  note: short series (N={len(clean)}), interpret ADF with caution')
     adf_stat, p_value, _, _, critical_values, _ = adfuller(clean, autolag='AIC')
     is_stationary = p_value < 0.05
     verdict = 'stationary' if is_stationary else 'non-stationary'
     print(
-        f'    [{label}]  ADF={adf_stat:+.4f}  p={p_value:.4f}'
+        f'    [{label} / {stage}]  ADF={adf_stat:+.4f}  p={p_value:.4f}'
         f'  critical(5%)={critical_values["5%"]:.4f}  => {verdict}'
     )
     return {
         'series': label,
+        'stage': stage,
         'adf_statistic': round(adf_stat, 4),
         'p_value': round(p_value, 4),
         'critical_value_5pct': round(critical_values['5%'], 4),
@@ -197,16 +199,27 @@ def _check_stationarity(series: pd.Series, label: str) -> dict:
     }
 
 
+def _stabilize(series: pd.Series) -> pd.Series:
+    """Apply variance- and trend-stabilising transformation: log(1+y) then
+    first-difference. The result hovers around zero with constant variance
+    when the original series has a multiplicative trend with bursty spikes,
+    which is the visual pattern present in the GamefyDB forecast series."""
+    return np.log1p(series.astype(float)).diff()
+
+
 def study_stationarity(transactions_df: pd.DataFrame) -> pd.DataFrame:
-    """Run ADF stationarity tests on the three forecast series.
+    """Run ADF stationarity tests on the three forecast series, both on the
+    raw observations and after a log(1+y)+first-difference stabilization step.
 
     Tests:
         1. Daily revenue (TND income)
         2. Daily session volume (transaction count)
         3. Weekly member activity
 
-    Returns a DataFrame with one row per series and columns:
-        series, adf_statistic, p_value, critical_value_5pct, is_stationary, verdict
+    Returns a long-format DataFrame with two rows per series ("raw" and
+    "log_diff" stages) and columns:
+        series, stage, adf_statistic, p_value, critical_value_5pct,
+        is_stationary, verdict
     """
     print('  Stationarity tests (ADF, significance=0.05):')
 
@@ -228,16 +241,21 @@ def study_stationarity(transactions_df: pd.DataFrame) -> pd.DataFrame:
         .rename(columns={'_w': 'ds', 'y': 'y'})
     )
 
-    results = [
-        _check_stationarity(rev_daily['y'], 'Revenue (TND, daily)'),
-        _check_stationarity(vol_daily['y'], 'Session volume (daily)'),
-        _check_stationarity(mem_weekly['y'], 'Member activity (weekly)'),
+    series_specs = [
+        (rev_daily['y'],  'Revenue (TND, daily)'),
+        (vol_daily['y'],  'Session volume (daily)'),
+        (mem_weekly['y'], 'Member activity (weekly)'),
     ]
+
+    results = []
+    for s, label in series_specs:
+        results.append(_check_stationarity(s, label, stage='raw'))
+        results.append(_check_stationarity(_stabilize(s), label, stage='log_diff'))
     return pd.DataFrame(results)
 
 
 def _evaluate_prophet(df: pd.DataFrame, split: float, freq: str = 'D',
-                       log_y: bool = False, use_weather: bool = False,
+                       use_weather: bool = False,
                        weekly_weather: bool = False) -> dict:
     n = len(df)
     cutoff = int(n * split)
@@ -248,9 +266,6 @@ def _evaluate_prophet(df: pd.DataFrame, split: float, freq: str = 'D',
         df = (_attach_weather_weekly(df) if weekly_weather else _attach_weather(df))
 
     train, test = df.iloc[:cutoff].copy(), df.iloc[cutoff:].copy()
-
-    if log_y:
-        train['y'] = np.log1p(train['y'])
 
     holiday_df = _build_holiday_df(df['ds'].min(), df['ds'].max())
     m = Prophet(interval_width=0.8,
@@ -266,9 +281,6 @@ def _evaluate_prophet(df: pd.DataFrame, split: float, freq: str = 'D',
         future['temp_max_c'] = future['temp_max_c'].fillna(df['temp_max_c'].mean())
         future['precip_mm']  = future['precip_mm'].fillna(0.0)
     fc = m.predict(future)
-
-    if log_y:
-        fc['yhat'] = np.expm1(fc['yhat'])
 
     merged = test.merge(fc[['ds', 'yhat']], on='ds', how='inner')
     if merged.empty:
@@ -495,8 +507,8 @@ def forecast_revenue(transactions_df: pd.DataFrame) -> pd.DataFrame:
     income['_v'] = income['amount_tnd']
     daily = _to_daily(income, 'transaction_datetime', '_v')
     weekly_eval = _to_weekly(daily)
-    p   = _evaluate_prophet(weekly_eval, split=0.8, freq='7D', log_y=True)
-    p_w = _evaluate_prophet(weekly_eval, split=0.8, freq='7D', log_y=True,
+    p   = _evaluate_prophet(weekly_eval, split=0.8, freq='7D')
+    p_w = _evaluate_prophet(weekly_eval, split=0.8, freq='7D',
                             use_weather=True, weekly_weather=True)
     s   = _evaluate_sarima(weekly_eval, split=0.8, m=4)
     x   = _evaluate_xgboost(weekly_eval, split=0.8)
@@ -619,8 +631,8 @@ def forecast_session_volume(transactions_df: pd.DataFrame) -> pd.DataFrame:
     df['_v'] = 1
     daily = _to_daily(df, 'transaction_datetime', '_v')
     weekly_eval = _to_weekly(daily)
-    p   = _evaluate_prophet(weekly_eval, split=0.8, freq='7D', log_y=True)
-    p_w = _evaluate_prophet(weekly_eval, split=0.8, freq='7D', log_y=True,
+    p   = _evaluate_prophet(weekly_eval, split=0.8, freq='7D')
+    p_w = _evaluate_prophet(weekly_eval, split=0.8, freq='7D',
                             use_weather=True, weekly_weather=True)
     s   = _evaluate_sarima(weekly_eval, split=0.8, m=4)
     x   = _evaluate_xgboost(weekly_eval, split=0.8)

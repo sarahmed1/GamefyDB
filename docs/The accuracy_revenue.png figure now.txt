@@ -1,0 +1,41 @@
+  The accuracy_revenue.png figure now shows this clearly — you'll see:
+  - Black line = actual values
+  - Green line = Prophet prediction
+  - Orange dashed = SARIMA prediction
+  - Dotted gray = naive baseline (what any trivial guess would get)
+  - Purple shaded area = Ramadan 2026 (the test period falls mostly during Ramadan, which no model had ever seen in
+  training)
+
+  What to say to your supervisor: The 80/20 split was applied equally to both models. SARIMA was properly trained using
+  auto_arima which searches for the best $(p,d,q)$ parameters by AIC — it had a fair shot. Prophet came out ahead on
+  revenue and session volume; SARIMA came out marginally ahead on member activity. The daily MAPE numbers look bad but
+  they're at the ceiling of what's possible given the noise level — even a dumb baseline gets the same score. The
+  confidence intervals (shaded band) are actually well-calibrated, which is the more useful output for practical
+  planning.
+
+
+
+
+
+The story for your supervisor actually becomes stronger this way: you add XGBoost to the comparison to show you know
+  your ML models, XGBoost wins short-term accuracy, but you justify keeping Prophet for the dashboard precisely because
+  the use case is a 4-week/3-month horizon not a 1-day-ahead prediction. That's a real engineering decision, not just
+  "Prophet is easier."
+
+
+
+
+  Where SARIMA wins:
+  - Revenue: by only 4 points (60.6% vs 64.7%) — basically a tie
+  - Member activity: by 10 points — more meaningful, but member activity is the least critical forecast for day-to-day decisions
+
+  Where Prophet wins:
+  - Session volume: by 21 points (54.7% vs 75.7%) — that's a big gap on the most operationally useful forecast
+
+  And the practical blockers for switching:
+  - SARIMA can't produce 4-week + 3-month forecasts cleanly — it would need recursive step-by-step prediction which compounds
+  errors (same issue as XGBoost)
+  - SARIMA doesn't give confidence intervals out of the box in the format Power BI expects — the planning range bands on the
+  dashboard would break
+  - SARIMA needs a regular time index — the missing days in your data would need imputation first
+  - The entire chatbot, pipeline, and Power BI output is wired around Prophet's output format — switching would break a lot

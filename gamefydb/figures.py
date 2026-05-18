@@ -77,7 +77,10 @@ def _to_daily(df, date_col, value_col):
 # ── 1. Rolling mean (stationarity graphical check) ────────────────────────────
 
 def plot_stationarity_rolling(transactions_df: pd.DataFrame, out_dir: str) -> None:
-    """3-panel figure: raw series + rolling mean for each forecast series."""
+    """3 x 2 figure: each forecast series shown raw (left) and after
+    log(1+y)+first-difference stabilization (right).  The right-hand panels
+    should hover around zero with a flat rolling mean, demonstrating
+    stationarity visually."""
     income = transactions_df[transactions_df['income_expense'] == 'Income'].copy()
     income['_v'] = income['amount_tnd']
     rev = _to_daily(income, 'transaction_datetime', '_v')
@@ -99,17 +102,32 @@ def plot_stationarity_rolling(transactions_df: pd.DataFrame, out_dir: str) -> No
         (mem_w,     4, 'Weekly Member Activity','Number of members'),
     ]
 
-    fig, axes = plt.subplots(3, 1, figsize=(FIG_W, 9), sharex=False)
+    fig, axes = plt.subplots(3, 2, figsize=(FIG_W * 1.4, 9), sharex=False)
 
-    for ax, (df, win, title, ylabel) in zip(axes, series_list):
-        ax.plot(df['ds'], df['y'],
-                color='#AACFE4', linewidth=1.2, label='Observed')
-        ax.plot(df['ds'], df['y'].rolling(win, center=True).mean(),
-                color=C_TRAIN, linewidth=2.2, label=f'Rolling mean (window={win})')
-        ax.set_title(title, fontsize=12, pad=6)
-        ax.set_ylabel(ylabel)
-        ax.tick_params(axis='x', rotation=25)
-        ax.legend(loc='upper right', framealpha=0.85)
+    for row_idx, (df, win, title, ylabel) in enumerate(series_list):
+        # --- Left: raw series ------------------------------------------------
+        ax_raw = axes[row_idx, 0]
+        ax_raw.plot(df['ds'], df['y'],
+                    color='#AACFE4', linewidth=1.2, label='Observed')
+        ax_raw.plot(df['ds'], df['y'].rolling(win, center=True).mean(),
+                    color=C_TRAIN, linewidth=2.2, label=f'Rolling mean ({win})')
+        ax_raw.set_title(f'{title}  —  raw', fontsize=12, pad=6)
+        ax_raw.set_ylabel(ylabel)
+        ax_raw.tick_params(axis='x', rotation=25)
+        ax_raw.legend(loc='upper right', framealpha=0.85)
+
+        # --- Right: log(1+y) + first-difference ------------------------------
+        stab = np.log1p(df['y'].astype(float)).diff()
+        ax_st = axes[row_idx, 1]
+        ax_st.plot(df['ds'], stab,
+                   color='#F2B79A', linewidth=1.0, label='Δ log(1+y)')
+        ax_st.plot(df['ds'], stab.rolling(win, center=True).mean(),
+                   color=C_TEST, linewidth=2.2, label=f'Rolling mean ({win})')
+        ax_st.axhline(0, color='#444444', linewidth=0.8, linestyle=':')
+        ax_st.set_title(f'{title}  —  log + diff', fontsize=12, pad=6)
+        ax_st.set_ylabel('Δ log(1+y)')
+        ax_st.tick_params(axis='x', rotation=25)
+        ax_st.legend(loc='upper right', framealpha=0.85)
 
     plt.tight_layout(pad=2.0)
     _save(fig, os.path.join(out_dir, 'stationarity_rolling.png'))
@@ -160,7 +178,7 @@ def plot_train_test_split(transactions_df: pd.DataFrame, out_dir: str,
 
 # ── 3. Actual vs predicted helpers ────────────────────────────────────────────
 
-def _prophet_test_preds(df, split, freq='D', log_y=False,
+def _prophet_test_preds(df, split, freq='D',
                          use_weather=False, weekly_weather=False):
     from gamefydb.forecaster import (_build_holiday_df, _attach_weather,
                                       _attach_weather_weekly)
@@ -169,9 +187,6 @@ def _prophet_test_preds(df, split, freq='D', log_y=False,
     if use_weather:
         df = (_attach_weather_weekly(df) if weekly_weather else _attach_weather(df))
     train, test = df.iloc[:cut].copy(), df.iloc[cut:].copy()
-    fit_train = train.copy()
-    if log_y:
-        fit_train['y'] = np.log1p(fit_train['y'])
     holiday_df = _build_holiday_df(df['ds'].min(), df['ds'].max())
     m = Prophet(interval_width=0.8,
                 holidays=holiday_df if holiday_df is not None else None,
@@ -179,16 +194,13 @@ def _prophet_test_preds(df, split, freq='D', log_y=False,
     if use_weather:
         m.add_regressor('temp_max_c')
         m.add_regressor('precip_mm')
-    m.fit(fit_train)
+    m.fit(train)
     future = m.make_future_dataframe(periods=len(test), freq=freq)
     if use_weather:
         future = future.merge(df[['ds', 'temp_max_c', 'precip_mm']], on='ds', how='left')
         future['temp_max_c'] = future['temp_max_c'].fillna(df['temp_max_c'].mean())
         future['precip_mm']  = future['precip_mm'].fillna(0.0)
     fc = m.predict(future)
-    if log_y:
-        for col in ('yhat', 'yhat_lower', 'yhat_upper'):
-            fc[col] = np.expm1(fc[col])
     merged = test.merge(fc[['ds', 'yhat', 'yhat_lower', 'yhat_upper']], on='ds', how='inner')
     return train, test, merged
 
@@ -272,8 +284,8 @@ def _compute_all_predictions(tx: pd.DataFrame, split: float = 0.8) -> dict:
     mem_d = _to_daily(mem, 'transaction_datetime', '_v')
     mem_w = _to_weekly(mem_d)
 
-    def _eval(df, freq, m_period, log_y=False, with_weather=False):
-        train, test, p_merged = _prophet_test_preds(df, split, freq=freq, log_y=log_y)
+    def _eval(df, freq, m_period, with_weather=False):
+        train, test, p_merged = _prophet_test_preds(df, split, freq=freq)
         s_test, s_preds       = _sarima_test_preds(df, split, m_period)
         x_test, x_preds       = _xgboost_test_preds(df, split)
         result = {
@@ -283,7 +295,7 @@ def _compute_all_predictions(tx: pd.DataFrame, split: float = 0.8) -> dict:
             'xgb':     (x_test, x_preds),
         }
         if with_weather:
-            _, _, pw_merged = _prophet_test_preds(df, split, freq=freq, log_y=log_y,
+            _, _, pw_merged = _prophet_test_preds(df, split, freq=freq,
                                                    use_weather=True, weekly_weather=True)
             xw_test, xw_preds = _xgboost_test_preds(df, split,
                                                      use_weather=True, weekly_weather=True)
@@ -291,10 +303,10 @@ def _compute_all_predictions(tx: pd.DataFrame, split: float = 0.8) -> dict:
             result['xgb_weather']     = (xw_test, xw_preds)
         return result
 
-    print('    Revenue series (weekly, log)...')
-    rev = _eval(rev_weekly, '7D', 4, log_y=True, with_weather=True)
-    print('    Session volume series (weekly, log)...')
-    ses = _eval(vol_weekly, '7D', 4, log_y=True, with_weather=True)
+    print('    Revenue series (weekly)...')
+    rev = _eval(rev_weekly, '7D', 4, with_weather=True)
+    print('    Session volume series (weekly)...')
+    ses = _eval(vol_weekly, '7D', 4, with_weather=True)
     print('    Member activity series (weekly)...')
     mem_r = _eval(mem_w, '7D', 4)
     return {'revenue': rev, 'sessions': ses, 'members': mem_r}
@@ -816,6 +828,113 @@ def plot_prophet_revenue_forecast(transactions_df: pd.DataFrame, out_dir: str) -
     _save(fig, os.path.join(out_dir, 'prophet_revenue_forecast.png'))
 
 
+# ── Clean two-line forecast figures (Amal-style) ──────────────────────────────
+
+def _weekly_revenue(transactions_df: pd.DataFrame) -> pd.DataFrame:
+    """Return weekly revenue (ds = week-start Monday, y = TND sum)."""
+    from gamefydb.forecaster import _to_weekly
+    income = transactions_df[transactions_df['income_expense'] == 'Income'].copy()
+    income['_v'] = income['amount_tnd']
+    daily = _to_daily(income, 'transaction_datetime', '_v')
+    return _to_weekly(daily)
+
+
+def _future_prophet(weekly_hist: pd.DataFrame, horizon_weeks: int):
+    from gamefydb.forecaster import _build_holiday_df
+    last_date = pd.Timestamp(weekly_hist['ds'].max())
+    holiday_df = _build_holiday_df(
+        pd.Timestamp(weekly_hist['ds'].min()),
+        last_date + pd.Timedelta(weeks=horizon_weeks + 1),
+    )
+    m = Prophet(
+        interval_width=0.8,
+        holidays=holiday_df if holiday_df is not None else None,
+        holidays_prior_scale=20.0,
+    )
+    m.fit(weekly_hist)
+    future = m.make_future_dataframe(periods=horizon_weeks, freq='W')
+    fc = m.predict(future)
+    return fc[['ds', 'yhat']].tail(horizon_weeks).reset_index(drop=True)
+
+
+def _future_sarima(weekly_hist: pd.DataFrame, horizon_weeks: int, m_period: int = 4):
+    last_date = pd.Timestamp(weekly_hist['ds'].max())
+    future_dates = pd.date_range(last_date + pd.Timedelta(weeks=1),
+                                  periods=horizon_weeks, freq='W')
+    try:
+        model = auto_arima(weekly_hist['y'], seasonal=True, m=m_period,
+                            stepwise=True, suppress_warnings=True,
+                            error_action='ignore', information_criterion='aic')
+        preds = model.predict(n_periods=horizon_weeks)
+    except Exception:
+        return None
+    return pd.DataFrame({'ds': future_dates, 'yhat': np.asarray(preds, dtype=float)})
+
+
+def _future_xgboost(weekly_hist: pd.DataFrame, horizon_weeks: int):
+    from gamefydb.forecaster import _xgb_features
+    if len(weekly_hist) < 16:
+        return None
+    ds_arr = list(pd.to_datetime(weekly_hist['ds']).values)
+    y_arr  = list(weekly_hist['y'].astype(float).values)
+    last_date = pd.Timestamp(weekly_hist['ds'].max())
+    future_dates = pd.date_range(last_date + pd.Timedelta(weeks=1),
+                                   periods=horizon_weeks, freq='W')
+    ds_ext = ds_arr + list(future_dates.values)
+
+    X_train, y_train = [], []
+    for i in range(14, len(y_arr)):
+        X_train.append(_xgb_features(i, np.array(y_arr), ds_arr))
+        y_train.append(y_arr[i])
+
+    model = XGBRegressor(n_estimators=300, learning_rate=0.05,
+                          max_depth=5, subsample=0.8, colsample_bytree=0.8,
+                          random_state=42, verbosity=0)
+    model.fit(pd.DataFrame(X_train), y_train)
+
+    y_ext = list(y_arr)
+    preds = []
+    for i in range(len(y_arr), len(y_arr) + horizon_weeks):
+        feat = _xgb_features(i, np.array(y_ext), ds_ext)
+        pred = max(0.0, float(model.predict(pd.DataFrame([feat]))[0]))
+        preds.append(pred)
+        y_ext.append(pred)
+    return pd.DataFrame({'ds': future_dates, 'yhat': preds})
+
+
+def plot_revenue_forecast_clean(transactions_df: pd.DataFrame, out_dir: str,
+                                  horizon_weeks: int = 12) -> None:
+    """Three Amal-style forecast figures: solid actual + dashed forecast,
+    one PNG per model (Prophet / SARIMA / XGBoost)."""
+    weekly_hist = _weekly_revenue(transactions_df)
+
+    forecasts = {
+        'prophet': _future_prophet(weekly_hist, horizon_weeks),
+        'sarima':  _future_sarima(weekly_hist, horizon_weeks),
+        'xgboost': _future_xgboost(weekly_hist, horizon_weeks),
+    }
+    pretty = {'prophet': 'Prophet', 'sarima': 'SARIMA', 'xgboost': 'XGBoost'}
+
+    for model_key, fc in forecasts.items():
+        if fc is None or fc.empty:
+            print(f'    Skipped {model_key} forecast (failed to fit)')
+            continue
+
+        fig, ax = plt.subplots(figsize=(FIG_W, 4.2))
+        ax.plot(weekly_hist['ds'], weekly_hist['y'],
+                color='#1A5FB4', linewidth=1.6, label='Actual')
+        ax.plot(fc['ds'], fc['yhat'],
+                color='#C7156A', linewidth=1.8, linestyle='--', label='Forecast')
+        ax.set_title(f'Revenue Forecast — {pretty[model_key]}',
+                     fontsize=14, fontweight='bold')
+        ax.set_xlabel('Date')
+        ax.set_ylabel('Weekly revenue (TND)')
+        ax.legend(loc='upper right', framealpha=0.85)
+        ax.tick_params(axis='x', rotation=25)
+        plt.tight_layout()
+        _save(fig, os.path.join(out_dir, f'forecast_revenue_{model_key}.png'))
+
+
 # ── 6 & 7. Peak hours / days ──────────────────────────────────────────────────
 
 def _gradient_colors(values, low='#AACFE4', high=None):
@@ -1027,6 +1146,9 @@ def generate_all_figures(transactions_df: pd.DataFrame, dim_member: pd.DataFrame
 
     print('  Prophet revenue forecast...')
     plot_prophet_revenue_forecast(transactions_df, figures_dir)
+
+    print('  Clean revenue forecast — Prophet / SARIMA / XGBoost...')
+    plot_revenue_forecast_clean(transactions_df, figures_dir)
 
     print('  Peak hours / days...')
     plot_peak_hours(forecasts_dir, figures_dir)

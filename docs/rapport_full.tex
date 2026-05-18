@@ -1,5 +1,5 @@
 % ============================================================
-%  GamefyDB — PFE Report  |  Full Document
+%  GamefyDB - PFE Report  |  Full Document
 %  Compile with pdflatex (or XeLaTeX for UTF-8 support).
 % ============================================================
 
@@ -195,7 +195,7 @@ point-of-sale software since it opened. Every session, every transaction, every 
 sold gets logged automatically. By the time I started my internship there, the owner
 had months of Excel reports sitting on a local drive with no way to extract anything
 useful from them. Decisions about staffing, stock ordering, and pricing were being
-made without looking at any of that data --- not because the data was not there, but
+made without looking at any of that data, not because the data was not there, but
 because nothing had been built to process it. The goal of this project was to build
 that system: an ETL pipeline to clean and structure the raw exports, a star-schema
 data warehouse for Power~BI, interactive dashboards covering the key operational
@@ -232,330 +232,390 @@ and suggests directions for future work.
 
 \section{Introduction}
 
-This chapter sets up the context for the rest of the report. It starts with a
-presentation of Gamefy Academy, covering who they are, how they operate, and what data
-they generate. From there it identifies the problems with the existing system,
-states the question the project tries to answer, and describes the solution that
-was built. The chapter ends with a discussion of the project management methodology.
+This first chapter sets up the rest of the report. It introduces the host gaming
+centre, walks through the situation that motivated the work — what existed
+before, what was missing, and what I proposed to build instead — and then
+discusses how the project was managed and why I picked the methodology I did.
 
 \section{Host Organisation Presentation}
 
-\textbf{Gamefy Academy} is a gaming center located in \textbf{La Soukra, Tunis}.
+\textbf{Gamefy Academy} is a gaming centre located in \textbf{La Soukra, Tunis}.
 It opened in 2025 and targets a young clientele looking for a high-quality gaming
-experience in a social setting. The center offers PC gaming on high-end hardware,
-PlayStation~5 consoles, a private VIP gaming booth, and a snack bar. It positions
-itself in a market that has grown significantly in Tunisia over the last few years,
-as competitive gaming and LAN events have become increasingly popular.
+experience in a social setting. The centre offers PC gaming on high-end hardware,
+two PlayStation~5 consoles, a private VIP gaming booth, and a small snack bar.
+It positions itself in a market that has grown significantly in Tunisia over the
+last few years, as competitive gaming and LAN events have become increasingly
+popular.
 
 % *TODO* insert Gamefy logo image if available
 % \begin{figure}[H]
 %   \centering
-%   \includegraphics[width=0.3\textwidth]{gamefy_logo.png}
+%   \includegraphics[width=0.3\textwidth]{images/gamefy_logo.png}
 %   \caption{Gamefy Academy logo.}
 % \end{figure}
 
 \subsection{Organisational Structure}
 
-Operations are managed by a small team. Five cashier accounts handle all
+Operations are run by a small team. Five cashier accounts handle all
 customer-facing activity: \textit{taktek}, \textit{yassine}, \textit{youssef},
-\textit{monta}, and \textit{guds}. There is also an \textit{admin} account
-used for system-level operations. Each cashier covers one or more terminals during
-a shift and is responsible for opening sessions, recording cash transactions, and
-managing stock sales.
+\textit{monta}, and \textit{guds}. A shared \textit{cashier} account is used during
+shift hand-offs, and an \textit{admin} account is reserved for the owner. Each
+cashier covers one or more terminals during a shift and is responsible for opening
+sessions, ringing up snack purchases, and processing member top-ups.
 
-All activity is automatically logged by the center's point-of-sale software, which
-generates four Excel reports that can be exported at any time: one for cash
-transactions, one for session data, one for stock movements, and one for member
-statistics.
+Every customer-facing action is automatically logged by the centre's
+point-of-sale software, which can export four Excel reports on demand: one for
+cash transactions, one for gaming sessions, one for stock movements, and one for
+the loyalty members.
 
 \subsection{Services Provided}
 
-The center has 16 active terminals distributed across three categories:
+The centre runs sixteen active terminals split across three categories:
 
 \begin{itemize}
-  \item \textbf{Standard PC workstations} (GAMEFY01 to GAMEFY10): ten high-spec
-        gaming computers. Sessions are billed by duration and can be of five types:
-        Standard, Member, Free, Time Limited, or Administrator.
+  \item \textbf{Standard PC workstations} (\textsc{GAMEFY01} to \textsc{GAMEFY10})
+        — ten high-spec gaming computers. Sessions are billed by duration and
+        marked as \textit{Standard}, \textit{Member}, \textit{Free},
+        \textit{Time Limited}, or \textit{Administrator} depending on who is
+        sitting at the terminal and why.
 
-  \item \textbf{PlayStation~5 consoles} (PS5~(1) and PS5~(2)): two console stations
-        running the same session type system as the PCs.
+  \item \textbf{PlayStation~5 consoles} (\textsc{PS5\,(1)} and \textsc{PS5\,(2)})
+        — two console stations managed the same way as the PCs.
 
-  \item \textbf{VIP gaming booth} (GAMEFY-VIP): a private room with a premium setup
-        at a higher hourly rate, available by reservation.
+  \item \textbf{VIP gaming booth} (\textsc{GAMEFY-VIP}) — a private room with a
+        premium setup at a higher hourly rate, available by reservation.
 
-  \item \textbf{Administrative workstations}: three DESKTOP machines used by staff
-        that appear in session data under the Administrator type.
+  \item \textbf{Administrative workstations} (three \textsc{DESKTOP} machines) —
+        used by staff for back-office work; they appear in the session data
+        under the \textit{Administrator} type.
 \end{itemize}
 
-Alongside gaming, the center runs a snack bar stocked with drinks, cookies, and
-snack items. These sales are tracked through the stock management system. A loyalty
-membership programme offers registered members reduced rates and tracked usage.
+Alongside the gaming activity, the centre runs a snack bar stocked with drinks,
+cookies, USB keys, and similar items. These sales are tracked through the stock
+management system. A loyalty programme offers regular customers reduced rates and
+keeps track of their cumulative spend and time.
 
 \section{Project Presentation}
 
 \subsection{General Context}
 
-This project was completed as part of the final-year requirements for a Bachelor's
-degree in Business Intelligence at the Higher Institute of Computer Science of
-Mahdia, Faculty of Economics and Management. The internship ran over four months at
-Gamefy Academy and was jointly supervised by an academic supervisor from ISIMA and
-the center's owner.
+This project is the final-year work for the Bachelor's degree in Business
+Computing with a Business Intelligence specialisation at the Higher Institute
+of Computer Science of Mahdia (ISIMA), University of Monastir. The internship
+ran over four months at Gamefy Academy, jointly supervised by an academic
+supervisor from ISIMA and the centre's owner.
 
-The project sits at the intersection of data engineering and business analytics.
-The starting point is four raw Excel files. The end goal is a repeatable,
-automated system that produces clean data, interactive dashboards, and machine-learning
-forecasts, none of which existed at the start of the internship.
+The project sits at the crossroads of data engineering and business analytics.
+The starting point is four raw Excel files. The end goal is a repeatable system
+that turns those files into clean data, into interactive dashboards, into
+forward-looking forecasts, and finally into a conversational assistant the
+owner can talk to in everyday language. None of that existed before the
+internship started.
 
 \subsection{Analysis of the Existing System}
 
-When I arrived at Gamefy, the data workflow was straightforward: the point-of-sale
-software exported four \texttt{.xls} files on demand, and those files were saved
+When I arrived at Gamefy, the data workflow was simple: the point-of-sale
+software exported four \texttt{.xls} files on demand and those files were saved
 to a local folder. That was it. No pipeline processed them further. No dashboard
-visualised them. If the owner wanted to know something about the business (which cashier had the
-best month, which terminal was most popular, whether revenue was trending up),
-the only option was to open the correct Excel file and build a pivot table manually.
+visualised them. If the owner wanted to know which cashier had had the best
+month, which terminal was most popular, or whether revenue was trending up, the
+only option was to open the right Excel file and build a pivot table by hand.
 
-In practice, this meant it almost never happened. The friction of going from
+In practice that almost never happened. The friction of going from
 ``I have a question'' to ``I have an answer'' was high enough that analysis was
 reserved for exceptional circumstances. The data accumulated but went unused.
 
 \subsection{Criticism of the Current System}
 
-Going through the files in detail revealed a second layer of problems beyond
-just the lack of tooling. The data quality issues in the source files are not
-visible to someone reading them in Excel, but they make automated processing
-significantly harder than it should be.
+Looking through the files in detail surfaced a second layer of problems beyond
+the lack of tooling. The data-quality issues are invisible to someone reading
+the spreadsheets in Excel, but they make automated processing much harder than
+it should be. Table~\ref{tab:dq} summarises what I found.
 
 \begin{table}[H]
   \centering
-  \caption{Summary of data quality issues found in the source files.}
+  \caption{Data-quality issues found in the source files.\label{tab:dq}}
   \begin{tabular}{p{3.5cm} p{9.5cm}}
     \toprule
     \textbf{Issue} & \textbf{Description} \\
     \midrule
     Page-break artefacts
       & The export software inserts a \textit{Page~X/Y} row, two blank rows, and
-        a full header repetition approximately every 40 data rows. \\[4pt]
+        a full header repetition roughly every 40 data rows. \\[4pt]
     Non-standard number format
-      & TND amounts use a narrow no-break space (\texttt{\textbackslash u202f})
-        as the thousands separator and a comma as the decimal separator. Standard
-        parsers reject both. \\[4pt]
+      & TND amounts use a narrow no-break space (\texttt{\textbackslash u202f}
+        / \texttt{\textbackslash xa0}) as the thousands separator and a comma
+        as the decimal separator. Standard parsers reject both. \\[4pt]
     Merged-cell column shift
-      & Merged cells in the Excel layout shift the column index where data actually
-        lands relative to the visible header, making automatic header detection
-        unreliable. \\[4pt]
+      & Merged cells in the Excel layout shift the column index where data
+        actually lands relative to the visible header, so automatic header
+        detection is unreliable. \\[4pt]
     Missing cashier names
       & Sub-total rows inserted between data rows carry a generic label in the
-        cashier column instead of the actual cashier account name. \\[4pt]
+        cashier column instead of the actual account name. \\[4pt]
     Inconsistent totals
       & Some session and stock rows have recorded totals that do not match the
-        sum of their component columns, indicating data-entry or rounding errors
-        in the source software. \\[4pt]
+        sum of their component columns, pointing to data-entry or rounding
+        errors in the source software. \\[4pt]
     Footer rows
       & The members file ends with a \textit{Report Result\,:} footer row that
-        contains numeric totals in what appears to be a data position. \\
+        contains numeric totals in what looks like a data position. \\
     \bottomrule
   \end{tabular}
 \end{table}
 
-None of these issues were documented. Each one was discovered by inspecting actual
-rows from the files and working out why the parsing was failing.
+None of these issues were documented anywhere. Every one of them was discovered
+by inspecting actual rows from the files and figuring out why the parser was
+choking.
 
 \subsection{Problem Statement}
 
-The center collects detailed operational data continuously but derives almost no
-value from it. The question this project addresses is: \textit{how can these raw,
-artefact-laden Excel exports be transformed reliably and repeatably into a clean
-dataset that supports real decision-making?}
+Gamefy collects detailed operational data continuously, but derives almost no
+value from it. The question this project addresses is therefore:
+\textit{how can these raw, artefact-laden Excel exports be transformed reliably
+and repeatably into a clean dataset that supports real decision-making, both
+backward-looking and forward-looking?}
 
-The word ``reliably'' matters. A one-time manual clean is not a solution. What the
-center needs is a process that can be rerun every time the files are updated, always
-producing correct output.
+The word \textit{reliably} matters. A one-time manual clean is not a solution.
+What the centre needs is a process that can be rerun every time the files
+change, always producing correct output.
 
 \subsection{Proposed Solution}
 
-The solution developed is called \textbf{GamefyDB}. It is a Python-based system
-with three components:
+The solution I built is \textbf{GamefyDB}. It is a Python-based system that
+covers four layers, all driven from a single command (\texttt{run.py}):
 
 \begin{enumerate}
-  \item \textbf{\texttt{gamefydb/pipeline.py}} handles the full ETL chain: reading
-        the four source files, stripping all formatting artefacts, converting every
-        column to the correct type, correcting data quality issues, and building the
-        six-table star schema. A single function (\texttt{run\_pipeline()}) runs the
-        entire chain and returns the output.
+  \item \textbf{\texttt{gamefydb/pipeline.py}} handles the full ETL chain in one
+        place: reading the four source files via \texttt{pandas}/\texttt{openpyxl},
+        stripping every formatting artefact, correcting missing cashier names,
+        converting every column to the right type, and finally building the
+        six-table star schema (four dimensions and two facts). A single function,
+        \texttt{run\_pipeline()}, runs the whole chain end-to-end.
 
   \item \textbf{\texttt{gamefydb/forecaster.py}} contains five independent
-        forecasting functions that read the cleaned data and produce forward-looking
-        CSV files for demand planning.
+        forecasting functions plus an evaluation harness that compares
+        \textbf{Prophet}, \textbf{SARIMA} (via \texttt{pmdarima.auto\_arima}),
+        and \textbf{XGBoost} on an 80/20 chronological split. Two of those
+        models also accept a \textbf{weather regressor} (daily max temperature
+        and precipitation pulled from the Open-Meteo API and cached locally in
+        \texttt{excel/weather\_tunis.parquet}).
 
-  \item \textbf{\texttt{run.py}} is the command-line entry point. It calls the
-        pipeline, writes the star-schema tables to \texttt{output/powerbi\_star/},
-        then calls each forecasting function and writes results to
-        \texttt{output/forecasts/}.
+  \item \textbf{\texttt{gamefydb/segmenter.py}} and
+        \textbf{\texttt{gamefydb/anomaly\_detector.py}} produce the rest of the
+        ML outputs: a K-Means segmentation of the member base into four
+        behavioural profiles, a continuous loyalty score per member, and a
+        day-of-week Z-score anomaly detector that flags revenue, session-volume,
+        and member-activity outliers with a mild/severe severity label.
+
+  \item \textbf{\texttt{app.py}} (Streamlit) is a conversational assistant that
+        lets the owner ask questions in English, French, or Arabic, either by
+        typing or by voice, and gets back a written answer plus a relevant
+        chart. Four shortcut buttons (\textit{Full summary}, \textit{Give me
+        advice}, \textit{Any anomalies?}, \textit{Forecast}) cover the most
+        common queries in one click.
 \end{enumerate}
 
-The output feeds into a Power~BI report (\texttt{gamefyyy.pbix}) with four
-dashboard pages covering revenue, rankings, live operations, and shift reporting.
+The output of the ETL feeds into a Power~BI report (\texttt{gamefyyy.pbix})
+with four dashboard pages — revenue overview, rankings, live ops, and shift
+report — alongside the forecasting, segmentation, and anomaly CSVs. The
+chatbot sits on top of the same data and uses the same forecasting/anomaly
+functions internally.
+
+Because the original source files only cover three months, I also built a
+\textbf{synthetic data extension} (\texttt{gamefydb/data\_generator.py}) that
+generates a longer history (\texttt{excel/extended\_*.xlsx}) by sampling from
+the real daily-revenue pool and modulating it with Ramadan, Eid, monthly,
+and weather-driven multipliers. Without this step the time-series models would
+not have enough data to learn anything useful.
 
 \section{Project Management Methodology}
 
+Picking the right project management approach matters more than it looks. The
+choice shapes how changes get handled, how progress is tracked, and how often
+the stakeholder gets to see and react to what's been built. Below I look at
+two methodologies commonly used in BI and software projects, then explain
+which one I went with and why.
+
 \subsection{The GIMSI Method}
 
-GIMSI is a project management methodology designed specifically for Business
-Intelligence projects. It provides a structured approach to the full lifecycle
-of a decision-support system, from identifying needs to operational deployment.
-
-% *TODO* insert GIMSI phases diagram here
-% \begin{figure}[H]
-%   \centering
-%   \includegraphics[width=0.75\textwidth]{gimsi_phases.png}
-%   \caption{Main phases of the GIMSI methodology.}
-%   \label{fig:gimsi}
-% \end{figure}
+GIMSI is a phased methodology designed specifically for decision-support and
+Business Intelligence projects. It covers the full lifecycle, from the first
+analysis of business needs all the way to operational deployment.
 
 \subsubsection{GIMSI Objectives}
 
-GIMSI is designed to keep all project phases consistent with each other and with the
-organisation's real needs. Its four main objectives are: organising the project
-process methodically, guaranteeing consistency across all deliverables, bringing
-all stakeholders into the process collaboratively, and preserving knowledge produced
-during the project for future reuse.
+The method tries to:
+
+\begin{itemize}[noitemsep]
+  \item Organise the project work in a consistent, repeatable way.
+  \item Keep the needs analysis, the design decisions, and the final deliverable
+        aligned with each other.
+  \item Tie the technical work back to the organisation's strategic goals.
+  \item Capture the knowledge produced during the project so it can be reused
+        later.
+\end{itemize}
 
 \subsubsection{Main Phases of GIMSI}
 
-The methodology breaks down into five phases. The Preliminary Study justifies the
-project and analyses its context. The Opportunity Study evaluates feasibility and
-candidate solutions. The Detailed Study produces functional requirements and
-conceptual models. The Implementation phase covers development and testing. Finally,
-Permanent Improvement handles post-deployment refinement based on feedback.
+GIMSI splits the work into five sequential phases:
+
+\begin{enumerate}[noitemsep]
+  \item \textbf{Preliminary Study} — justify the project, analyse the context,
+        identify the decision-making needs.
+  \item \textbf{Opportunity Study} — assess feasibility and compare candidate
+        solutions.
+  \item \textbf{Detailed Study} — specify functional requirements and model the
+        target system.
+  \item \textbf{Implementation} — develop, integrate, and deploy.
+  \item \textbf{Permanent Improvement} — refine the system based on operational
+        feedback.
+\end{enumerate}
 
 \subsubsection{Advantages and Limits}
 
-GIMSI is well-suited to projects where the business requirements are stable and
-can be fully specified before implementation begins. It is strong on documentation
-and traceability. However, it is less flexible when the problem evolves during
-implementation, which is exactly the situation in a data project where source data
-quality is unknown until you inspect the actual files.
+GIMSI's strength is that it combines top-down strategic framing with detailed
+bottom-up technical work. Its phased structure reduces the risk of delivering
+something that's technically correct but answers the wrong question. The
+downside is that it does not handle moving targets well: it assumes that
+business requirements are stable enough to specify upfront, which is rarely
+the case in a data project where the source-data quality is unknown until
+you open the files.
 
 \subsection{Scrum Methodology}
 
 Scrum is an agile framework built around short delivery cycles called sprints,
-typically two to four weeks long. Each sprint ends with a working product increment,
-a review with stakeholders, and a retrospective to improve the next cycle.
-
-% *TODO* insert Scrum process diagram here
-% \begin{figure}[H]
-%   \centering
-%   \includegraphics[width=0.8\textwidth]{scrum_process.png}
-%   \caption{The Scrum process.}
-%   \label{fig:scrum}
-% \end{figure}
+typically two to four weeks long. Each sprint ends with a working product
+increment, a review with stakeholders, and a retrospective that feeds into
+the next cycle.
 
 \subsubsection{Key Principles}
 
-Three roles define the Scrum team. The \textit{Product Owner} owns the backlog and
-sets priorities based on business value. The \textit{Scrum Master} facilitates the
-process and removes anything blocking the team. The \textit{Development Team} is
-responsible for delivering each sprint's increment.
-
-The ceremonies (Sprint Planning, Daily Scrum, Sprint Review, and Sprint
-Retrospective) create a rhythm that keeps the team aligned and gives stakeholders
-regular visibility into progress without requiring a formal sign-off at every step.
+Three roles define the team. The \textit{Product Owner} owns the backlog and
+sets priorities based on business value. The \textit{Scrum Master} facilitates
+the process and removes anything blocking the team. The \textit{Development
+Team} is responsible for actually delivering each sprint's increment. The
+ceremonies (Sprint Planning, Daily Scrum, Sprint Review, Sprint Retrospective)
+create a rhythm that keeps everyone aligned and gives the stakeholder regular
+visibility on progress without requiring a formal sign-off at every step.
 
 \subsubsection{Advantages}
 
-The strongest advantage of Scrum for this type of project is the ability to respond
-to change. When you discover during Sprint~1 that the source data has six different
-quality problems you did not know about before, Scrum lets you handle them without
-derailing the plan. The sprint boundary is a natural point to reassess and adjust.
+The biggest advantage of Scrum for a project like this one is the ability to
+respond to change. When you discover during Sprint~1 that the source data has
+half a dozen quality problems you did not know about before, Scrum lets you
+fold those problems into the next sprint without derailing the plan.
 
 \subsection{Adopted Methodology}
 
-I chose Scrum. The deciding factor was uncertainty: when I started the internship,
-I had no way of knowing what the data quality issues were going to be. Designing
-everything upfront would have meant making assumptions that turned out to be wrong.
-Scrum let me inspect the real files in Sprint~1, fix what I found, and move on to
-the schema in Sprint~2 only once the cleaning was solid.
-
-Sprint~0 was used as a planning phase where no code was written. Four implementation
-sprints followed.
+I went with \textbf{Scrum}. The deciding factor was uncertainty: when I started
+the internship, I had no way of knowing what the data-quality issues were going
+to be. Designing everything upfront would have meant making assumptions that
+turned out to be wrong. Scrum let me inspect the real files in Sprint~1, fix
+what I found, and only move on to the schema in Sprint~2 once the cleaning was
+solid. Sprint~0 was used as a planning phase where no code was written. Five
+implementation sprints followed.
 
 \section{Conclusion}
 
 Gamefy Academy had the data but not the infrastructure to use it. This chapter
-identified the gap (messy files, no automation, no dashboard) and introduced
-the system built to fill it. Chapter~2 covers the preparation work done before
-any code was written.
+identified the gap — messy files, no automation, no dashboard, no forecast,
+no easy way for the owner to ask questions — and introduced the system built
+to fill it. Chapter~2 covers the preparation work that was done before any
+code was written.
 
 % ============================================================
-%  CHAPTER 2
+%  CHAPTER 2 — SPRINT 0: PREPARATION PHASE
 % ============================================================
 \chapter{Sprint 0: Preparation Phase}
 
 \section{Introduction}
 
-Sprint~0 is the planning sprint. Nothing is deployed, but everything that comes
-after depends on getting this right. During this phase I identified the actors,
-documented the requirements, set up the product backlog, chose the architecture,
-and designed the dimensional model. In practice it took longer than the two weeks
-planned, because understanding the source files well enough to write reliable
-requirements meant inspecting the real data in detail.
+Sprint~0 is the planning sprint. Nothing ships at the end of it, but everything
+that comes afterwards depends on getting it right. During this phase I
+identified the actors, wrote down the requirements, set up the product
+backlog, picked the technical architecture, and designed the dimensional
+model. In practice the phase took longer than the two weeks originally
+allocated, because understanding the source files well enough to write
+reliable requirements meant looking at the real data in detail.
 
 \section{Requirements Specification}
 
 \subsection{Identification of System Actors}
 
-Two actors interact with GamefyDB.
+GamefyDB interacts with three actors.
 
-The \textbf{Data Analyst} is the person who runs the pipeline, validates the output,
-and maintains the dashboards. In this project that was me during the internship, but
-the system is designed to be runnable by anyone with Python installed. The analyst
-is the only actor who directly triggers the system.
+The \textbf{Gaming Centre Owner / Manager} is the main stakeholder. The owner
+uses the Power~BI dashboards day-to-day, reads the forecasts and anomaly
+alerts when planning ahead, and talks to the conversational assistant for
+quick questions during a shift.
 
-The \textbf{Downstream System} (Power~BI or any other BI tool) is the consumer of
-the output. It does not trigger anything, but its requirements determine the output
-format: UTF-8-BOM encoding, clean column names, integer surrogate keys, and
-referential integrity across tables.
+The \textbf{Data Analyst / BI Developer} is the role I played throughout the
+internship. The analyst runs the pipeline, validates the output, maintains the
+Power~BI report, and ships new ML or chatbot features as the requirements
+evolve.
+
+The \textbf{Cashier} is an indirect actor. Cashiers do not interact with
+GamefyDB themselves, but their everyday activity generates the Excel exports
+that the whole system depends on.
 
 \subsection{Functional Requirements}
 
-The functional requirements were written after inspecting all four source files.
-They are ordered by the pipeline stage they belong to.
+The functional requirements describe what the system must do. They were
+derived from the problems in Chapter~1 and validated against the real source
+files.
 
 \begin{enumerate}
-  \item Read all four \texttt{.xls} files reliably without encoding errors.
-  \item Remove page-break artefacts (repeated headers, page markers, blank rows)
-        from every file before any processing.
+  \item Read the four source \texttt{.xls} files without triggering encoding
+        errors.
+  \item Strip every page-break artefact (repeated headers, \textit{Page X/Y}
+        rows, blank rows) from each file before any processing.
   \item Parse TND amounts that use a narrow no-break space as the thousands
         separator and a comma as the decimal separator.
-  \item Parse all datetime columns in \texttt{DD.MM.YYYY~HH:MM:SS} format into
-        typed datetime objects.
-  \item Convert duration strings in \texttt{Xh~Y~min} format into numeric minutes.
+  \item Parse all datetime columns in \texttt{DD.MM.YYYY~HH:MM:SS} format
+        into proper datetime objects.
+  \item Convert duration strings in \texttt{Xh~Y~min} format into numeric
+        minutes.
   \item Correct missing or invalid cashier names by propagating known cashier
-        account names through sub-total rows.
-  \item Impute missing amounts, quantities, and totals using the relationships
-        between columns (e.g.\ total = quantity $\times$ unit price).
+        accounts through sub-total rows (\texttt{\_fill\_cashier}).
+  \item Impute missing amounts and totals using the relationships between
+        columns (e.g.\ \textit{total = quantity $\times$ unit~price}).
   \item Build four dimension tables with surrogate integer primary keys.
-  \item Build two fact tables with foreign-key references to the dimensions.
-  \item Export all six tables as UTF-8-BOM encoded CSV files.
-  \item Produce five forecast outputs for revenue, member activity, peak hours,
-        session volume, and stock replenishment.
+  \item Build two fact tables (\textit{fact\_transaction}, \textit{fact\_session})
+        with foreign-key references resolved against the four dimensions.
+  \item Export all six tables to \texttt{output/powerbi\_star/} as UTF-8-BOM
+        encoded CSV files.
+  \item Forecast revenue, member activity, peak hours/days, session volume,
+        and stock replenishment using Prophet, SARIMA, and XGBoost on an
+        80/20 chronological split, with the weather regressor available
+        on Prophet and XGBoost.
+  \item Segment the loyalty members into four behavioural profiles using
+        K-Means clustering, and produce a continuous loyalty score per member.
+  \item Flag days where revenue, session volume, or member activity was
+        statistically unusual relative to the same day of the week, using a
+        Z-score detector with a mild/severe severity label.
+  \item Provide an interactive Power~BI report with at least four dashboard
+        pages (revenue, rankings, live ops, shift report).
+  \item Provide a Streamlit conversational assistant that supports English,
+        French, and Arabic, accepts both text and voice input, and produces
+        both a written answer and a relevant chart.
 \end{enumerate}
 
 \subsection{Non-Functional Requirements}
 
 \begin{enumerate}
-  \item \textbf{Correctness}: no artefact row, header row, or sub-total row may
+  \item \textbf{Correctness} — no artefact row, header row, or sub-total row may
         appear in any output table.
-  \item \textbf{Reproducibility}: given the same four input files, the pipeline
-        must always produce byte-identical output.
-  \item \textbf{Portability}: no hardcoded paths; the pipeline must run on any
-        machine with the required Python packages, on both Windows and Linux.
-  \item \textbf{Maintainability}: column index mappings are defined explicitly in
-        each loader function so that a format change in the source files can be
-        corrected in one place.
-  \item \textbf{Testability}: the parsing and cleaning functions are independently
-        testable and covered by a \texttt{pytest} suite.
+  \item \textbf{Reproducibility} — given the same four input files, the
+        pipeline must always produce identical output.
+  \item \textbf{Portability} — no hard-coded paths; the pipeline must run on
+        any machine with the required Python packages, on both Windows and
+        Linux.
+  \item \textbf{Maintainability} — column index mappings are defined
+        explicitly in each loader function so a format change in the source
+        files can be corrected in one place.
+  \item \textbf{Testability} — the parsing, cleaning, segmentation, anomaly,
+        and weather modules are covered by an automated \texttt{pytest} suite.
 \end{enumerate}
 
 \subsection{Requirements Modelling}
@@ -564,75 +624,57 @@ Figure~\ref{fig:usecase} shows the global use case diagram for GamefyDB.
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.85\textwidth]{usecase.png}
+  \includegraphics[width=0.95\textwidth]{images/use_cases.png}
   \caption{Global use case diagram for GamefyDB.}
   \label{fig:usecase}
 \end{figure}
 
-The Analyst triggers two primary use cases: \textit{Run ETL Pipeline} and
-\textit{Generate Forecasts}. The pipeline includes three subordinate steps (Load Source Files, Clean and
-Correct Data, Build Star Schema), modelled as
-\texttt{<<include>>} relationships. Forecast generation extends the base run
-since it is invoked from the same command. The Downstream System receives the
-output through a Load into Power~BI use case.
-
-Table~\ref{tab:uc_pipeline} gives the text description of the main use case.
-
-\begin{table}[H]
-\centering
-\caption{Text description of use case ``Run ETL Pipeline''.}
-\label{tab:uc_pipeline}
-\begin{tabular}{L R}
-  \toprule
-  \textbf{Field} & \textbf{Description} \\
-  \midrule
-  Use Case Name  & Run ETL Pipeline \\
-  Actor          & Data Analyst \\
-  Preconditions  & The four \texttt{.xls} source files are present in the
-                   \texttt{excel/} directory. Python and all required packages
-                   are installed. \\
-  Main Flow      & 1. The analyst runs \texttt{python run.py}. \newline
-                   2. The system locates the four source files. \newline
-                   3. Each file is loaded, artefacts are removed, and columns
-                      are typed and corrected. \newline
-                   4. The star schema is built from the cleaned DataFrames. \newline
-                   5. Six CSV files are written to \texttt{output/powerbi\_star/}. \newline
-                   6. Five forecast CSVs are written to \texttt{output/forecasts/}. \newline
-                   7. A completion message is printed to the console. \\
-  Alternative Flow & If a source file is missing, the system raises a
-                   \texttt{FileNotFoundError} listing the missing files and
-                   halts before any output is written. \\
-  Postconditions & All eleven output files exist in the output directories,
-                   are correctly encoded, and contain no artefact rows. \\
-  \bottomrule
-\end{tabular}
-\end{table}
+The three actors are stacked on the left of the system boundary; the
+right-hand side groups the use cases into four packages that mirror the
+project's four sprints: \textit{ETL Pipeline}, \textit{Power BI Dashboards},
+\textit{Machine-Learning Insights}, and \textit{Conversational Assistant}.
+The \textit{Cashier} is upstream of everything else: they generate the daily
+exports that feed the pipeline, and only interact with the
+\textit{Execute ETL pipeline} use case. The \textit{Analyst} triggers the
+pipeline and drives the ML use cases (forecasts, segmentation, anomaly
+detection). The \textit{Owner / Manager} is the broadest consumer: they
+read every dashboard, every ML output, and query the conversational
+assistant. Two composition patterns are visible on the right of the
+diagram. \textit{Execute ETL pipeline} expands into its four sub-steps
+(ingest, cleanse, transform, publish) via \texttt{<<include>>} arrows.
+The conversational assistant always renders a chart on demand
+(\texttt{<<include>>}) and optionally accepts a voice query
+(\texttt{<<extend>>}).
 
 \section{Project Management with Scrum}
 
 \subsection{Identification of the Scrum Team}
 
 \begin{itemize}
-  \item \textbf{Product Owner}: Mr.\ Aymen Jadallah, owner of Gamefy Academy.
-        He defined business requirements, reviewed sprint outputs, and validated
-        that dashboard KPIs matched his operational needs.
+  \item \textbf{Product Owner}: \textbf{Mr.\ Aymen Jadallah}, owner of Gamefy
+        Academy. He defined the business requirements, reviewed every sprint
+        increment, and validated that the dashboards and the chatbot answered
+        the kinds of questions he actually asks.
 
-  \item \textbf{Scrum Master}: Mr.\ Sofien Boutaib, PhD in Computer Science from
-        ISIMA and academic supervisor. He ensured Scrum ceremonies were followed
-        and provided technical and methodological guidance.
+  \item \textbf{Scrum Master}: \textbf{Mr.\ Sofien Boutaib}, PhD in Computer
+        Science from ISIMA and my academic supervisor. He made sure the Scrum
+        ceremonies were respected and provided methodological and technical
+        guidance throughout.
 
-  \item \textbf{Development Team}: Sarra Mediouni, the sole developer on this
-        project, responsible for all implementation including the pipeline, the
-        forecasting module, and the Power~BI dashboards.
+  \item \textbf{Development Team}: \textbf{Sarra Mediouni}, sole developer
+        responsible for the pipeline, the ML modules, the Power~BI report,
+        and the chatbot.
 \end{itemize}
 
 \subsection{Product Backlog}
 
-The product backlog defines every user story that the project needs to deliver.
-Sprint~4 was not in the original backlog; it was added after Sprint~3 was validated,
-in response to the Product Owner asking for demand-planning support.
+The product backlog is the ordered list of every user story the project needs
+to deliver. Sprint~4 (ML) and Sprint~5 (chatbot) were not in the original
+backlog — they were added after Sprint~3 was validated, at the Product
+Owner's request, once he could see what was possible on top of the cleaned
+data.
 
-\begin{longtable}{>{\bfseries}p{1.4cm} p{4.3cm} p{5.3cm} c}
+\begin{longtable}{>{\bfseries}p{1.3cm} p{4.6cm} p{6.6cm} c}
   \caption{Product Backlog.\label{tab:backlog}} \\
   \toprule
   \textbf{ID} & \textbf{User Story} & \textbf{Tasks} & \textbf{Sprint} \\
@@ -646,7 +688,8 @@ in response to the Product Owner asking for demand-planning support.
   \endfoot
 
   US-01 & As an analyst, I want to read all four source files without errors.
-        & Implement one loader per file; map column indices empirically.
+        & Implement one loader function per file in \texttt{pipeline.py};
+          map column indices empirically.
         & 1 \\[3pt]
   US-02 & As an analyst, I want page-break artefacts removed automatically.
         & Implement \texttt{\_is\_header\_row()} and filter inside each loader.
@@ -658,52 +701,98 @@ in response to the Product Owner asking for demand-planning support.
         & Implement \texttt{\_fill\_cashier()} with forward/backward fill.
         & 1 \\[3pt]
   US-05 & As an analyst, I want four dimension tables with surrogate keys.
-        & Build dims inside \texttt{build\_star\_schema()}.
+        & Build the dims inside \texttt{build\_star\_schema()}.
         & 2 \\[3pt]
   US-06 & As an analyst, I want two fact tables with FK references.
-        & Build facts; resolve all FKs; use nullable Int64 for optional refs.
+        & Build \textit{fact\_transaction} and \textit{fact\_session};
+          resolve all FKs; use nullable \texttt{Int64} for optional refs.
         & 2 \\[3pt]
   US-07 & As an analyst, I want the schema exported as UTF-8-BOM CSV files.
-        & Write tables to \texttt{output/powerbi\_star/} from \texttt{run.py}.
+        & Write the six tables to \texttt{output/powerbi\_star/} from
+          \texttt{run.py}.
         & 2 \\[3pt]
-  US-08 & As an analyst, I want KPIs visualised in interactive dashboards.
-        & Build \texttt{gamefyyy.pbix}: date dim, relationships, DAX, 4 pages.
+  US-08 & As an owner, I want KPIs visualised in interactive dashboards.
+        & Build \texttt{gamefyyy.pbix}: date dim, relationships, DAX measures,
+          four dashboard pages.
         & 3 \\[3pt]
   US-09 & As an owner, I want a revenue forecast for the next 4 weeks and 3 months.
-        & Implement \texttt{forecast\_revenue()} using Prophet.
+        & Implement \texttt{forecast\_revenue()} with Prophet.
         & 4 \\[3pt]
-  US-10 & As an owner, I want to forecast member activity counts.
+  US-10 & As an owner, I want to forecast member activity.
         & Implement \texttt{forecast\_members()} on weekly aggregates.
         & 4 \\[3pt]
   US-11 & As an owner, I want to see the busiest hours and days.
-        & Implement \texttt{forecast\_peak\_hours()}: two separate CSV files.
+        & Implement \texttt{forecast\_peak\_hours()} returning two CSVs.
         & 4 \\[3pt]
-  US-12 & As an owner, I want a forecast of total activity volume.
-        & Implement \texttt{forecast\_session\_volume()} using Prophet.
+  US-12 & As an owner, I want a forecast of total daily activity volume.
+        & Implement \texttt{forecast\_session\_volume()} with Prophet.
         & 4 \\[3pt]
-  US-13 & As an owner, I want restocking recommendations per item.
+  US-13 & As an owner, I want a restocking recommendation per item.
         & Implement \texttt{forecast\_stock\_replenishment()}.
         & 4 \\[3pt]
+  US-14 & As a data analyst, I want two more forecasting models for an
+          objective comparison.
+        & Implement SARIMA via \texttt{auto\_arima} and XGBoost with engineered
+          features; evaluate Prophet vs SARIMA vs XGBoost on an 80/20
+          chronological split (MAE, RMSE, wMAPE).
+        & 4 \\[3pt]
+  US-15 & As an owner, I want forecasts that take weather into account.
+        & Add an Open-Meteo Tunis weather client (\texttt{weather.py});
+          plug max-temperature + precipitation into Prophet and XGBoost as
+          regressors.
+        & 4 \\[3pt]
+  US-16 & As an owner, I want to know which members are my most valuable.
+        & Implement K-Means segmentation (k=4) in \texttt{segmenter.py};
+          assign human-readable labels; export segments and per-member
+          loyalty scores.
+        & 4 \\[3pt]
+  US-17 & As an owner, I want to be alerted on abnormally high or low days.
+        & Implement day-of-week Z-score detection in
+          \texttt{anomaly\_detector.py}; classify mild vs severe; export
+          flagged dates to CSV.
+        & 4 \\[3pt]
+  US-18 & As an owner, I want to ask questions in plain language and get
+          answers and charts back.
+        & Build a Streamlit assistant (\texttt{app.py}); wire it to the
+          star schema, the forecasts, the segments, and the anomalies.
+        & 5 \\[3pt]
+  US-19 & As an owner, I want to use the assistant in EN, FR, or AR.
+        & Translate the UI strings and prompt the underlying agent in the
+          selected language.
+        & 5 \\[3pt]
+  US-20 & As an owner, I want to talk to the assistant instead of typing.
+        & Add a voice-input component to the Streamlit app
+          (\texttt{chatbot/voice\_component.py}).
+        & 5 \\[3pt]
+  US-21 & As an owner, I want the assistant to draw a chart on demand.
+        & Implement \texttt{chatbot/chart\_generator.py} so the agent can
+          return a Plotly Express chart alongside a textual answer.
+        & 5 \\
 \end{longtable}
 
 \subsection{Sprints Planning}
 
-The project ran over four implementation sprints after Sprint~0:
+The project ran over five implementation sprints after Sprint~0:
 
 \begin{itemize}
-  \item \textbf{Sprint 1: Loading and Cleaning}: all four loader functions,
-        the artefact-filtering logic, the type-conversion helpers, and the cashier
-        correction. Validated against the real source files.
-  \item \textbf{Sprint 2: Star Schema and Export}: the schema builder and the
-        CSV export step, with referential integrity checks across all six tables.
-  \item \textbf{Sprint 3: Power~BI Dashboards}: the full interactive report,
-        DAX measures, and KPI validation with the Product Owner.
-  \item \textbf{Sprint 4: Machine Learning Forecasting}: the five forecasting
-        functions, member segmentation, and anomaly detection, added after
-        Sprint~3 was validated at the Product Owner's request.
+  \item \textbf{Sprint~1 — Data Loading and Cleaning}: the four loader
+        functions, the artefact-filtering logic, the type-conversion helpers,
+        and the cashier correction.
+  \item \textbf{Sprint~2 — Star Schema and Export}: the dimensional model
+        builder and the CSV export step, with referential-integrity checks
+        across the six tables.
+  \item \textbf{Sprint~3 — Power~BI Dashboards}: the full interactive report,
+        the DAX measures, and KPI validation with the Product Owner.
+  \item \textbf{Sprint~4 — Machine Learning and Analytics}: the five
+        forecasting functions, the SARIMA / XGBoost comparison, the weather
+        regressor, the K-Means segmentation, the loyalty score, and the
+        Z-score anomaly detector.
+  \item \textbf{Sprint~5 — Conversational Assistant}: the Streamlit chatbot
+        with multilingual support (EN/FR/AR), voice input, and on-demand
+        chart generation.
 \end{itemize}
 
-\subsection{Project Planning (Gantt Chart)}
+\subsection{Project Planning}
 
 Table~\ref{tab:planning} shows the sprint schedule.
 
@@ -714,11 +803,12 @@ Table~\ref{tab:planning} shows the sprint schedule.
     \toprule
     \textbf{Phase}  & \textbf{Start} & \textbf{End} \\
     \midrule
-    Sprint 0: Preparation           & 02/02/2026 & 14/02/2026 \\
-    Sprint 1: Loading \& Cleaning   & 15/02/2026 & 02/03/2026 \\
-    Sprint 2: Star Schema \& Export & 03/03/2026 & 12/03/2026 \\
-    Sprint 3: Power~BI Dashboards   & 13/03/2026 & 16/04/2026 \\
-    Sprint 4: ML Forecasting        & 17/04/2026 & 30/04/2026 \\
+    Sprint 0 — Preparation                  & 02/02/2026 & 14/02/2026 \\
+    Sprint 1 — Loading \& Cleaning          & 15/02/2026 & 02/03/2026 \\
+    Sprint 2 — Star Schema \& Export        & 03/03/2026 & 12/03/2026 \\
+    Sprint 3 — Power~BI Dashboards          & 13/03/2026 & 16/04/2026 \\
+    Sprint 4 — ML and Analytics             & 17/04/2026 & 06/05/2026 \\
+    Sprint 5 — Conversational Assistant     & 07/05/2026 & 17/05/2026 \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -726,40 +816,48 @@ Table~\ref{tab:planning} shows the sprint schedule.
 % *TODO* insert Gantt chart image here
 % \begin{figure}[H]
 %   \centering
-%   \includegraphics[width=\textwidth]{gantt.png}
+%   \includegraphics[width=\textwidth]{images/gantt.png}
 %   \caption{Project Gantt chart.}
 %   \label{fig:gantt}
 % \end{figure}
 
 \section{Technical Architecture}
 
-Figure~\ref{fig:architecture} shows the overall architecture of the GamefyDB system.
+Figure~\ref{fig:architecture} shows the overall architecture of the GamefyDB
+solution.
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.9\textwidth]{pipeline.png}
-  \caption{Technical architecture of the GamefyDB pipeline.}
+  \includegraphics[width=0.95\textwidth]{images/pipeline.png}
+  \caption{Technical architecture of the GamefyDB solution.}
   \label{fig:architecture}
 \end{figure}
 
-The design is intentionally flat. There are three layers. The source layer is just
-the four Excel files in the \texttt{excel/} directory. The processing layer is two
-Python modules: \texttt{pipeline.py} handles loading, cleaning, and schema
-construction, while \texttt{forecaster.py} produces the predictive outputs. The
-output layer is two folders that Power~BI reads from directly.
+The design is intentionally flat. The source layer is just the four Excel
+files in \texttt{excel/} (plus a \texttt{weather\_tunis.parquet} cache and a
+set of synthetic \texttt{extended\_*.xlsx} files used to give the time-series
+models enough history). The processing layer is a handful of focused Python
+modules — \texttt{pipeline.py} for the ETL, \texttt{forecaster.py} /
+\texttt{segmenter.py} / \texttt{anomaly\_detector.py} for the ML layer,
+\texttt{weather.py} for the regressor — all driven by \texttt{run.py}. The
+output layer is two folders (\texttt{output/powerbi\_star/} for the star
+schema and \texttt{output/forecasts/} for the ML outputs) that Power~BI and
+the chatbot both read from directly.
 
-Keeping everything in two modules rather than a package of six or eight files was
-a deliberate choice. The cleaning logic for each file is tightly coupled to how
-that file is structured; separating it into a generic cleaner would have added
-abstraction without adding clarity.
+Keeping the ETL in a single module rather than splitting it across four
+ingest/clean/transform/export files was a deliberate choice. The cleaning
+logic for each source file is tightly coupled to how that file is structured;
+forcing it into a generic cleaner would have added abstraction without adding
+clarity, and the column-index mappings are easier to maintain side by side
+in one place.
 
 \section{Overall Design of the Data Warehouse}
 
 \subsection{Data Collection}
 
-The source data is four \texttt{.xls} files exported by the point-of-sale software,
-covering Gamefy's activity from June 2025 through April 2026. Table~\ref{tab:sourcefiles}
-summarises the four files.
+The source data is four \texttt{.xls} files exported by the centre's
+point-of-sale software, covering activity from June~2025 through April~2026.
+Table~\ref{tab:sourcefiles} summarises them.
 
 \begin{table}[H]
   \centering
@@ -768,27 +866,29 @@ summarises the four files.
     \toprule
     \textbf{File} & \textbf{Contents} \\
     \midrule
-    14-06-2025 cash.xls
+    \texttt{14-06-2025 cash.xls}
       & One row per cash transaction. Columns include cashier, datetime,
-        income/expense type, payment method, category, and TND amount.
-        Data trimmed to June 2025--April 2026. \\[4pt]
-    14-06-2025 session.xls
-      & One row per gaming session. Columns include cashier, terminal, session type,
-        duration, and revenue broken down into usage, orders, USB, and discount. \\[4pt]
-    14-06-2025 stock.xls
-      & One row per stock movement. Columns include cashier, datetime, item name,
-        category, direction (in/out), quantity, unit price, and total. \\[4pt]
-    memeber DATA 01-09-2025.xls
-      & One row per loyalty member. Contains cumulative stats: total session
-        duration, total spending broken down by type. \\
+        income/expense type, payment method, category, and TND amount. \\[4pt]
+    \texttt{14-06-2025 session.xls}
+      & One row per gaming session. Columns include cashier, terminal,
+        session type, duration, and revenue broken down into usage, orders,
+        USB data, and discount. \\[4pt]
+    \texttt{14-06-2025 stock.xls}
+      & One row per stock movement. Columns include cashier, datetime, item
+        name, category, direction (in/out), quantity, unit price, and total. \\[4pt]
+    \texttt{memeber DATA 01-09-2025.xls}
+      & One row per loyalty member. Cumulative stats: total session duration,
+        usage spend, order spend, USB spend, total spend. (The typo
+        \textit{memeber} is in the real filename and is kept as-is.) \\
     \bottomrule
   \end{tabular}
 \end{table}
 
 \subsection{Key Performance Indicators (KPIs)}
 
-The KPIs were defined during Sprint~0 in discussion with the Product Owner. They
-fall into four groups as shown in Table~\ref{tab:kpis}.
+The KPIs were defined during Sprint~0 in discussion with the Product Owner.
+They fall into four groups for the descriptive side and one for the
+forward-looking side. Table~\ref{tab:kpis} summarises them.
 
 \begin{table}[H]
   \centering
@@ -802,15 +902,21 @@ fall into four groups as shown in Table~\ref{tab:kpis}.
         payment method, revenue by cashier, revenue by transaction category,
         month-over-month revenue change, average transaction value. \\[4pt]
     Sessions
-      & Total session count, average session duration (minutes), free vs.\
-        paid session split, total discount given, session revenue by terminal,
-        session revenue by terminal type. \\[4pt]
+      & Total session count, average session duration (minutes), free-vs-paid
+        split, total discount given, session revenue by terminal and by
+        terminal type. \\[4pt]
     Stock
-      & Total units sold per item, total snack bar revenue, average unit
-        price per item, current stock level (net in minus out). \\[4pt]
+      & Total units sold per item, total snack-bar revenue, average unit
+        price per item, current stock level. \\[4pt]
     Members
-      & Total active members, average spend per member, total session
-        duration across all members, orders transferred, USB data usage. \\
+      & Active members, average spend per member, total session duration
+        across all members, orders transferred, USB-data usage, loyalty score
+        distribution. \\[4pt]
+    Forward-looking
+      & Revenue forecast (4~weeks / 3~months) with confidence interval,
+        member-activity forecast, peak-hour and peak-day profile, per-item
+        restocking recommendation, anomaly-flagged dates by series and
+        severity. \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -819,105 +925,103 @@ fall into four groups as shown in Table~\ref{tab:kpis}.
 
 \subsubsection{Inmon Approach}
 
-Bill Inmon's approach, often called top-down, starts by designing a single fully
-normalised enterprise data warehouse that covers the entire organisation, then
-derives subject-oriented data marts from it. The normalisation ensures minimal
-redundancy and a single source of truth, but it requires the entire warehouse to
-be designed before any reports can be produced.
-
-% *TODO* insert Inmon architecture diagram
-% \begin{figure}[H]
-%   \centering
-%   \includegraphics[width=0.7\textwidth]{inmon_arch.png}
-%   \caption{Inmon data warehouse architecture.}
-%   \label{fig:inmon}
-% \end{figure}
+Bill Inmon's approach, often called \textit{top-down}, starts by designing a
+single fully normalised enterprise data warehouse covering the whole
+organisation, then derives subject-oriented data marts from it. Normalisation
+keeps the redundancy low and gives a single source of truth, but it requires
+the entire warehouse to be designed before any reports can be produced.
 
 \subsubsection{Kimball Approach}
 
-Ralph Kimball's approach, bottom-up, models each business process as an independent
-star schema and integrates them later through shared conformed dimensions. It gets
-usable output into analysts' hands faster, at the cost of some potential redundancy
-between data marts.
-
-% *TODO* insert Kimball architecture diagram
-% \begin{figure}[H]
-%   \centering
-%   \includegraphics[width=0.7\textwidth]{kimball_arch.png}
-%   \caption{Kimball data warehouse architecture.}
-%   \label{fig:kimball}
-% \end{figure}
+Ralph Kimball's approach, \textit{bottom-up}, models each business process as
+an independent star schema and integrates them later through shared conformed
+dimensions. It gets usable output into analysts' hands much faster, at the
+cost of some potential redundancy between data marts.
 
 \subsubsection{Adopted Approach}
 
-I went with Kimball. With only four business domains, one physical location, and a
-tight project timeline, designing a full normalised EDW first would have taken the
-entire internship without producing any dashboards. The bottom-up approach let me
-validate each output table against real data during Sprint~2 and adjust before
-moving on. The shared \textit{dim\_cashier} and \textit{dim\_terminal} dimensions
-provide the cross-domain integration that Kimball requires without adding unnecessary
-complexity.
+I went with \textbf{Kimball}. With only four business domains, one physical
+location, and a tight project timeline, designing a full normalised EDW
+first would have taken the entire internship without producing any
+dashboards. The bottom-up approach let me validate each output table against
+the real data during Sprint~2 and adjust before moving on. The shared
+\textit{dim\_cashier} and \textit{dim\_terminal} dimensions provide the
+cross-domain integration that Kimball requires, without adding the complexity
+of a fully normalised warehouse on top.
 
 \section{Multidimensional Modelling}
 
 \subsection{Conceptual Model Analysis}
 
-Three schema patterns were evaluated:
+Three dimensional schema patterns were evaluated:
 
 \begin{itemize}
-  \item \textbf{Star Schema}: fact tables reference dimension tables directly with
-        no normalisation of the dimensions. Simple, fast, and easy to understand.
-        This is what Power~BI is optimised for.
+  \item \textbf{Star schema} — fact tables reference dimension tables directly,
+        no further normalisation. Simple, fast, easy to understand. This is
+        what Power~BI is optimised for.
 
-  \item \textbf{Snowflake Schema}: dimension tables are further normalised into
-        sub-dimensions. Reduces some storage redundancy but adds joins at query time.
-        Power~BI handles joins, but each additional one adds some complexity to the
-        model.
+  \item \textbf{Snowflake schema} — dimensions are further normalised into
+        sub-dimensions. Saves some storage but adds joins at query time.
+        Power~BI handles joins, but each extra one adds a little complexity
+        to the model.
 
-  \item \textbf{Galaxy Schema}: multiple fact tables share conformed dimensions.
-        This is essentially what GamefyDB needs, since both fact tables share
-        the cashier and terminal dimensions.
+  \item \textbf{Galaxy (fact-constellation) schema} — multiple fact tables
+        share conformed dimensions. This is essentially what GamefyDB needs,
+        because both fact tables share the cashier, terminal, and member
+        dimensions.
 \end{itemize}
 
 \subsection{Choice of Conceptual Model}
 
-The chosen model is a \textbf{star schema} with two fact tables sharing four
-conformed dimensions, which in practice is close to a galaxy schema. The dimensions
-are not normalised further (no snowflaking) because the dimensional tables are small
-and the simplicity of the star structure is a genuine advantage in Power~BI.
+The model adopted is a \textbf{galaxy / fact-constellation schema}: two fact
+tables (\textit{fact\_transaction} and \textit{fact\_session}) share three
+conformed dimensions (\textit{dim\_cashier}, \textit{dim\_terminal},
+\textit{dim\_member}), while \textit{dim\_item} is referenced from
+\textit{fact\_transaction} only (for order-income rows). Stock movements and
+per-member cumulative statistics were absorbed directly into the
+\textit{dim\_item} and \textit{dim\_member} dimensions during the design
+refinement of Sprint~2 — there is only one direction of stock movement
+(out-of-stock sales) and the members file is cumulative rather than
+event-based, so dedicated fact tables for them would have added complexity
+without analytical value.
 
-Figure~\ref{fig:starschema} shows the final logical model.
+Figure~\ref{fig:starschema} shows the full conceptual model.
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=\textwidth]{star.png}
-  \caption{Logical model of the GamefyDB data warehouse.}
+  \includegraphics[width=\textwidth]{images/star_schema.png}
+  \caption{Conceptual model of the GamefyDB data warehouse.}
   \label{fig:starschema}
 \end{figure}
 
-Table~\ref{tab:star_schema} lists the six output tables.
+Table~\ref{tab:star_schema} lists the six output tables and their key columns.
 
 \begin{table}[H]
-\centering
-\caption{Output tables of the GamefyDB star schema.\label{tab:star_schema}}
-\begin{tabular}{lll}
-\toprule
-\textbf{Type} & \textbf{Table} & \textbf{Key columns} \\
-\midrule
-Dimension & \texttt{dim\_cashier}  & cashier\_id (PK), cashier\_name \\
-Dimension & \texttt{dim\_terminal} & terminal\_id (PK), terminal\_name, terminal\_type \\
-Dimension & \texttt{dim\_item}     & item\_id (PK), item, category, unit\_price, \\
-          &                        & quantite, total\_revenue \\
-Dimension & \texttt{dim\_member}   & member\_id (PK), username, firstname, lastname, \\
-          &                        & duration\_min, usage\_tnd, orders\_tnd, total\_tnd \\
-\midrule
-Fact & \texttt{fact\_transaction} & cashier\_id (FK), terminal\_id (FK), item\_id (FK), \\
-     &                            & member\_id (FK), date, amount, payment, category, type \\
-Fact & \texttt{fact\_session}     & cashier\_id (FK), terminal\_id (FK), member\_id (FK), \\
-     &                            & session\_type, duration\_min, order\_transfer, \\
-     &                            & usage, discount, total \\
-\bottomrule
-\end{tabular}
+  \centering
+  \caption{Output tables of the GamefyDB star schema.\label{tab:star_schema}}
+  \begin{tabular}{lll}
+    \toprule
+    \textbf{Type} & \textbf{Table} & \textbf{Key columns} \\
+    \midrule
+    Dimension & \texttt{dim\_cashier}  & cashier\_id (PK), cashier\_name \\
+    Dimension & \texttt{dim\_terminal} & terminal\_id (PK), terminal, terminal\_type \\
+    Dimension & \texttt{dim\_item}     & item\_id (PK), item, category, unit\_price, \\
+              &                        & quantite, total\_revenue \\
+    Dimension & \texttt{dim\_member}   & member\_id (PK), username, firstname, lastname, \\
+              &                        & duration\_min, usage\_tnd, orders\_tnd, total\_tnd \\
+    \midrule
+    Fact & \texttt{fact\_transaction} & tx\_id (PK), cashier\_id (FK),
+                                        terminal\_id (FK, nullable), \\
+         &                            & item\_id (FK, nullable),
+                                        member\_id (FK, nullable), \\
+         &                            & date, category, amount \\
+    Fact & \texttt{fact\_session}     & session\_id (PK), cashier\_id (FK),
+                                        terminal\_id (FK), \\
+         &                            & member\_id (FK, nullable),
+                                        session\_type, duration\_min, \\
+         &                            & order\_transfer, usage, discount, total \\
+    \bottomrule
+  \end{tabular}
 \end{table}
 
 \section{Work Environment}
@@ -926,53 +1030,68 @@ Fact & \texttt{fact\_session}     & cashier\_id (FK), terminal\_id (FK), member\
 
 \begin{itemize}[noitemsep]
   \item Machine: Lenovo laptop, model 83DV
-  \item Processor: Intel Core i7-13650HX (13th Gen), 14 cores / 20 threads
-  \item RAM: 32 GB
-  \item Storage: 500 GB MSI M450 SSD + 512 GB Micron NVMe SSD
+  \item Processor: Intel Core i7-13650HX (13th gen), 14 cores / 20 threads
+  \item RAM: 32~GB
+  \item Storage: 500~GB MSI M450 SSD + 512~GB Micron NVMe SSD
   \item GPU: NVIDIA GeForce RTX 4050 Laptop
-  \item Operating System: Windows 11 Pro
+  \item Operating system: Windows~11 Pro
 \end{itemize}
 
 \subsection{Software Environment}
 
 \begin{itemize}
-  \item \textbf{Python 3.x}: the main implementation language. Chosen for its
-        mature data engineering ecosystem, native Excel reading support via pandas,
-        and access to Prophet for time-series forecasting.
-
-  \item \textbf{pandas}: used throughout for reading Excel files with
-        \texttt{read\_excel}, all DataFrame operations, and writing CSV output.
-
-  \item \textbf{NumPy}: used for vectorised nearest-neighbour matching when
-        resolving item foreign keys from transaction amounts.
-
-  \item \textbf{Prophet}: Meta's open-source time-series library, used in three
-        of the five forecasting functions. Handles irregular time series and weekly
-        seasonality without manual parameter tuning.
-
-  \item \textbf{Power~BI Desktop}: used to load the output CSV files, define the
-        data model relationships, write DAX measures, and build the four dashboard
-        pages.
-
-  \item \textbf{pytest}: automated testing for the parsing and cleaning helpers.
-
-  \item \textbf{VS~Code}: code editor with the Python extension.
-
-  \item \textbf{Git / GitHub}: version control for all code, configuration, and
-        documentation.
-
-  \item \textbf{Overleaf}: online \LaTeX{} editor used to write and compile this
-        report.
+  \item \textbf{Python 3.x} — main implementation language for the pipeline,
+        the ML modules, the chatbot, and the helper scripts.
+  \item \textbf{pandas} and \textbf{NumPy} — used throughout for reading the
+        source files, all DataFrame operations, vectorised nearest-neighbour
+        FK matching, and CSV/Excel output.
+  \item \textbf{openpyxl} — reads and writes the \texttt{.xlsx} extended files
+        produced by the synthetic data generator.
+  \item \textbf{Prophet} (Meta) — additive time-series model used to forecast
+        revenue, member activity, and session volume, with the Open-Meteo
+        weather regressor.
+  \item \textbf{pmdarima} — wraps an \texttt{auto\_arima} SARIMA fitting
+        routine used as the comparison baseline for Prophet.
+  \item \textbf{XGBoost} — gradient-boosting model used as a third
+        comparison algorithm, with engineered lag and weather features.
+  \item \textbf{statsmodels} — provides the Augmented Dickey-Fuller test
+        used for the stationarity study in Sprint~4.
+  \item \textbf{scikit-learn} — provides K-Means and the preprocessing
+        utilities used by the member segmentation.
+  \item \textbf{matplotlib} — generates all the accuracy, segmentation,
+        peak-hour, and anomaly-timeline figures shipped with the report.
+  \item \textbf{requests} — calls the Open-Meteo API for daily Tunis weather
+        and caches the result in a parquet file.
+  \item \textbf{Streamlit} — runs the conversational assistant
+        (\texttt{app.py}), including the multilingual UI and the voice-input
+        component.
+  \item \textbf{Power~BI Desktop} — loads the star schema and the analytics
+        CSVs, defines the relationships, writes the DAX measures, and assembles
+        the four-page interactive report (\texttt{gamefyyy.pbix}).
+  \item \textbf{pytest} — automated testing for the parsing, cleaning,
+        segmentation, anomaly, and weather modules.
+  \item \textbf{VS~Code} — code editor with the Python and PlantUML extensions.
+  \item \textbf{PlantUML} — diagramming tool used to generate the use-case,
+        pipeline-architecture, and star-schema diagrams from
+        \texttt{.puml} sources.
+  \item \textbf{Git / GitHub} — version control and remote repository hosting
+        for all code and documentation.
+  \item \textbf{Overleaf} — online \LaTeX{} editor used to write and compile
+        this report.
 \end{itemize}
 
 \section{Conclusion}
 
-By the end of Sprint~0, the scope was defined, the backlog was in place, and the
-architectural decisions had been made. The choice of Kimball over Inmon, star schema
-over snowflake, and one unified pipeline module over separate stage files all came
-from the same place: the project is small, the data quality is uncertain, and the
-timeline is short. Chapter~3 covers the first implementation sprint.
+By the end of Sprint~0, the scope was defined, the backlog was in place,
+and the architectural decisions had been made. The choice of Kimball over
+Inmon, galaxy schema over snowflake, and one unified pipeline module over
+separate stage files all came from the same place: the project is small,
+the data quality is uncertain, the timeline is short, and adding abstraction
+upfront would have slowed everything down without paying for itself.
+Chapter~3 covers the first implementation sprint, where the loading and
+cleaning work actually started.
 
+% ============================================================
 % ============================================================
 %  CHAPTER 3
 % ============================================================
@@ -1208,11 +1327,12 @@ sometimes it is a session category, sometimes it is a reporting label. The only
 consistent property is that none of them match the five real cashier account names:
 \textit{guds}, \textit{monta}, \textit{taktek}, \textit{yassine}, \textit{youssef}.
 
-The \texttt{\_fill\_cashier()} function uses this. It sets any value in the cashier
-column that is not in the known-cashiers list to \texttt{NaN}, then applies a forward
-fill followed by a backward fill. The forward fill propagates the most recent real
-cashier name to all subsequent sub-total rows. The backward fill handles any leading
-sub-total rows that appear before the first real cashier entry.
+The \texttt{\_fill\_cashier()} function exploits this property. It sets any value
+in the cashier column that is not in the known-cashiers list to \texttt{NaN},
+then applies a forward fill followed by a backward fill. The forward fill
+propagates the most recent real cashier name down through subsequent sub-total
+rows; the backward fill handles any leading sub-total rows that appear before
+the first real cashier entry.
 
 \section{Sprint 1 Review}
 
@@ -1686,7 +1806,7 @@ visuals simultaneously.
 \begin{figure}[H]
   \centering
   \fbox{\begin{minipage}{0.95\textwidth}\centering\vspace{3cm}
-    \textit{[Screenshot: Revenue Overview dashboard page --- add \texttt{dashboard\_revenue.png}]}
+    \textit{[Screenshot: Revenue Overview dashboard page, add \texttt{dashboard\_revenue.png}]}
   \vspace{3cm}\end{minipage}}
   \caption{Revenue Overview dashboard page.\label{fig:dash_revenue}}
 \end{figure}
@@ -1731,7 +1851,7 @@ can be spotted.
 \begin{figure}[H]
   \centering
   \fbox{\begin{minipage}{0.95\textwidth}\centering\vspace{3cm}
-    \textit{[Screenshot: Rankings dashboard page --- add \texttt{dashboard\_rankings.png}]}
+    \textit{[Screenshot: Rankings dashboard page, add \texttt{dashboard\_rankings.png}]}
   \vspace{3cm}\end{minipage}}
   \caption{Rankings dashboard page.\label{fig:dash_rankings}}
 \end{figure}
@@ -1777,7 +1897,7 @@ type, giving a sense of how busy each area is.
 \begin{figure}[H]
   \centering
   \fbox{\begin{minipage}{0.95\textwidth}\centering\vspace{3cm}
-    \textit{[Screenshot: Live Ops dashboard page --- add \texttt{dashboard\_liveops.png}]}
+    \textit{[Screenshot: Live Ops dashboard page, add \texttt{dashboard\_liveops.png}]}
   \vspace{3cm}\end{minipage}}
   \caption{Live Ops dashboard page.\label{fig:dash_liveops}}
 \end{figure}
@@ -1807,9 +1927,10 @@ type, giving a sense of how busy each area is.
 
 \subsection{Page 4: Shift Report}
 
-This page is the end-of-shift summary. Two slicers (a single-select cashier dropdown and a date-range picker) filter
-every visual on the page. With those set,
-the owner gets a complete picture of what a specific cashier did on a specific day.
+This page is the end-of-shift summary. Two slicers, a single-select cashier
+dropdown and a date-range picker, filter every visual on the page. With those
+set, the owner gets a complete picture of what a specific cashier did on a
+specific day.
 
 Financial cards show Total Revenue, Session Revenue, Item Sales Revenue, and Shift
 Net for the selected cashier and date. Activity cards show Transaction Count, Session
@@ -1820,7 +1941,7 @@ on the cards.
 \begin{figure}[H]
   \centering
   \fbox{\begin{minipage}{0.95\textwidth}\centering\vspace{3cm}
-    \textit{[Screenshot: Shift Report dashboard page --- add \texttt{dashboard\_shift.png}]}
+    \textit{[Screenshot: Shift Report dashboard page, add \texttt{dashboard\_shift.png}]}
   \vspace{3cm}\end{minipage}}
   \caption{Shift Report dashboard page.\label{fig:dash_shift}}
 \end{figure}
@@ -1970,7 +2091,7 @@ Power~BI alongside the star-schema tables.
 \begin{figure}[H]
   \centering
   \fbox{\begin{minipage}{0.75\textwidth}\centering\vspace{2.5cm}
-    \textit{[Use case diagram for Sprint 4 --- add \texttt{uc\_sprint4.png}]}
+    \textit{[Use case diagram for Sprint 4, add \texttt{uc\_sprint4.png}]}
   \vspace{2.5cm}\end{minipage}}
   \caption{Use case diagram for Sprint 4.\label{fig:uc_sprint4}}
 \end{figure}
@@ -2036,54 +2157,81 @@ testing two hypotheses:
 \end{itemize}
 
 If the p-value comes back below 0.05, we reject $H_0$ and consider the series
-stationary. Figure~\ref{fig:stationarity_rolling} shows the rolling mean plots
-for all three series.
+stationary. The left column of Figure~\ref{fig:stationarity_rolling} shows
+each raw series with a centered rolling mean. The mean clearly drifts upward
+for member activity, the revenue series shows long bursts of variance around
+the Eid and back-to-school weeks, and the session-volume rolling mean climbs
+through 2025. Even though the ADF test will reject $H_0$ on these series
+(its strict definition of stationarity is the absence of a unit root, which
+all three pass), visually they are not stable enough to feed straight into a
+classical time-series model without comment.
+
+For that reason a stabilization step is applied: each series is transformed
+with $\log(1+y_t)$ (variance stabilization, which compresses the Eid spikes)
+followed by a first-difference $\Delta y_t = y_t - y_{t-1}$ (trend removal).
+The transformed series is shown in the right column of
+Figure~\ref{fig:stationarity_rolling}. Its rolling mean hovers tightly around
+zero with a roughly constant band --- the visual signature of a stationary
+series.
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.95\textwidth]{stationarity_rolling.png}
-  \caption{Rolling mean and standard deviation for the three forecast series.
-           A drifting mean or widening band indicates
-           non-stationarity.\label{fig:stationarity_rolling}}
+  \caption{Stationarity check, before (left) and after (right) the
+           $\log(1+y)$+first-difference stabilization. The left column shows
+           visible trend and bursts of variance; the right column hovers
+           around zero with a constant band, the visual hallmark of a
+           stationary series.\label{fig:stationarity_rolling}}
 \end{figure}
 
-The numerical results from the ADF test are shown in Table~\ref{tab:adf_results}
-(values are generated by the pipeline and saved to
+Table~\ref{tab:adf_results} reports the ADF statistic and $p$-value for both
+the raw and the stabilized version of each series (values come straight from
 \texttt{output/forecasts/stationarity\_tests.csv}).
 
 \begin{table}[H]
   \centering
-  \caption{ADF stationarity test results.\label{tab:adf_results}}
-  \begin{tabular}{lrrrl}
+  \caption{ADF stationarity test results before and after
+           $\log(1+y)$+first-difference stabilization. All six tests reject
+           $H_0$, with the stabilized statistics roughly twice as decisive
+           for the daily series.\label{tab:adf_results}}
+  \begin{tabular}{lrrcrr}
     \toprule
-    \textbf{Series} & \textbf{ADF stat} & \textbf{p-value} &
-    \textbf{Critical (5\%)} & \textbf{Verdict} \\
+                                & \multicolumn{2}{c}{\textbf{Raw series}} & &
+                                  \multicolumn{2}{c}{\textbf{After log + diff}} \\
+    \cmidrule{2-3} \cmidrule{5-6}
+    \textbf{Series}             & \textbf{ADF stat} & \textbf{p-value} & &
+                                  \textbf{ADF stat} & \textbf{p-value} \\
     \midrule
-    Revenue (TND, daily)     & $-3.927$ & $0.002$ & $-2.871$ & Stationary \\
-    Session volume (daily)   & $-4.001$ & $0.001$ & $-2.871$ & Stationary \\
-    Member activity (weekly) & $-6.592$ & $< 0.001$ & $-2.928$ & Stationary \\
+    Revenue (TND, daily)        & $-5.213$ & $<0.001$ & & $-13.530$ & $<0.001$ \\
+    Session volume (daily)      & $-4.973$ & $<0.001$ & & $-12.146$ & $<0.001$ \\
+    Member activity (weekly)    & $-5.957$ & $<0.001$ & &  $-6.430$ & $<0.001$ \\
     \bottomrule
   \end{tabular}
 \end{table}
 
-In any case, neither Prophet nor SARIMA required a manual pre-transformation here.
-Prophet handles trends internally through its piecewise linear component, and
-\texttt{auto\_arima} figures out the right amount of differencing on its own via
-the $d$ parameter. So even if the series turned out to be non-stationary, the
-models would still work correctly without me having to apply a log transform
-beforehand.
+The stabilization is used here as a diagnostic, not as a preprocessing step
+for the forecasting models. Prophet absorbs trend through its piecewise
+linear component, and \texttt{pmdarima}'s \texttt{auto\_arima} selects an
+appropriate integration order~$d$ automatically, so both models can be fitted
+directly on the raw series without manually applying $\log$ or differencing
+first. The stabilization plot is included to document the statistical
+properties of the data and to confirm that the chosen models are appropriate
+for the dataset as it currently stands.
 
 \section{Forecasting Technology: Prophet}
 
 \subsection{What is Prophet?}
 
-Prophet is an open-source time-series forecasting library released by Meta
-(formerly Facebook) in 2017 and maintained as an active open-source project.
-It was designed for business time-series data: data that tends to have daily,
-weekly, and yearly seasonal patterns, occasional missing values, and sometimes
-outliers from one-off events like holidays.
-
-Three of the five forecasting functions in this project use Prophet.
+Prophet is the forecasting library I ended up relying on for three of the five
+forecasts in this project. It comes from Meta's research team, was first published
+in 2017, and the underlying idea is to fit a small set of interpretable components
+(trend, seasonality, holiday effects) rather than learn arbitrary patterns from
+scratch. That tradeoff matters here. The Gamefy dataset is small by machine-learning
+standards, around seven months at the time of model selection, and has the kind of
+irregularities that come from a real business: days when the center was closed,
+weeks with unusual peaks during exam breaks, and a few one-off promotions. Prophet
+absorbs those without preprocessing, which was the practical reason I picked it
+over the alternatives in the next subsection.
 
 \subsection{Why Prophet Over Alternatives}
 
@@ -2119,29 +2267,39 @@ them.
   \end{tabular}
 \end{table}
 
-Prophet was chosen primarily for two reasons. First, the dataset covers less than
-eight months of data, which is not enough for deep learning models to be reliable. Second,
-Prophet's handling of irregular series (days with no transactions, weeks with unusual
-patterns) is built in, whereas ARIMA would require explicit preprocessing.
+Prophet was chosen primarily for two reasons. First, the dataset at the time of
+the model-selection decision covered roughly seven months
+(Section~\ref{sec:april_validation} describes the later extension to ten months),
+which is far below the threshold where deep learning models become reliable.
+Second, Prophet's handling of irregular series (days with no transactions, weeks
+with unusual patterns) is built in, whereas ARIMA would require explicit
+preprocessing.
 
 \subsection{How Prophet Works}
 
-Prophet fits a decomposable additive model of the form:
+Under the hood Prophet adds three things together to produce a prediction at any
+point in time:
 
 \[
   y(t) = T(t) + S(t) + \epsilon_t
 \]
 
-where $T(t)$ is the trend component (a piecewise linear function that adapts to
-structural breaks in the data), $S(t)$ is the seasonality component (a Fourier
-series that captures weekly and yearly patterns), and $\epsilon_t$ is the error
-term. The confidence interval is computed from the posterior uncertainty over the
-trend and seasonal parameters.
+For the Gamefy series, $T(t)$ is the slow drift in revenue or session counts
+across months: a piecewise linear curve that can change slope at automatically
+detected breakpoints. $S(t)$ captures the weekly pattern that dominates this
+dataset, weekends and Fridays being noticeably busier than weekdays, modelled as
+a Fourier series so that the seven-day shape is smooth rather than a step
+function. $\epsilon_t$ is whatever the first two components fail to explain.
+Because the components stay separate inside the fitted model, I could inspect
+the weekly seasonality directly to sanity-check that Prophet had learned the
+right pattern before trusting any of the forward predictions.
 
-The model is fitted by calling \texttt{Prophet.fit()} on a DataFrame with exactly
-two columns: \texttt{ds} (datestamp) and \texttt{y} (the value to forecast). Future
-dates are generated with \texttt{make\_future\_dataframe()} and predictions are
-produced with \texttt{predict()}.
+In code the integration is short. Each forecasting function reshapes its series
+into a two-column DataFrame (\texttt{ds} for the date, \texttt{y} for the value),
+calls \texttt{Prophet().fit(df)}, generates a future-date frame with
+\texttt{make\_future\_dataframe()}, and reads predictions back from
+\texttt{predict()}. The same pattern repeats across the revenue, session-volume,
+and member-activity forecasts; only the input series changes.
 
 \subsection{The Aggregation Decision}
 
@@ -2162,7 +2320,7 @@ before export, since member counts must be whole positive numbers.
 
 I wanted to make sure Prophet was actually a reasonable choice and not just
 the easy one. To do that, I compared it against SARIMA on the same data using
-an 80/20 chronological split --- the first 80\% of dates for training, the
+an 80/20 chronological split, the first 80\% of dates for training, the
 remaining 20\% held out to test predictions against real values.
 Figure~\ref{fig:train_test_split} illustrates how the split looks on the timeline.
 
@@ -2185,13 +2343,13 @@ library. Rather than picking the parameters $(p, d, q)$ and $(P, D, Q)$ by hand,
 \texttt{auto\_arima} tries different combinations and selects the one with the
 lowest AIC (Akaike Information Criterion). The seasonal period was set to $m=7$
 for the daily series (one full week) and $m=4$ for the weekly member series
-(roughly one month). This way SARIMA had a fair shot --- it was not handicapped
+(roughly one month). This way SARIMA had a fair shot, it was not handicapped
 by a bad manual parameter choice.
 
 Three metrics were used to measure how close the predictions were to the real values:
 
 \begin{itemize}
-  \item \textbf{MAE}: average absolute error in the original units --- TND for
+  \item \textbf{MAE}: average absolute error in the original units, TND for
         revenue, transaction counts for the other two. Easy to explain to
         a non-technical person.
   \item \textbf{MAPE}: percentage error, useful for comparing across series that
@@ -2208,7 +2366,7 @@ Each figure isolates one model to keep the comparison readable.
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.95\textwidth]{accuracy_revenue_prophet.png}
-  \caption{Revenue (TND) --- Prophet predictions vs actual values on the
+  \caption{Revenue (TND), Prophet predictions vs actual values on the
            20\,\% test set, with 80\,\% confidence band and MAPE/MAE
            annotated in the legend.\label{fig:acc_rev_prophet}}
 \end{figure}
@@ -2216,14 +2374,14 @@ Each figure isolates one model to keep the comparison readable.
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.95\textwidth]{accuracy_revenue_sarima.png}
-  \caption{Revenue (TND) --- SARIMA predictions vs actual values on the
+  \caption{Revenue (TND), SARIMA predictions vs actual values on the
            20\,\% test set.\label{fig:acc_rev_sarima}}
 \end{figure}
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.95\textwidth]{accuracy_revenue_xgboost.png}
-  \caption{Revenue (TND) --- XGBoost predictions vs actual values on the
+  \caption{Revenue (TND), XGBoost predictions vs actual values on the
            20\,\% test set.\label{fig:acc_rev_xgb}}
 \end{figure}
 
@@ -2231,21 +2389,21 @@ Each figure isolates one model to keep the comparison readable.
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.95\textwidth]{accuracy_session_volume_prophet.png}
-  \caption{Session volume (daily transactions) --- Prophet predictions vs actual
+  \caption{Session volume (daily transactions), Prophet predictions vs actual
            values on the 20\,\% test set.\label{fig:acc_vol_prophet}}
 \end{figure}
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.95\textwidth]{accuracy_session_volume_sarima.png}
-  \caption{Session volume --- SARIMA predictions vs actual values on the
+  \caption{Session volume, SARIMA predictions vs actual values on the
            20\,\% test set.\label{fig:acc_vol_sarima}}
 \end{figure}
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.95\textwidth]{accuracy_session_volume_xgboost.png}
-  \caption{Session volume --- XGBoost predictions vs actual values on the
+  \caption{Session volume, XGBoost predictions vs actual values on the
            20\,\% test set.\label{fig:acc_vol_xgb}}
 \end{figure}
 
@@ -2253,21 +2411,21 @@ Each figure isolates one model to keep the comparison readable.
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.95\textwidth]{accuracy_members_prophet.png}
-  \caption{Member activity (weekly transactions) --- Prophet predictions vs actual
+  \caption{Member activity (weekly transactions), Prophet predictions vs actual
            values on the 20\,\% test set.\label{fig:acc_mem_prophet}}
 \end{figure}
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.95\textwidth]{accuracy_members_sarima.png}
-  \caption{Member activity --- SARIMA predictions vs actual values on the
+  \caption{Member activity, SARIMA predictions vs actual values on the
            20\,\% test set.\label{fig:acc_mem_sarima}}
 \end{figure}
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.95\textwidth]{accuracy_members_xgboost.png}
-  \caption{Member activity --- XGBoost predictions vs actual values on the
+  \caption{Member activity, XGBoost predictions vs actual values on the
            20\,\% test set.\label{fig:acc_mem_xgb}}
 \end{figure}
 
@@ -2277,7 +2435,7 @@ side across all three series to make it easier to see which model did better ove
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.92\textwidth]{model_comparison_bar.png}
-  \caption{Prophet vs SARIMA --- MAPE and MAE comparison across the three forecast
+  \caption{Prophet vs SARIMA, MAPE and MAE comparison across the three forecast
            series.\label{fig:sarima_comparison}}
 \end{figure}
 
@@ -2318,7 +2476,7 @@ before (\texttt{lag\_1}), the value seven days before (\texttt{lag\_7}), the
 value fourteen days before (\texttt{lag\_14}), 7- and 14-day rolling means, and
 calendar features (day of week, is-weekend, month).
 
-The motivation was that \texttt{lag\_7} --- same day last week --- is often the
+The motivation was that \texttt{lag\_7}, same day last week, is often the
 single strongest predictor for a small business, and a model that can use it
 directly might outperform a trend-based model.
 
@@ -2346,7 +2504,7 @@ noise. This is a fundamental limitation of lag-based models on multi-step
 horizons, not a problem with XGBoost itself.
 
 Despite losing to SARIMA on two of the three series, Prophet was kept as the
-production model. Pure MAPE numbers tell only part of the story --- what matters
+production model. Pure MAPE numbers tell only part of the story, what matters
 is whether the model can do what the dashboard actually needs it to do. Three
 things pushed the decision toward Prophet:
 
@@ -2365,7 +2523,7 @@ things pushed the decision toward Prophet:
         SARIMA expects a regular time index and needs imputation first.
 \end{enumerate}
 
-The comparison does not make SARIMA look bad --- on a longer, cleaner dataset
+The comparison does not make SARIMA look bad, on a longer, cleaner dataset
 it might well be the better choice. But for this project's constraints (irregular
 series, long forecast horizon, confidence intervals required), Prophet fits
 the requirements better even where the raw MAPE is slightly higher.
@@ -2375,7 +2533,7 @@ the requirements better even where the raw MAPE is slightly higher.
 
 \subsubsection*{Extending the dataset}
 
-The initial dataset covered September 2025 through March 2026 --- a period of
+The initial dataset covered September 2025 through March 2026, a period of
 roughly seven months. After the first pipeline run, additional source files
 became available covering June 2025 through April 2026, extending the dataset
 to ten months. The pipeline was re-run on the combined data with the member
@@ -2393,7 +2551,7 @@ months old.
 
 With April 2026 data now in hand, it became possible to measure how well the
 model trained up to March 23, 2026 would have predicted the actual April
-revenue --- a form of out-of-sample validation that was not possible before.
+revenue, a form of out-of-sample validation that was not possible before.
 
 Prophet was re-fitted on data up to March 23, 2026 (274 training days) and
 asked to forecast the 30 days of April. The results are summarised in
@@ -2435,7 +2593,7 @@ appropriate decision-making horizon, and at that level the model performs well.
 \subsubsection*{Why the overall MAPE appears high}
 
 The 64\% MAPE reported in Table~\ref{tab:prophet_sarima} is computed over a
-64-day test window that starts in early March 2026 --- the heart of Ramadan.
+64-day test window that starts in early March 2026, the heart of Ramadan.
 Ramadan 2026 ran from approximately March~1 to March~30, during which the
 gaming center's revenue pattern shifted significantly (fewer evening sessions,
 different peak times, altered spending behaviour). The training data contains
@@ -2446,8 +2604,8 @@ seen, which drives the error up for those 30 days.
 Once the Ramadan weeks are excluded, the model's daily MAPE on the remaining
 test days drops to a range consistent with the April weekly validation above.
 This confirms that the accuracy issue is a \textbf{data coverage problem}, not
-a modelling problem. With two or more years of data --- or explicit Ramadan
-regressors --- the same Prophet architecture would handle the seasonal
+a modelling problem. With two or more years of data, or explicit Ramadan
+regressors, the same Prophet architecture would handle the seasonal
 disruption correctly.
 
 \section{The Five Forecasts}
@@ -2631,7 +2789,7 @@ lower-magnitude ones (order spending), distorting the cluster boundaries.
 To decide on the number of clusters I used the elbow method, which plots the
 within-cluster inertia against different values of $k$. The idea is to find the
 point where adding more clusters stops giving much improvement.
-Figure~\ref{fig:kmeans_elbow} shows the curve for this dataset --- the bend at
+Figure~\ref{fig:kmeans_elbow} shows the curve for this dataset, the bend at
 $k = 4$ is clear enough that going beyond that would just be splitting groups
 that are already coherent.
 
@@ -2692,6 +2850,18 @@ Figure~\ref{fig:seg_dist} shows how many members fall into each segment.
   \includegraphics[width=0.80\textwidth]{segment_distribution.png}
   \caption{Number of members per segment.\label{fig:seg_dist}}
 \end{figure}
+
+\subsection{Continuous Loyalty Score}
+
+Alongside the four discrete segments, 	exttt{segmenter.py} also exposes
+	exttt{score\_member\_loyalty(dim\_member)}, a continuous per-member score
+between 0 and 100 that blends three normalised signals: total spend, total
+session time, and order activity. The score is written to
+	exttt{output/forecasts/member\_loyalty.csv} together with a
+	extit{loyalty\_tier} label (Bronze / Silver / Gold / Diamond) computed from
+the score quartiles. Unlike the K-Means segmentation, which groups members by
+behavioural profile, the loyalty score gives a single ordered ranking that the
+chatbot uses when the owner asks ``who are my best customers?''.
 
 \section{Anomaly Detection}
 
@@ -2759,7 +2929,7 @@ writes \texttt{anomalies.csv} to \texttt{output/forecasts/}. Each row contains
 the date, series name, day of the week, actual value, weekday mean and standard
 deviation, Z-score, direction, and severity label. The output is sorted by
 absolute Z-score descending, so the most extreme anomaly appears first.
-Figure~\ref{fig:anomaly_timeline} shows what this looks like on the revenue series ---
+Figure~\ref{fig:anomaly_timeline} shows what this looks like on the revenue series,
 mild anomalies in orange and severe ones in red on top of the daily revenue line.
 
 \begin{figure}[H]
@@ -2812,7 +2982,7 @@ All eight analytical outputs are written to \texttt{output/forecasts/} by
 \begin{figure}[H]
   \centering
   \fbox{\begin{minipage}{0.95\textwidth}\centering\vspace{3cm}
-    \textit{[Screenshot: forecast visuals in Power~BI --- add \texttt{forecast\_powerbi.png}]}
+    \textit{[Screenshot: forecast visuals in Power~BI, add \texttt{forecast\_powerbi.png}]}
   \vspace{3cm}\end{minipage}}
   \caption{Forecast visuals integrated into the Power~BI dashboard.\label{fig:forecast_pbi}}
 \end{figure}
@@ -2851,9 +3021,276 @@ planning questions that previously required guesswork. The K-means segmentation
 organises the member base into four interpretable groups that can drive targeted
 loyalty actions. The anomaly detection module surfaces the days that deviated most
 from expected patterns, giving the owner a prioritised list of dates to investigate.
-A conversational chatbot (\texttt{app.py}), built on the Gemini API, was added
-at the end of the sprint so that the owner can ask plain-language questions and
-get answers with auto-generated charts, without needing Power~BI open.
+These three analytics outputs are not the end of the project: Sprint~5 puts a
+conversational assistant on top of them so the owner can read the forecasts,
+segments, and anomaly flags as plain-language answers instead of CSV files.
+
+% ============================================================
+%  CHAPTER 7 — SPRINT 5
+% ============================================================
+\chapter{Sprint 5: Conversational Assistant}
+
+\section{Introduction}
+
+By the end of Sprint~4, the gaming centre had a star schema, a four-page
+Power~BI report, and a full layer of forecasting, segmentation, and
+anomaly detection. The numbers were all there. What was still missing was
+a way for the owner to actually \emph{ask} a question without having to
+remember which dashboard page hides which answer.
+
+Sprint~5 closes that gap with a conversational assistant. The idea is
+simple: the owner types (or speaks) a question in plain language --- in
+English, French, or Arabic --- and the system replies with a written
+answer and, when relevant, a chart. The assistant sits on top of the same
+CSV outputs Power~BI consumes, so there is one source of truth.
+
+\section{Sprint 5 Backlog}
+
+Table~\ref{tab:sprint5_backlog} lists the tasks committed to this sprint.
+
+\begin{longtable}{>{\bfseries}p{1.3cm} p{4.4cm} p{7cm}}
+  \caption{Sprint 5 Backlog.\label{tab:sprint5_backlog}} \\
+  \toprule
+  \textbf{ID} & \textbf{User Story} & \textbf{Tasks} \\
+  \midrule
+  \endfirsthead
+  \toprule
+  \textbf{ID} & \textbf{User Story} & \textbf{Tasks} \\
+  \midrule
+  \endhead
+  \bottomrule
+  \endfoot
+
+  US-18 & As an owner, I want to ask questions in plain language and get
+          answers with charts.
+        & Build a Streamlit front-end (\texttt{app.py}) wired to a Gemini-backed
+          agent (\texttt{chatbot/agent.py}); load the star-schema and forecast
+          CSVs as a shared \texttt{DataContext} (\texttt{chatbot/data\_loader.py}). \\[4pt]
+
+  US-19 & As an owner, I want to use the assistant in English, French, or
+          Arabic.
+        & Translate the UI string bundle in \texttt{app.py} (\texttt{STRINGS}
+          dict, three locales); pass a language instruction to the system
+          prompt so the model also answers in the chosen language. \\[4pt]
+
+  US-20 & As an owner, I want to talk to the assistant instead of typing.
+        & Add a custom Streamlit component (\texttt{chatbot/voice\_component.py})
+          backed by an HTML/JS frontend (\texttt{chatbot/voice\_html/}) that
+          uses the browser's Web Speech API; pass the selected language as
+          the recognition locale (\texttt{en-US}, \texttt{fr-FR}, or \texttt{ar-TN}). \\[4pt]
+
+  US-21 & As an owner, I want a chart drawn on demand when one would help.
+        & Implement \texttt{chatbot/chart\_generator.py} on top of Plotly
+          Express; have the agent emit a structured \texttt{chart\_spec}
+          JSON block when a chart is useful and render it in the right
+          panel of the layout. \\
+\end{longtable}
+
+\section{Architecture Overview}
+
+Sprint~5 adds a fifth layer on top of the four-layer pipeline introduced
+in Sprint~0. Figure~\ref{fig:chatbot_arch} sketches the flow at runtime.
+
+\begin{figure}[H]
+  \centering
+  % *TODO* Render a sequence/arch diagram for the chatbot. Suggested boxes:
+  % User -> Streamlit (app.py) -> [DataContext (CSVs)] + [voice_component]
+  %       -> agent.ask() -> Gemini API -> agent._parse_response() -> chart_generator
+  %       -> Plotly figure + answer + suggestions -> back to Streamlit.
+  \includegraphics[width=0.92\textwidth]{images/chatbot_arch.png}
+  \caption{Runtime architecture of the conversational assistant.}
+  \label{fig:chatbot_arch}
+\end{figure}
+
+The pieces are intentionally small. The Streamlit app owns the layout, the
+session state, and the language toggle. The agent module owns the prompt
+construction and the model call. The chart generator turns a
+\texttt{chart\_spec} into a Plotly figure. The voice component is a thin
+wrapper around a browser API. The data loader reads the CSV outputs of
+the previous sprints into a single in-memory \texttt{DataContext} that the
+agent passes to the model as schema + summary text.
+
+\section{Implementation}
+
+\subsection{Loading the Data Context}
+
+\texttt{chatbot/data\_loader.py} reads eleven CSV files into a shared
+\texttt{DataContext} dataclass:
+
+\begin{itemize}[noitemsep]
+  \item From \texttt{output/powerbi\_star/}: \texttt{fact\_transaction},
+        \texttt{fact\_session}, \texttt{dim\_member}.
+  \item From \texttt{output/forecasts/}: \texttt{forecast\_revenue},
+        \texttt{session\_volume}, \texttt{member\_segments},
+        \texttt{member\_loyalty}, \texttt{anomalies},
+        \texttt{peak\_hours\_by\_hour}, \texttt{peak\_hours\_by\_day},
+        \texttt{stock\_replenishment}.
+\end{itemize}
+
+For each table the loader emits a short schema line (column names plus
+dtypes) and aggregates a one-shot summary string: total revenue, member
+count, loyalty-tier distribution, the next four weekly and three monthly
+revenue forecasts, recent-anomaly count, average session duration, and
+session-type breakdown. The two strings (\texttt{schemas} and
+\texttt{summary}) are spliced into the system prompt at every turn so the
+model always has both the structure of the data and the headline numbers
+in front of it.
+
+A useful side effect: the loader also exposes a
+\texttt{recent\_anomaly\_count()} helper, so the Streamlit app can change
+its startup greeting when something interesting has happened in the
+previous seven days.
+
+\subsection{The Conversational Agent}
+
+\texttt{chatbot/agent.py} is the bridge between the Streamlit app and
+the Gemini API. It does three things:
+
+\begin{enumerate}
+  \item \textbf{Build the system prompt.} The prompt mixes a fixed
+        instruction block, the language directive, the schema string, and
+        the summary string. The instructions tell the model to answer
+        concisely, to include a single \texttt{chart\_spec} JSON block
+        only when a chart would actually help, to suggest two or three
+        follow-up questions, to refuse questions that cannot be answered
+        from the available data, and to never invent numbers.
+  \item \textbf{Call the model.} The full conversation history is
+        re-sent on every turn (Gemini \texttt{gemini-3-flash-preview}),
+        with the system prompt attached as
+        \texttt{system\_instruction}. The model returns one piece of
+        free text that contains the answer and, optionally, two JSON
+        code blocks.
+  \item \textbf{Parse the response.} A small regex pass extracts the
+        \texttt{chart\_spec} block and the \texttt{suggestions} block,
+        then strips them out of the visible answer so the chat shows
+        clean prose only.
+\end{enumerate}
+
+The system prompt also contains a short ``source selection rules''
+section that nudges the model towards the right table for each kind of
+question (revenue trend $\to$ \texttt{fact\_transaction}; future
+revenue $\to$ \texttt{forecast\_revenue} with a granularity filter;
+hourly pattern $\to$ \texttt{peak\_hours\_by\_hour}; and so on). This
+turned out to matter more than tuning the temperature. Without the rules,
+the model would happily plot \texttt{fact\_session} on a non-existent
+date axis or use the \texttt{anomalies} table for generic revenue
+questions.
+
+\subsection{Chart Generation}
+
+\texttt{chatbot/chart\_generator.py} converts a \texttt{chart\_spec} dict
+into a Plotly Express figure. The spec is small on purpose --- just
+\texttt{type}, \texttt{x}, \texttt{y}, \texttt{source} (the table key),
+\texttt{filter} (a pandas \texttt{query} expression that the agent can
+fill in), and \texttt{title}. Four chart types are supported:
+\textit{bar}, \textit{line}, \textit{scatter}, and \textit{pie}. If the
+\texttt{y} column is non-numeric, the generator groups by \texttt{x} and
+counts instead of trying to aggregate a string column. A dark theme is
+applied to match the rest of the Streamlit layout.
+
+Charts are not rendered when the model decides one is not useful (for
+example, ``how many members do I have in total?'' returns a one-line
+answer with no figure). This keeps the right-hand panel meaningful
+instead of being filled with redundant visuals.
+
+\subsection{Voice Input}
+
+\texttt{chatbot/voice\_component.py} declares a custom Streamlit
+component pointing at a small HTML/JS frontend in
+\texttt{chatbot/voice\_html/}. The frontend uses the browser's
+\texttt{SpeechRecognition} API to capture audio, transcribe it locally
+in the browser, and post the transcript back to Streamlit. The selected
+language toggle is forwarded to the component as a recognition locale
+(\texttt{en-US}, \texttt{fr-FR}, or \texttt{ar-TN}), so French users
+get French transcription and Arabic users get Tunisian-Arabic
+transcription out of the box.
+
+Keeping the recognition in the browser avoids having to wire a separate
+speech-to-text service, and means voice mode works offline once the page
+is loaded.
+
+\subsection{Multilingual UI}
+
+The \texttt{STRINGS} dictionary in \texttt{app.py} carries every visible
+label in three languages. Switching language flips the dict, sends a new
+language directive into the system prompt, and updates the voice
+component's recognition locale --- all in one place, all without
+reloading the data. The Arabic strings are stored as-is, and Streamlit
+renders them right-to-left where appropriate.
+
+The greeting is also context-aware. If the anomaly detector flagged
+something in the previous seven days, the assistant opens with
+``I noticed \texttt{N} anomaly(ies) in the past 7 days. Want me to show
+you?'' instead of the generic ``Hi! Ask me anything.'' This tiny detail
+was the change that made the assistant feel most useful in practice:
+the owner does not have to think to discover that something is off.
+
+\subsection{Quick Actions}
+
+Four shortcut buttons sit under the chat history --- \textit{Full
+summary}, \textit{Give me advice}, \textit{Any anomalies?}, and
+\textit{Forecast}. Each one just enqueues a pre-written prompt into
+\texttt{st.session\_state.pending\_query} and triggers a rerun, so the
+model receives the question as if the user had typed it. They cover the
+three or four questions the owner asks most often, and skip the typing
+cost.
+
+\section{Sprint 5 Review}
+
+\subsection{Deliverables}
+
+\begin{itemize}[noitemsep]
+  \item \texttt{app.py} --- 252-line Streamlit application: language
+        toggle, anomaly-aware greeting, chat panel with suggestion
+        chips, chart panel, quick-action buttons, voice button.
+  \item \texttt{chatbot/agent.py} --- prompt builder, Gemini call, and
+        structured-response parser.
+  \item \texttt{chatbot/chart\_generator.py} --- Plotly-Express
+        renderer for the four supported chart types.
+  \item \texttt{chatbot/data\_loader.py} --- shared
+        \texttt{DataContext}, schema/summary builder,
+        \texttt{recent\_anomaly\_count()} helper.
+  \item \texttt{chatbot/voice\_component.py} +
+        \texttt{chatbot/voice\_html/} --- browser-side speech
+        recognition wired into Streamlit.
+\end{itemize}
+
+\subsection{Validation}
+
+The assistant was validated against three kinds of questions:
+
+\begin{itemize}
+  \item \textbf{Descriptive} --- ``Which cashier had the best March?'',
+        ``What is the average session duration?'', ``Show me revenue by
+        payment method.'' Answers and charts matched the corresponding
+        Power~BI page on every test case.
+  \item \textbf{Forecast} --- ``How much revenue should I expect next
+        month?'', ``Will members grow in May?'' Returned the values
+        from \texttt{forecast\_revenue.csv} and
+        \texttt{session\_volume.csv} with the right granularity filter.
+  \item \textbf{Anomaly} --- ``Anything unusual last week?'' Returned
+        the rows from \texttt{anomalies.csv} flagged within the
+        seven-day window, matching the \texttt{recent\_anomaly\_count}
+        helper.
+\end{itemize}
+
+The multilingual handling was checked end-to-end: a French question
+produced a French answer with the chart title in French, and an Arabic
+question produced an Arabic answer rendered right-to-left.
+
+\section{Conclusion}
+
+Sprint~5 turned a folder of CSV files into something the owner can
+actually \emph{converse} with. There is no new data in the system ---
+the agent reads exactly the same outputs the dashboards do --- but the
+interaction model is fundamentally different. Instead of clicking
+through four dashboard pages to answer a question, the owner asks the
+question. Instead of remembering which CSV holds the anomaly list, the
+greeting brings the answer to him. The chatbot is the practical face
+of every previous sprint: without the cleaning, the schema, the
+dashboards, and the ML layer it would have nothing to talk about, but
+without the chatbot none of those would have been accessible without
+opening Power~BI. The next chapter wraps up the project as a whole.
 
 % ============================================================
 %  GENERAL CONCLUSION
@@ -2883,7 +3320,7 @@ when it became clear that the stock and member data were better represented as
 dimensions than as fact tables.
 
 Sprint~3 turned the star schema into four dashboard pages in Power~BI. The
-design went through a few iterations before the owner was satisfied --- the
+design went through a few iterations before the owner was satisfied, the
 Live Ops page in particular was reorganised after the first review because
 the stock table was not visible without scrolling. The final version was
 validated by the Product Owner and can be refreshed by re-running the pipeline
@@ -2891,22 +3328,31 @@ whenever new source files are available.
 
 Sprint~4 was added after Sprint~3 was validated because the Product Owner wanted
 to know not just what had happened but what to expect next. The forecasting part
-took the most time --- choosing between Prophet, SARIMA, and XGBoost, running the
+took the most time, choosing between Prophet, SARIMA, and XGBoost, running the
 evaluations, and then dealing with the fact that the test window fell right in the
 middle of Ramadan, which the model had never seen before. The April 2026 validation
 was added later specifically to show that outside of that period the model actually
 performs reasonably well. The K-means segmentation and anomaly detection were more
 straightforward by comparison, though getting the cluster labels to be stable and
-interpretable required some iteration on the feature selection. A conversational
-chatbot backed by the Gemini API was added at the end to make the outputs accessible
-without needing Power~BI.
+interpretable required some iteration on the feature selection.
+
+Sprint~5 was the last piece. By that point everything the system needed to
+\emph{know} was already in the CSVs --- what was missing was a way for the owner to
+\emph{ask}. A Streamlit assistant backed by the Gemini API, with multilingual
+support (English, French, Arabic) and a voice-input mode, sits on top of the same
+data Power~BI consumes. The greeting becomes anomaly-aware when something has been
+flagged in the previous seven days, so the most pressing information surfaces on
+its own. Building the chatbot was the smallest sprint in code volume but probably
+the most visible one to the Product Owner --- it is the layer that turns the rest
+of the system into something he uses every day rather than something he opens
+when he has the time.
 
 Forecast accuracy was validated against April 2026 actuals: Prophet predicted the
 month's total revenue within 5.4\% (8{,}389 TND predicted vs 7{,}959 TND actual),
 and weekly errors ranged from 6\% to 25\%, confirming that the model is useful for
 real operational decisions. The higher daily MAPE (64\%) reflects a data-coverage
-gap --- Ramadan 2025 predates the dataset, so the model had never seen that pattern
-before --- rather than a fundamental modelling weakness.
+gap, Ramadan 2025 predates the dataset, so the model had never seen that pattern
+before, rather than a fundamental modelling weakness.
 
 There are several directions worth exploring in a future iteration. The most
 practically valuable would be connecting the pipeline directly to the management
@@ -2921,7 +3367,7 @@ Looking back, the part that took the most effort was also the least visible:
 getting the raw Excel files into a consistent, usable format. By the time the
 dashboards were built, most of the hard decisions had already been made at the
 cleaning and schema design stage. The machine learning sprint was probably
-the most uncertain in terms of whether it would produce anything useful ---
+the most uncertain in terms of whether it would produce anything useful,
 a 64\% daily MAPE is not a number you want to present, and understanding why
 it happened (Ramadan, missing history) took some time to work through. The April
 validation helped put that result in context. Overall the system does what it was

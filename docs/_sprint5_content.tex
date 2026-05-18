@@ -1,0 +1,268 @@
+% ============================================================
+%  CHAPTER 7 — Sprint 5: Conversational Assistant
+%  Reusable content block (no \documentclass, no preamble).
+%  Author: Sarra Mediouni
+% ============================================================
+\chapter{Sprint 5: Conversational Assistant}
+
+\section{Introduction}
+
+By the end of Sprint~4, the gaming centre had a star schema, a four-page
+Power~BI report, and a full layer of forecasting, segmentation, and
+anomaly detection. The numbers were all there. What was still missing was
+a way for the owner to actually \emph{ask} a question without having to
+remember which dashboard page hides which answer.
+
+Sprint~5 closes that gap with a conversational assistant. The idea is
+simple: the owner types (or speaks) a question in plain language --- in
+English, French, or Arabic --- and the system replies with a written
+answer and, when relevant, a chart. The assistant sits on top of the same
+CSV outputs Power~BI consumes, so there is one source of truth.
+
+\section{Sprint 5 Backlog}
+
+Table~\ref{tab:sprint5_backlog} lists the tasks committed to this sprint.
+
+\begin{longtable}{>{\bfseries}p{1.3cm} p{4.4cm} p{7cm}}
+  \caption{Sprint 5 Backlog.\label{tab:sprint5_backlog}} \\
+  \toprule
+  \textbf{ID} & \textbf{User Story} & \textbf{Tasks} \\
+  \midrule
+  \endfirsthead
+  \toprule
+  \textbf{ID} & \textbf{User Story} & \textbf{Tasks} \\
+  \midrule
+  \endhead
+  \bottomrule
+  \endfoot
+
+  US-18 & As an owner, I want to ask questions in plain language and get
+          answers with charts.
+        & Build a Streamlit front-end (\texttt{app.py}) wired to a Gemini-backed
+          agent (\texttt{chatbot/agent.py}); load the star-schema and forecast
+          CSVs as a shared \texttt{DataContext} (\texttt{chatbot/data\_loader.py}). \\[4pt]
+
+  US-19 & As an owner, I want to use the assistant in English, French, or
+          Arabic.
+        & Translate the UI string bundle in \texttt{app.py} (\texttt{STRINGS}
+          dict, three locales); pass a language instruction to the system
+          prompt so the model also answers in the chosen language. \\[4pt]
+
+  US-20 & As an owner, I want to talk to the assistant instead of typing.
+        & Add a custom Streamlit component (\texttt{chatbot/voice\_component.py})
+          backed by an HTML/JS frontend (\texttt{chatbot/voice\_html/}) that
+          uses the browser's Web Speech API; pass the selected language as
+          the recognition locale (\texttt{en-US}, \texttt{fr-FR}, or \texttt{ar-TN}). \\[4pt]
+
+  US-21 & As an owner, I want a chart drawn on demand when one would help.
+        & Implement \texttt{chatbot/chart\_generator.py} on top of Plotly
+          Express; have the agent emit a structured \texttt{chart\_spec}
+          JSON block when a chart is useful and render it in the right
+          panel of the layout. \\
+\end{longtable}
+
+\section{Architecture Overview}
+
+Sprint~5 adds a fifth layer on top of the four-layer pipeline introduced
+in Sprint~0. Figure~\ref{fig:chatbot_arch} sketches the flow at runtime.
+
+\begin{figure}[H]
+  \centering
+  % *TODO* Render a sequence/arch diagram for the chatbot. Suggested boxes:
+  % User -> Streamlit (app.py) -> [DataContext (CSVs)] + [voice_component]
+  %       -> agent.ask() -> Gemini API -> agent._parse_response() -> chart_generator
+  %       -> Plotly figure + answer + suggestions -> back to Streamlit.
+  \includegraphics[width=0.92\textwidth]{images/chatbot_arch.png}
+  \caption{Runtime architecture of the conversational assistant.}
+  \label{fig:chatbot_arch}
+\end{figure}
+
+The pieces are intentionally small. The Streamlit app owns the layout, the
+session state, and the language toggle. The agent module owns the prompt
+construction and the model call. The chart generator turns a
+\texttt{chart\_spec} into a Plotly figure. The voice component is a thin
+wrapper around a browser API. The data loader reads the CSV outputs of
+the previous sprints into a single in-memory \texttt{DataContext} that the
+agent passes to the model as schema + summary text.
+
+\section{Implementation}
+
+\subsection{Loading the Data Context}
+
+\texttt{chatbot/data\_loader.py} reads eleven CSV files into a shared
+\texttt{DataContext} dataclass:
+
+\begin{itemize}[noitemsep]
+  \item From \texttt{output/powerbi\_star/}: \texttt{fact\_transaction},
+        \texttt{fact\_session}, \texttt{dim\_member}.
+  \item From \texttt{output/forecasts/}: \texttt{forecast\_revenue},
+        \texttt{session\_volume}, \texttt{member\_segments},
+        \texttt{member\_loyalty}, \texttt{anomalies},
+        \texttt{peak\_hours\_by\_hour}, \texttt{peak\_hours\_by\_day},
+        \texttt{stock\_replenishment}.
+\end{itemize}
+
+For each table the loader emits a short schema line (column names plus
+dtypes) and aggregates a one-shot summary string: total revenue, member
+count, loyalty-tier distribution, the next four weekly and three monthly
+revenue forecasts, recent-anomaly count, average session duration, and
+session-type breakdown. The two strings (\texttt{schemas} and
+\texttt{summary}) are spliced into the system prompt at every turn so the
+model always has both the structure of the data and the headline numbers
+in front of it.
+
+A useful side effect: the loader also exposes a
+\texttt{recent\_anomaly\_count()} helper, so the Streamlit app can change
+its startup greeting when something interesting has happened in the
+previous seven days.
+
+\subsection{The Conversational Agent}
+
+\texttt{chatbot/agent.py} is the bridge between the Streamlit app and
+the Gemini API. It does three things:
+
+\begin{enumerate}
+  \item \textbf{Build the system prompt.} The prompt mixes a fixed
+        instruction block, the language directive, the schema string, and
+        the summary string. The instructions tell the model to answer
+        concisely, to include a single \texttt{chart\_spec} JSON block
+        only when a chart would actually help, to suggest two or three
+        follow-up questions, to refuse questions that cannot be answered
+        from the available data, and to never invent numbers.
+  \item \textbf{Call the model.} The full conversation history is
+        re-sent on every turn (Gemini \texttt{gemini-3-flash-preview}),
+        with the system prompt attached as
+        \texttt{system\_instruction}. The model returns one piece of
+        free text that contains the answer and, optionally, two JSON
+        code blocks.
+  \item \textbf{Parse the response.} A small regex pass extracts the
+        \texttt{chart\_spec} block and the \texttt{suggestions} block,
+        then strips them out of the visible answer so the chat shows
+        clean prose only.
+\end{enumerate}
+
+The system prompt also contains a short ``source selection rules''
+section that nudges the model towards the right table for each kind of
+question (revenue trend $\to$ \texttt{fact\_transaction}; future
+revenue $\to$ \texttt{forecast\_revenue} with a granularity filter;
+hourly pattern $\to$ \texttt{peak\_hours\_by\_hour}; and so on). This
+turned out to matter more than tuning the temperature. Without the rules,
+the model would happily plot \texttt{fact\_session} on a non-existent
+date axis or use the \texttt{anomalies} table for generic revenue
+questions.
+
+\subsection{Chart Generation}
+
+\texttt{chatbot/chart\_generator.py} converts a \texttt{chart\_spec} dict
+into a Plotly Express figure. The spec is small on purpose --- just
+\texttt{type}, \texttt{x}, \texttt{y}, \texttt{source} (the table key),
+\texttt{filter} (a pandas \texttt{query} expression that the agent can
+fill in), and \texttt{title}. Four chart types are supported:
+\textit{bar}, \textit{line}, \textit{scatter}, and \textit{pie}. If the
+\texttt{y} column is non-numeric, the generator groups by \texttt{x} and
+counts instead of trying to aggregate a string column. A dark theme is
+applied to match the rest of the Streamlit layout.
+
+Charts are not rendered when the model decides one is not useful (for
+example, ``how many members do I have in total?'' returns a one-line
+answer with no figure). This keeps the right-hand panel meaningful
+instead of being filled with redundant visuals.
+
+\subsection{Voice Input}
+
+\texttt{chatbot/voice\_component.py} declares a custom Streamlit
+component pointing at a small HTML/JS frontend in
+\texttt{chatbot/voice\_html/}. The frontend uses the browser's
+\texttt{SpeechRecognition} API to capture audio, transcribe it locally
+in the browser, and post the transcript back to Streamlit. The selected
+language toggle is forwarded to the component as a recognition locale
+(\texttt{en-US}, \texttt{fr-FR}, or \texttt{ar-TN}), so French users
+get French transcription and Arabic users get Tunisian-Arabic
+transcription out of the box.
+
+Keeping the recognition in the browser avoids having to wire a separate
+speech-to-text service, and means voice mode works offline once the page
+is loaded.
+
+\subsection{Multilingual UI}
+
+The \texttt{STRINGS} dictionary in \texttt{app.py} carries every visible
+label in three languages. Switching language flips the dict, sends a new
+language directive into the system prompt, and updates the voice
+component's recognition locale --- all in one place, all without
+reloading the data. The Arabic strings are stored as-is, and Streamlit
+renders them right-to-left where appropriate.
+
+The greeting is also context-aware. If the anomaly detector flagged
+something in the previous seven days, the assistant opens with
+``I noticed \texttt{N} anomaly(ies) in the past 7 days. Want me to show
+you?'' instead of the generic ``Hi! Ask me anything.'' This tiny detail
+was the change that made the assistant feel most useful in practice:
+the owner does not have to think to discover that something is off.
+
+\subsection{Quick Actions}
+
+Four shortcut buttons sit under the chat history --- \textit{Full
+summary}, \textit{Give me advice}, \textit{Any anomalies?}, and
+\textit{Forecast}. Each one just enqueues a pre-written prompt into
+\texttt{st.session\_state.pending\_query} and triggers a rerun, so the
+model receives the question as if the user had typed it. They cover the
+three or four questions the owner asks most often, and skip the typing
+cost.
+
+\section{Sprint 5 Review}
+
+\subsection{Deliverables}
+
+\begin{itemize}[noitemsep]
+  \item \texttt{app.py} --- 252-line Streamlit application: language
+        toggle, anomaly-aware greeting, chat panel with suggestion
+        chips, chart panel, quick-action buttons, voice button.
+  \item \texttt{chatbot/agent.py} --- prompt builder, Gemini call, and
+        structured-response parser.
+  \item \texttt{chatbot/chart\_generator.py} --- Plotly-Express
+        renderer for the four supported chart types.
+  \item \texttt{chatbot/data\_loader.py} --- shared
+        \texttt{DataContext}, schema/summary builder,
+        \texttt{recent\_anomaly\_count()} helper.
+  \item \texttt{chatbot/voice\_component.py} +
+        \texttt{chatbot/voice\_html/} --- browser-side speech
+        recognition wired into Streamlit.
+\end{itemize}
+
+\subsection{Validation}
+
+The assistant was validated against three kinds of questions:
+
+\begin{itemize}
+  \item \textbf{Descriptive} --- ``Which cashier had the best March?'',
+        ``What is the average session duration?'', ``Show me revenue by
+        payment method.'' Answers and charts matched the corresponding
+        Power~BI page on every test case.
+  \item \textbf{Forecast} --- ``How much revenue should I expect next
+        month?'', ``Will members grow in May?'' Returned the values
+        from \texttt{forecast\_revenue.csv} and
+        \texttt{session\_volume.csv} with the right granularity filter.
+  \item \textbf{Anomaly} --- ``Anything unusual last week?'' Returned
+        the rows from \texttt{anomalies.csv} flagged within the
+        seven-day window, matching the \texttt{recent\_anomaly\_count}
+        helper.
+\end{itemize}
+
+The multilingual handling was checked end-to-end: a French question
+produced a French answer with the chart title in French, and an Arabic
+question produced an Arabic answer rendered right-to-left.
+
+\section{Conclusion}
+
+Sprint~5 turned a folder of CSV files into something the owner can
+actually \emph{converse} with. There is no new data in the system ---
+the agent reads exactly the same outputs the dashboards do --- but the
+interaction model is fundamentally different. Instead of clicking
+through four dashboard pages to answer a question, the owner asks the
+question. Instead of remembering which CSV holds the anomaly list, the
+greeting brings the answer to him. The chatbot is the practical face
+of every previous sprint: without the cleaning, the schema, the
+dashboards, and the ML layer it would have nothing to talk about, but
+without the chatbot none of those would have been accessible without
+opening Power~BI. The next chapter wraps up the project as a whole.

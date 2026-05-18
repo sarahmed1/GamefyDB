@@ -1,0 +1,97 @@
+<h2>How should the chatbot feel?</h2>
+<p class="subtitle">Pick the experience that makes most sense for your demo and the owner's daily use</p>
+
+<div class="cards">
+
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#1a1a2e;padding:12px;border-radius:6px;font-size:11px;color:#aaa;font-family:monospace;">
+      <div style="display:flex;gap:8px;height:110px;">
+        <div style="flex:1;background:#16213e;border-radius:4px;padding:8px;">
+          <div style="color:#4fc3f7;font-size:9px;margin-bottom:6px">📊 POWER BI</div>
+          <div style="background:#0f3460;height:18px;border-radius:2px;margin-bottom:4px"></div>
+          <div style="background:#0f3460;height:30px;border-radius:2px;margin-bottom:4px"></div>
+          <div style="background:#0f3460;height:18px;border-radius:2px;width:70%"></div>
+        </div>
+        <div style="flex:1;background:#16213e;border-radius:4px;padding:8px;">
+          <div style="color:#a78bfa;font-size:9px;margin-bottom:6px">💬 CHATBOT APP</div>
+          <div style="background:#1e1e3a;height:12px;border-radius:2px;margin-bottom:4px;width:80%"></div>
+          <div style="background:#1e1e3a;height:12px;border-radius:2px;margin-bottom:4px"></div>
+          <div style="background:#4c1d95;height:10px;border-radius:2px;width:60%;margin-left:auto"></div>
+          <div style="margin-top:8px;display:flex;gap:4px;">
+            <div style="flex:1;background:#1e1e3a;height:8px;border-radius:2px"></div>
+            <div style="background:#6d28d9;width:20px;height:8px;border-radius:2px"></div>
+          </div>
+        </div>
+      </div>
+      <div style="text-align:center;margin-top:6px;color:#ef4444;font-size:9px">↑ two windows open at the same time</div>
+    </div>
+    <div class="card-body">
+      <h3>A — Side by side</h3>
+      <p>Power BI on one side, chatbot on the other. Switch between them as needed.</p>
+      <div class="pros-cons" style="font-size:12px;margin-top:8px">
+        <div class="pros"><h4>Pros</h4><ul><li>Power BI stays the main dashboard</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>Fragmented — feels like two products</li><li>Awkward to demo</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#1a1a2e;padding:12px;border-radius:6px;font-size:11px;color:#aaa;font-family:monospace;">
+      <div style="background:#16213e;border-radius:4px;padding:8px;height:110px;display:flex;flex-direction:column;">
+        <div style="color:#4fc3f7;font-size:9px;margin-bottom:6px">🤖 GAMEFYDB ASSISTANT</div>
+        <div style="display:flex;gap:8px;flex:1;">
+          <div style="flex:1.2;display:flex;flex-direction:column;gap:4px;">
+            <div style="background:#0f3460;height:12px;border-radius:2px;width:85%"></div>
+            <div style="background:#0f3460;height:12px;border-radius:2px;width:70%"></div>
+            <div style="background:#4c1d95;height:12px;border-radius:2px;width:80%;margin-left:auto"></div>
+            <div style="background:#0f3460;height:12px;border-radius:2px;width:90%"></div>
+            <div style="margin-top:auto;display:flex;gap:4px;align-items:center;">
+              <div style="background:#374151;width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:8px">🎤</div>
+              <div style="flex:1;background:#1e1e3a;height:10px;border-radius:2px"></div>
+              <div style="background:#6d28d9;width:20px;height:10px;border-radius:2px"></div>
+            </div>
+          </div>
+          <div style="flex:1;background:#0a0a1a;border-radius:4px;display:flex;align-items:center;justify-content:center;">
+            <div style="text-align:center;">
+              <div style="color:#22c55e;font-size:16px">📈</div>
+              <div style="font-size:8px;color:#6b7280;margin-top:4px">chart appears here</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="text-align:center;margin-top:6px;color:#22c55e;font-size:9px">↑ one app — chat left, chart right, mic button</div>
+    </div>
+    <div class="card-body">
+      <h3>B — Unified assistant app ⭐</h3>
+      <p>One app: chat on the left, chart appears on the right. Mic button for voice input. Ask anything, chart updates instantly.</p>
+      <div class="pros-cons" style="font-size:12px;margin-top:8px">
+        <div class="pros"><h4>Pros</h4><ul><li>One thing to show</li><li>Voice input possible</li><li>Chart + answer together</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>Separate from Power BI</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#1a1a2e;padding:12px;border-radius:6px;font-size:11px;color:#aaa;font-family:monospace;">
+      <div style="background:#16213e;border-radius:4px;padding:8px;height:110px;position:relative;">
+        <div style="color:#4fc3f7;font-size:9px;margin-bottom:6px">📊 POWER BI</div>
+        <div style="background:#0f3460;height:18px;border-radius:2px;margin-bottom:4px"></div>
+        <div style="background:#0f3460;height:30px;border-radius:2px;margin-bottom:4px"></div>
+        <div style="background:#0f3460;height:18px;border-radius:2px;width:70%"></div>
+        <div style="position:absolute;bottom:8px;right:8px;background:#6d28d9;border-radius:6px;padding:4px 8px;font-size:9px;color:white">
+          💬 Ask AI
+        </div>
+      </div>
+      <div style="text-align:center;margin-top:6px;color:#f59e0b;font-size:9px">↑ Power BI stays main, floating chat button</div>
+    </div>
+    <div class="card-body">
+      <h3>C — Chat panel inside Power BI</h3>
+      <p>Power BI stays the main view. A floating "Ask AI" button opens a chat panel inside it.</p>
+      <div class="pros-cons" style="font-size:12px;margin-top:8px">
+        <div class="pros"><h4>Pros</h4><ul><li>Everything in one place</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>Complex to build</li><li>Power BI embedding is limited/paid</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+</div>

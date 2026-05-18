@@ -1,90 +1,106 @@
 @startuml star
-title GamefyDB Star Schema (4 dimensions + 4 facts)
+title GamefyDB — Galaxy Schema (4 dimensions + 2 facts)
 
 hide circle
-skinparam linetype ortho
 skinparam shadowing false
+skinparam linetype ortho
+skinparam DefaultFontName "Liberation Sans"
+skinparam DefaultFontSize 10
+skinparam ArrowColor #555555
+skinparam ranksep 40
+skinparam nodesep 30
+
 skinparam class {
-  BackgroundColor<<dim>>  #E8F5E9
-  BorderColor<<dim>>      #2E7D32
-  BackgroundColor<<fact>> #FFF3E0
-  BorderColor<<fact>>     #E65100
+  BackgroundColor #EAF1FA
+  BorderColor     #4A6FA5
+  FontColor       #1F3A5F
+  AttributeFontColor   #333333
+  AttributeFontSize    10
 }
 
-entity "dim_cashier" as dc <<dim>> {
-  * cashier_id : int <<PK>>
+' --- Dimensions (top row) ------------------------------------------------
+' Order chosen so that each dimension sits above (or near) the fact it
+' most often joins to: item -> transaction only ; cashier/terminal ->
+' both facts (center) ; member -> both facts (right).
+entity "dim_item" as di {
+  + item_id : int  <PK>
   --
-  name
-  role
-}
-
-entity "dim_terminal" as dt <<dim>> {
-  * terminal_id : int <<PK>>
-  --
-  name
-  type
-  zone
-}
-
-entity "dim_item" as di <<dim>> {
-  * item_id : int <<PK>>
-  --
-  name
+  item
   category
   unit_price
+  quantite
+  total_revenue
 }
 
-entity "dim_member" as dm <<dim>> {
-  * member_id : int <<PK>>
+entity "dim_cashier" as dc {
+  + cashier_id : int  <PK>
+  --
+  cashier_name
+}
+
+entity "dim_terminal" as dt {
+  + terminal_id : int  <PK>
+  --
+  terminal
+  terminal_type
+}
+
+entity "dim_member" as dm {
+  + member_id : int  <PK>
   --
   username
   firstname
   lastname
-  registration_date
-}
-
-entity "fact_cash_transactions" as fct <<fact>> {
-  * tx_id : int <<PK>>
-  --
-  cashier_id : int <<FK>>
-  terminal_id : int <<FK>>
-  date : date
-  type : string
-  amount : decimal
-}
-
-entity "fact_sessions" as fs <<fact>> {
-  * session_id : int <<PK>>
-  --
-  terminal_id : int <<FK>>
-  member_id : int <<FK>>
-  start_time
   duration_min
-  session_type
+  usage_tnd
+  total_tnd
 }
 
-entity "fact_stock_movements" as fsm <<fact>> {
-  * movement_id : int <<PK>>
+' --- Facts (bottom row) --------------------------------------------------
+' fact_transaction sits under item+cashier (its non-shared dim is item)
+' fact_session sits under terminal+member (its shared dims are on the right)
+entity "fact_transaction" as ftx {
+  + tx_id : int  <PK>
   --
-  item_id : int <<FK>>
+  cashier_id  <FK>
+  terminal_id <FK>
+  item_id     <FK>
+  member_id   <FK>
+  --
   date
-  qty_in
-  qty_out
+  category
+  amount
 }
 
-entity "fact_member_stats" as fms <<fact>> {
+entity "fact_session" as fse {
+  + session_id : int  <PK>
   --
-  member_id : int <<FK>>
-  total_tnd : decimal
-  duration_min : int
-  visit_count : int
+  cashier_id  <FK>
+  terminal_id <FK>
+  member_id   <FK>
+  --
+  start_time
+  session_type
+  duration_min
+  total
 }
 
-dc  ||--o{ fct
-dt  ||--o{ fct
-dt  ||--o{ fs
-dm  ||--o{ fs
-dm  ||--o{ fms
-di  ||--o{ fsm
+' --- Layout hints --------------------------------------------------------
+di -[hidden]r- dc
+dc -[hidden]r- dt
+dt -[hidden]r- dm
+ftx -[hidden]r- fse
+
+' --- Relationships -------------------------------------------------------
+' Order matters with linetype ortho: declare shortest first so the
+' router prefers them, then the cross-fact lines.
+di ||--o{ ftx
+dc ||--o{ ftx
+dt ||--o{ ftx
+dm ||--o{ ftx
+
+dc ||--o{ fse
+dt ||--o{ fse
+dm ||--o{ fse
 
 @enduml

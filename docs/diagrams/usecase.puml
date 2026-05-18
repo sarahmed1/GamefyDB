@@ -1,63 +1,130 @@
 @startuml usecase
-title GamefyDB — Use Case Diagram
+title GamefyDB — Global Use Case Diagram
 
 left to right direction
 skinparam shadowing false
+skinparam DefaultFontName "Liberation Sans"
+skinparam DefaultFontSize 12
+skinparam ArrowColor #555555
+skinparam ranksep 35
+skinparam nodesep 18
+skinparam packageStyle rectangle
+skinparam package {
+  BorderColor      #4A6FA5
+  BackgroundColor  #F5F8FC
+  FontColor        #1F3A5F
+  FontStyle        bold
+  FontSize         13
+}
+skinparam rectangle {
+  BorderColor      #4A6FA5
+  BackgroundColor  #FFFFFF
+  FontStyle        bold
+  FontSize         14
+}
 skinparam usecase {
-  BackgroundColor #E3F2FD
-  BorderColor     #1565C0
+  BackgroundColor  #DCE6F4
+  BorderColor      #4A6FA5
+  FontColor        #1F3A5F
+  FontSize         12
+}
+skinparam usecase<<sub>> {
+  BackgroundColor  #F2F6FC
+  BorderColor      #93A8C7
+  FontColor        #3A567E
+  FontSize         11
 }
 skinparam actor {
-  BackgroundColor #FFF3E0
-  BorderColor     #E65100
+  Style            awesome
+  BackgroundColor  #FFFFFF
+  BorderColor      #333333
+  FontColor        #222222
+  FontSize         12
 }
 
-actor "Gaming Center\nOwner" as owner
-actor "Cashier" as cashier
-actor "Data Analyst" as analyst
+' === Actors (both on the LEFT to avoid arrow crossings) ===================
+actor "Cashier\n(data source)"           as cashier
+actor "Data Analyst /\nBI Developer"     as analyst
+actor "Gaming Centre\nOwner / Manager"   as owner
 
 rectangle "GamefyDB System" {
-  package "ETL & Data" {
-    usecase "Run ETL pipeline\non daily exports" as UC_ETL
-    usecase "Browse star-schema\nCSVs" as UC_CSV
+
+  package "ETL Pipeline (backend)" as PKG_ETL {
+    usecase "Execute ETL pipeline"        as UC_ETL
+    usecase "Ingest source files"         as UC_ING  <<sub>>
+    usecase "Cleanse & normalise data"    as UC_CLN  <<sub>>
+    usecase "Model star schema"           as UC_TRA  <<sub>>
+    usecase "Publish warehouse files"     as UC_EXP  <<sub>>
   }
-  package "Power BI Dashboards" {
-    usecase "View revenue\ndashboard" as UC_REV
-    usecase "View member\nrankings" as UC_RANK
-    usecase "Monitor live\noperations" as UC_LIVE
-    usecase "Review shift\nperformance" as UC_SHIFT
-  }
-  package "Analytics" {
-    usecase "View revenue\nforecast" as UC_FCAST
-    usecase "Check anomaly\nalerts" as UC_ANOM
-    usecase "View member\nsegments + loyalty" as UC_SEG
-  }
-  package "Conversational" {
-    usecase "Ask the chatbot\n(text or voice)" as UC_CHAT
-    usecase "Switch language\nEN / FR / AR" as UC_LANG
+
+  package "Unified Web Platform (user interface)" as PKG_WEB {
+
+    usecase "Authenticate &\naccess platform" as UC_LOGIN
+
+    package "Power BI Dashboards" as PKG_DASH {
+      usecase "Analyse revenue\nperformance"   as UC_REV
+      usecase "Track top members\n& terminals" as UC_MEM
+      usecase "Monitor live\noperations"       as UC_LIVE
+      usecase "Evaluate shift\nperformance"    as UC_SHIFT
+    }
+
+    package "Machine-Learning Insights" as PKG_ML {
+      usecase "Forecast revenue\n& session volume" as UC_FCAST
+      usecase "Identify peak\nperiods"             as UC_PEAK
+      usecase "Plan stock\nreplenishment"          as UC_STOCK
+      usecase "Analyse member\nloyalty"            as UC_SEG
+      usecase "Flag unusual\nactivity"             as UC_ANOM
+    }
+
+    package "Conversational Assistant" as PKG_CHAT {
+      usecase "Consult AI assistant\n(EN / FR / AR)" as UC_CHAT
+      usecase "Render chart\non demand"              as UC_CHART <<sub>>
+      usecase "Submit voice\nquery"                  as UC_VOICE <<sub>>
+    }
   }
 }
 
-owner --> UC_ETL
+' === Internal UML relations (composition arrows) =========================
+UC_ETL ..> UC_ING : <<include>>
+UC_ETL ..> UC_CLN : <<include>>
+UC_ETL ..> UC_TRA : <<include>>
+UC_ETL ..> UC_EXP : <<include>>
+
+UC_CHAT ..> UC_CHART : <<include>>
+UC_CHAT ..> UC_VOICE : <<extend>>
+
+' Every UI use case requires logging into the platform
+UC_REV   ..> UC_LOGIN : <<include>>
+UC_MEM   ..> UC_LOGIN : <<include>>
+UC_LIVE  ..> UC_LOGIN : <<include>>
+UC_SHIFT ..> UC_LOGIN : <<include>>
+UC_FCAST ..> UC_LOGIN : <<include>>
+UC_PEAK  ..> UC_LOGIN : <<include>>
+UC_STOCK ..> UC_LOGIN : <<include>>
+UC_SEG   ..> UC_LOGIN : <<include>>
+UC_ANOM  ..> UC_LOGIN : <<include>>
+UC_CHAT  ..> UC_LOGIN : <<include>>
+
+' === Actor links ==========================================================
+' Cashier: only feeds the ETL with daily reports
+cashier ..> UC_ETL : submits\ndaily reports
+
+' Analyst: operates the backend pipeline + drives ML through the web platform
+analyst --> UC_ETL
+analyst --> UC_FCAST
+analyst --> UC_SEG
+analyst --> UC_ANOM
+
+' Owner: consumes everything through the unified web platform UI
 owner --> UC_REV
-owner --> UC_RANK
+owner --> UC_MEM
 owner --> UC_LIVE
 owner --> UC_SHIFT
 owner --> UC_FCAST
-owner --> UC_ANOM
+owner --> UC_PEAK
+owner --> UC_STOCK
 owner --> UC_SEG
+owner --> UC_ANOM
 owner --> UC_CHAT
-owner --> UC_LANG
-
-cashier --> UC_ETL : provides\ndaily exports
-cashier --> UC_LIVE
-
-analyst --> UC_CSV
-analyst --> UC_FCAST
-analyst --> UC_ANOM
-
-UC_CHAT ..> UC_FCAST : <<include>>
-UC_CHAT ..> UC_ANOM  : <<include>>
-UC_CHAT ..> UC_SEG   : <<include>>
 
 @enduml

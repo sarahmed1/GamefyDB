@@ -1,0 +1,3160 @@
+
+===== PAGE 1 =====
+ 
+ 
+ 
+ 
+  University of Monastir 
+Higher Institute of Computer 
+Science of Mahdia 
+Faculty of Economics and 
+Management of Mahdia 
+ 
+Order Number: LBC-BI-3-
+2025-050   
+ 
+Tunisian Republic 
+Ministry of Higher Education and Scientific 
+Research 
+ 
+ 
+DISSERTATION OF GRADUATION 
+                                                 
+Presented at 
+ 
+Higher Institute of Computer Science of Mahdia 
+                                                 
+ Carried out at 
+ 
+Sumitomo Electric Bordnetze 
+ 
+ 
+In view of obtaining the diploma of 
+ 
+Bachelor’s Degree in Business Computing  : Business Intelligence 
+ 
+Prepared by: 
+ 
+Belghouthi Ichrak 
+ 
+Optimizing Employee Transportation System via Business Intelligence and 
+Generative-AI 
+ 
+ 
+Defended on16/06/2025  
+before the jury composed of: 
+ 
+ 
+President   : Ines Zribi 
+Reviewer   : Ben Kraiem Maha 
+Academic Supervisor   : Soufien Boutaib 
+Academic Co-Supervisor   : Maha Elarbi 
+Industrial Supervisor : Moetaz Fatin 
+  
+Academic Year:   2024-2025 
+
+===== PAGE 2 =====
+DEDICATION
+First and foremost, I want to thank God, the Most Gracious and the Most Merciful.
+Without His guidance, strength, and blessings, none of this would be possible. Each
+step, every hurdle I overcame, and every mile I celebrated would have felt a much heavier
+without His divine presence in my life.
+To my mother"Cherifa Slimi", the most important person in my world, this effort is
+dedicated to you. Your unwavering support, selfless sacrifice, and prayers have sustained
+my journey. You remained steadfast as a mother and believed in me when I didn’t believe
+in myself. Your prayers have also been my shield. Thank you for being my light in dark
+times.
+To my dear father"Kamel Belghouthi", your strength, wisdom, and quiet encour-
+agement have reminded me to keep moving forward. You’ve taught me the value of
+diligence and integrity, and instilled within me the confidence I needed, by believing in
+my potential. Your trust in me gave me courage and conviction to pursue whatever the
+dreams I had. This accomplishment is yours as much as it is mine.
+To my lovely sister"Islem Belghouthi", you have always been such a joy and com-
+fort. Thank you for your supportive words, for being my shoulder in stressful times, for
+being my best friend. I love you very much.
+Lastly, I would like to dedicate this to me - to myself, for not giving up. Thank you
+for being strong in the sleepless nights, for moving through doubt, and for tackling every
+challenge with resilience and determination. This report reflects my drive and I am proud
+of my progress.
+===== PAGE 3 =====
+GRATITUDE
+First, IwouldliketoacknowledgemyGod, forthestrength, patience, andperseverance
+given to finish this project.
+Moreover, I would like to express my sincere gratitude to my academic supervisors,
+Mr. SofienBoutaib andMrs. MahaElarbi, fortheirsupport, guidance, andconstant
+availability. Their know-how, well-deserved advice and feedback, were priceless through-
+out every aspect of this project. Their professionalism, discipline, and motivation for
+students deeply inspired me. I am very thankful for their constant motivation, especially
+during challenging situations, and for the trust they had in me and my work.
+I also sincerely thank my professional supervisorMr. Moetaz Fatin, who has facil-
+itated my internship and guided me with his support, availability, and constructive feed-
+back. I appreciate the chance to have learned and have the trust placed in me throughout
+my internship.
+Lastly, I thank allthe jury memberswho will assess my work. I appreciate you all
+being here, and your impressions are valued. Thank you for contributing to this valuable
+stage of my academic journey.
+===== PAGE 4 =====
+CONTENTS
+General Introduction 1
+1 General Context of the Project 3
+1.1 Introduction . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 3
+1.2 Host Organization Presentation . . . . . . . . . . . . . . . . . . . . . . . . 3
+1.2.1 Organizational Structure of SEBN-TN2 . . . . . . . . . . . . . . . . 4
+1.2.2 Services provided by the company . . . . . . . . . . . . . . . . . . . 4
+1.3 Project presentation . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 5
+1.3.1 General context of the project . . . . . . . . . . . . . . . . . . . . . 5
+1.3.2 Analysis of the Existing System . . . . . . . . . . . . . . . . . . . . 5
+1.3.3 Criticism of the Current System . . . . . . . . . . . . . . . . . . . . 5
+1.3.4 Problematic . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 6
+1.3.5 Proposed Solution . . . . . . . . . . . . . . . . . . . . . . . . . . . 6
+1.4 Project Management Methodologies Study . . . . . . . . . . . . . . . . . . 7
+1.4.1 The GIMSI Method . . . . . . . . . . . . . . . . . . . . . . . . . . . 7
+1.4.1.1 GIMSI objectives . . . . . . . . . . . . . . . . . . . . . . . 8
+1.4.1.2 Main Phases of GIMSI . . . . . . . . . . . . . . . . . . . . 8
+1.4.1.3 Advantages of GIMSI . . . . . . . . . . . . . . . . . . . . 9
+1.4.2 SCRUM Methodology . . . . . . . . . . . . . . . . . . . . . . . . . 9
+1.4.2.1 Key Principles of Scrum . . . . . . . . . . . . . . . . . . . 9
+1.4.2.2 Advantages of Scrum . . . . . . . . . . . . . . . . . . . . . 10
+1.4.3 Adopted Methodology . . . . . . . . . . . . . . . . . . . . . . . . . 11
+1.5 Conclusion: . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 11
+2 Sprint 0: Preparation phase 12
+2.1 Introduction . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 12
+2.2 Requirements specification . . . . . . . . . . . . . . . . . . . . . . . . . . . 12
+i
+===== PAGE 5 =====
+2.2.1 Identification of system actors . . . . . . . . . . . . . . . . . . . . . 12
+2.2.2 Functional requirements . . . . . . . . . . . . . . . . . . . . . . . . 13
+2.2.3 Non-Functional requirements . . . . . . . . . . . . . . . . . . . . . 13
+2.2.4 Requirements modeling . . . . . . . . . . . . . . . . . . . . . . . . . 14
+2.3 Project Management with Scrum . . . . . . . . . . . . . . . . . . . . . . . 16
+2.3.1 Identification of the Scrum Team . . . . . . . . . . . . . . . . . . . 16
+2.3.2 Product backlog . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 16
+2.3.3 Sprints Planning . . . . . . . . . . . . . . . . . . . . . . . . . . . . 18
+2.3.4 Project Planning . . . . . . . . . . . . . . . . . . . . . . . . . . . . 19
+2.4 Technical architecture of the decision-making solution . . . . . . . . . . . . 20
+2.5 Overall design of the data warehouse . . . . . . . . . . . . . . . . . . . . . 21
+2.5.1 Data Collection . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 22
+2.5.2 Key Performance Indicators (KPIs) Selection . . . . . . . . . . . . . 22
+2.5.3 Data Warehouse Design Approaches . . . . . . . . . . . . . . . . . 23
+2.5.3.1 Inmon Approach . . . . . . . . . . . . . . . . . . . . . . . 24
+2.5.3.2 Kimball Approach . . . . . . . . . . . . . . . . . . . . . . 24
+2.5.3.3 Adopted Approach . . . . . . . . . . . . . . . . . . . . . . 25
+2.6 Multidimensional Modeling . . . . . . . . . . . . . . . . . . . . . . . . . . 25
+2.6.1 Conceptual Model Analysis . . . . . . . . . . . . . . . . . . . . . . 26
+2.6.2 Choice of the Conceptual Model: . . . . . . . . . . . . . . . . . . . 28
+2.7 Work Environment . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 29
+2.7.1 Hardware environment . . . . . . . . . . . . . . . . . . . . . . . . . 29
+2.7.2 Software environment . . . . . . . . . . . . . . . . . . . . . . . . . . 30
+2.8 Conclusion . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 32
+3 Sprint 1: Design and Development of Dashboards 34
+3.1 Introduction . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 34
+3.2 Requirements Definition . . . . . . . . . . . . . . . . . . . . . . . . . . . . 34
+3.3 Sprint 1 Backlog . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 36
+3.4 Data integration phase (ETL) . . . . . . . . . . . . . . . . . . . . . . . . . 36
+3.4.1 General Overview of the ETL Process . . . . . . . . . . . . . . . . . 36
+3.4.2 Data Extraction Phase (Extract) . . . . . . . . . . . . . . . . . . . 37
+3.4.3 Data Transformation Phase (Transform) . . . . . . . . . . . . . . . 40
+3.4.4 Data Loading Phase (Load) . . . . . . . . . . . . . . . . . . . . . . 44
+3.4.5 Creating the dimension tables and the fact table . . . . . . . . . . . 45
+3.5 Dashboard Wireframe Design . . . . . . . . . . . . . . . . . . . . . . . . . 46
+3.5.1 Overview dashboard wireframe . . . . . . . . . . . . . . . . . . . . 47
+3.5.2 Line Analysis dashboard wireframe . . . . . . . . . . . . . . . . . . 47
+3.5.3 Financial Analysis dashboard wireframe . . . . . . . . . . . . . . . 48
+ii
+===== PAGE 6 =====
+3.5.4 Delay Analysis dashboard wireframe . . . . . . . . . . . . . . . . . 49
+3.6 Data Presentation Phase . . . . . . . . . . . . . . . . . . . . . . . . . . . . 49
+3.6.1 Overview Dashboard . . . . . . . . . . . . . . . . . . . . . . . . . . 50
+3.6.2 Line Analysis Dashboard . . . . . . . . . . . . . . . . . . . . . . . . 53
+3.6.3 Financial Analysis Dashboard . . . . . . . . . . . . . . . . . . . . . 54
+3.6.4 Delay Analysis Dashboard . . . . . . . . . . . . . . . . . . . . . . . 56
+3.7 Conclusion . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 59
+4 Sprint 2: Chatbot-Driven Dashboard Generation and Insight Analysis 60
+4.1 Introduction . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 60
+4.2 Requirements Definition . . . . . . . . . . . . . . . . . . . . . . . . . . . . 60
+4.3 Sprint 2 Backlog . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 61
+4.4 Sprint 2 Analysis . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 61
+4.4.1 Sprint 2 Use Case Diagram . . . . . . . . . . . . . . . . . . . . . . 61
+4.4.2 Text description of use case "Generate AI report" . . . . . . . . . . 62
+4.5 Definition of generative Artificial Intelligence . . . . . . . . . . . . . . . . . 63
+4.5.1 Traditional AI vs Generative AI . . . . . . . . . . . . . . . . . . . . 63
+4.5.2 The Usefulness of Generative Artificial Intelligence in Business In-
+telligence . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 64
+4.5.3 Generative AI Types . . . . . . . . . . . . . . . . . . . . . . . . . . 64
+4.5.4 Selected Type . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 65
+4.6 Large Language Model . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 65
+4.6.1 LLM Models Comparison . . . . . . . . . . . . . . . . . . . . . . . 66
+4.6.2 Selected model . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 67
+4.6.3 Working Mechanism of the Mistral-Saba-24b Model . . . . . . . . . 67
+4.7 Integration of Groq API . . . . . . . . . . . . . . . . . . . . . . . . . . . . 67
+4.7.1 API Key and Authentication . . . . . . . . . . . . . . . . . . . . . . 68
+4.7.2 Groq Cloud Usage . . . . . . . . . . . . . . . . . . . . . . . . . . . 68
+4.8 Architecture diagram of the intelligent agent . . . . . . . . . . . . . . . . . 69
+4.9 Realization . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 71
+4.10 Conclusion . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 74
+5 Sprint 3:Transport management 75
+5.1 Introduction . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 75
+5.2 Sprint 3 Backlog . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 75
+5.3 Sprint 3 Analysis . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 77
+5.3.1 Sprint 3 Use Case Diagram . . . . . . . . . . . . . . . . . . . . . . 77
+5.3.2 Detailed use case study . . . . . . . . . . . . . . . . . . . . . . . . . 78
+5.3.2.1 Use case diagram for the “Authenticate” functionality . . . 78
+5.3.2.2 Use case diagram for the “Display Fill Rate” functionality 79
+iii
+===== PAGE 7 =====
+5.3.2.3 Use case diagram for the “Manage employees” functionality 80
+5.3.3 Text descriptions of use case scenarios . . . . . . . . . . . . . . . . 81
+5.3.3.1 Text description of use case "Authenticate" . . . . . . . . 81
+5.3.3.2 Text description of use case "Display Fill Rate" . . . . . . 82
+5.3.3.3 Text description of use case "Add employee" . . . . . . . . 82
+5.4 Conception . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 83
+5.4.1 Sequence Diagrams . . . . . . . . . . . . . . . . . . . . . . . . . . . 83
+5.4.1.1 Authenticate sequence diagram . . . . . . . . . . . . . . . 84
+5.4.1.2 Display Fill Rate sequence diagram . . . . . . . . . . . . . 84
+5.4.1.3 Add employee sequence diagram . . . . . . . . . . . . . . 85
+5.4.2 Class Diagram . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 86
+5.5 Realization . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 87
+5.5.0.1 Authentication interface . . . . . . . . . . . . . . . . . . . 87
+5.5.0.2 Home interface . . . . . . . . . . . . . . . . . . . . . . . . 88
+5.5.0.3 Fill rate interface . . . . . . . . . . . . . . . . . . . . . . . 89
+5.5.0.4 Employees interface . . . . . . . . . . . . . . . . . . . . . 90
+5.6 Conclusion . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 91
+6 Sprint 4: Real-Time Employee Authentication and Transport Request
+System 92
+6.1 Introduction . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 92
+6.2 Sprint 4 Backlog . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 92
+6.3 Sprint 4 Analysis . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 93
+6.3.1 Sprint 4 Use Case Diagram . . . . . . . . . . . . . . . . . . . . . . 93
+6.3.2 Detailed use case study . . . . . . . . . . . . . . . . . . . . . . . . . 94
+6.3.2.1 Use case diagram for the “Scan Badge” functionality . . . 94
+6.3.2.2 Use case diagram for the “Send complaint” functionality . 94
+6.3.2.3 Use case diagram for the “Show bus position” functionality 94
+6.3.3 Text descriptions of use case scenarios . . . . . . . . . . . . . . . . 95
+6.3.3.1 Text description of use case "Scan Badge" . . . . . . . . . 95
+6.3.3.2 Text description of use case "Send complaint" . . . . . . . 96
+6.3.3.3 Text description of use case "Show bus position" . . . . . 96
+6.4 Conception . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 97
+6.4.1 Sequence Diagrams . . . . . . . . . . . . . . . . . . . . . . . . . . . 97
+6.4.1.1 Scan Badge sequence diagram . . . . . . . . . . . . . . . . 97
+6.4.1.2 Send complaint sequence diagram . . . . . . . . . . . . . . 98
+6.4.1.3 Show bus position sequence diagram . . . . . . . . . . . . 99
+6.4.2 Class Diagram . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 100
+6.5 Realization . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 101
+iv
+===== PAGE 8 =====
+6.5.1 Scan badge Interface: . . . . . . . . . . . . . . . . . . . . . . . . . . 101
+6.5.2 Send complaints Interface . . . . . . . . . . . . . . . . . . . . . . . 104
+6.5.3 Track Bus Interface . . . . . . . . . . . . . . . . . . . . . . . . . . . 106
+6.6 Conclusion . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 107
+General Conclusion 108
+Bibliography 110
+v
+===== PAGE 9 =====
+LIST OF FIGURES
+1.1 SEBN-TN2’s Logo. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 3
+1.2 Organizational chart of SEBN-TN2. . . . . . . . . . . . . . . . . . . . . . . 4
+1.3 Main Phases of GIMSI. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 8
+1.4 SCRUM PROCESS. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 9
+1.5 SCRUM Roles. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 10
+2.1 Global Use Case Diagram. . . . . . . . . . . . . . . . . . . . . . . . . . . . 15
+2.2 Gantt chart. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 20
+2.3 Technical architecture of the system . . . . . . . . . . . . . . . . . . . . . . 21
+2.4 Inmon Approach architecture. . . . . . . . . . . . . . . . . . . . . . . . . . 24
+2.5 Kimball Approach architecture. . . . . . . . . . . . . . . . . . . . . . . . . 25
+2.6 Star Schema Model. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 27
+2.7 Snowflake Schema Model. . . . . . . . . . . . . . . . . . . . . . . . . . . . 27
+2.8 Galaxy Schema Model. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 28
+2.9 the Conceptual Model of the DW. . . . . . . . . . . . . . . . . . . . . . . . 29
+2.10 VS Code Logo. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 30
+2.11 MySQL Logo. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 30
+2.12 phpMyAdmin Logo. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 31
+2.13 XAMPP Logo. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 31
+2.14 Talend Logo. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 31
+2.15 Power BI Logo. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 32
+2.16 Draw.io Logo. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 32
+2.17 Overleaf’s Logo. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 32
+3.1 The ETL Process. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 37
+3.2 "arrival_time" table dimensions. . . . . . . . . . . . . . . . . . . . . . . . 38
+3.3 "employee" table dimensions. . . . . . . . . . . . . . . . . . . . . . . . . . 38
+3.4 "lignes" table dimensions. . . . . . . . . . . . . . . . . . . . . . . . . . . . 38
+vi
+===== PAGE 10 =====
+3.5 "arrets" table dimensions. . . . . . . . . . . . . . . . . . . . . . . . . . . . 38
+3.6 "bus" table dimensions. . . . . . . . . . . . . . . . . . . . . . . . . . . . . 39
+3.7 MySQL Database Connection. . . . . . . . . . . . . . . . . . . . . . . . . . 39
+3.8 tDBInput. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 40
+3.9 SQL Query to Identify Orphan Route IDs in ’arrets’ Table. . . . . . . . . . 41
+3.10 Orphan Route IDs in ’arrets’ Table. . . . . . . . . . . . . . . . . . . . . . . 41
+3.11 tMap component configuration with lookup. . . . . . . . . . . . . . . . . . 41
+3.12 SQL Query to detect "prestataire" redundancy. . . . . . . . . . . . . . . . 42
+3.13 Redundancy Count of "Prestataire" . . . . . . . . . . . . . . . . . . . . . . 42
+3.14 Normalization using tUniqRow. . . . . . . . . . . . . . . . . . . . . . . . . 42
+3.15 Sample of non-descriptive numeric "shift" IDs. . . . . . . . . . . . . . . . 43
+3.16 tMap component with conditional expressions. . . . . . . . . . . . . . . . . 43
+3.17 SQL Query to detect "Buses" redundancy. . . . . . . . . . . . . . . . . . . 44
+3.18 Sample lines with more than one bus. . . . . . . . . . . . . . . . . . . . . . 44
+3.19 tMap component to create the "ligne_bus" table. . . . . . . . . . . . . . . 44
+3.20 tDBOutput. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 45
+3.21 Job Creation. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 45
+3.22 Populating the Fact Table. . . . . . . . . . . . . . . . . . . . . . . . . . . . 46
+3.23 Wireframe of the overview dashboard. . . . . . . . . . . . . . . . . . . . . . 47
+3.24 Wireframe for the line analysis dashboard. . . . . . . . . . . . . . . . . . . 48
+3.25 The financial analysis dashboard wireframe. . . . . . . . . . . . . . . . . . 48
+3.26 The delay analysis dashboard wireframe. . . . . . . . . . . . . . . . . . . . 49
+3.27 Navigation Menu. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 50
+3.28 General Overview Dashboard. . . . . . . . . . . . . . . . . . . . . . . . . . 51
+3.29 Line Analysis Dashboard. . . . . . . . . . . . . . . . . . . . . . . . . . . . 53
+3.30 Financial Analysis Dashboard. . . . . . . . . . . . . . . . . . . . . . . . . . 55
+3.31 Delay Analysis Dashboard. . . . . . . . . . . . . . . . . . . . . . . . . . . . 57
+3.32 filtering menu. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 58
+4.1 Sprint 3 Use Case Diagram. . . . . . . . . . . . . . . . . . . . . . . . . . . 62
+4.2 Setting up Groq LLM with API key in project. . . . . . . . . . . . . . . . 68
+4.3 API activity and resource consumption. . . . . . . . . . . . . . . . . . . . . 69
+4.4 Architecture diagram of the intelligent agent. . . . . . . . . . . . . . . . . . 70
+4.5 Main Interface of the Dashboard Generation Platform. . . . . . . . . . . . 71
+4.6 Natural language query submitted by the user: “Analyse des employés”. . . 72
+4.7 Analytical visualization of the number of employees per shift and per bus
+line. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 72
+4.8 Analytical visualization of the total employee contribution and the yearly
+trend in worker numbers. . . . . . . . . . . . . . . . . . . . . . . . . . . . . 73
+vii
+===== PAGE 11 =====
+4.9 Automatic analysis and strategic recommendation. . . . . . . . . . . . . . 73
+5.1 Sprint 3 Use Case Diagram. . . . . . . . . . . . . . . . . . . . . . . . . . . 78
+5.2 Use case diagram for the “Authenticate” functionality. . . . . . . . . . . . . 79
+5.3 Use case diagram for the “Display Fill Rate” functionality. . . . . . . . . . 80
+5.4 Use case diagram for the “Manage employees” functionality. . . . . . . . . . 80
+5.5 Sequence diagram of the “Authenticate” functionality. . . . . . . . . . . . . 84
+5.6 Sequence diagram of the “Display Fill Rate” functionality. . . . . . . . . . . 85
+5.7 Sequence diagram of the “Add employee” functionality. . . . . . . . . . . . 86
+5.8 Class Diagram of Sprint 3. . . . . . . . . . . . . . . . . . . . . . . . . . . . 87
+5.9 the HR employee authentication interface. . . . . . . . . . . . . . . . . . . 88
+5.10 The Home interface of the web platform. . . . . . . . . . . . . . . . . . . . 88
+5.11 Fill rate interface. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 89
+5.12 Modal of the scanned employees. . . . . . . . . . . . . . . . . . . . . . . . 90
+5.13 Manage employees interface. . . . . . . . . . . . . . . . . . . . . . . . . . . 90
+5.14 Add employee form. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 91
+6.1 Sprint 4 Use Case Diagram. . . . . . . . . . . . . . . . . . . . . . . . . . . 93
+6.2 Use case diagram for the “Scan Badge” functionality. . . . . . . . . . . . . 94
+6.3 Use case diagram for the “send complaint” functionality. . . . . . . . . . . . 94
+6.4 Use case diagram for the “Show bus position” functionality. . . . . . . . . . 95
+6.5 Sequence diagram of the “Scan Badge” functionality. . . . . . . . . . . . . . 98
+6.6 Sequence diagram of the “Send complaint” functionality. . . . . . . . . . . 99
+6.7 Sequence diagram of the “Show bus position” functionality. . . . . . . . . . 100
+6.8 Class Diagram of sprint 4. . . . . . . . . . . . . . . . . . . . . . . . . . . . 101
+6.9 Scan Result Interface – Authorized Badge. . . . . . . . . . . . . . . . . . . 102
+6.10 Scan Result Interface – Unauthorized Badge. . . . . . . . . . . . . . . . . . 103
+6.11 Scan Result Interface – Warning message. . . . . . . . . . . . . . . . . . . 104
+6.12 Send complaints Interface. . . . . . . . . . . . . . . . . . . . . . . . . . . . 105
+6.13 The history of submitted complaints. . . . . . . . . . . . . . . . . . . . . . 106
+6.14 Track Bus Interface. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 107
+viii
+===== PAGE 12 =====
+LIST OF TABLES
+2.1 Product Backlog. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 17
+3.1 Sprint 1 Backlog. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 36
+3.2 Analysis of the visuals of the “Overview” dashboard. . . . . . . . . . . . . . 51
+3.3 Analysis of the visuals of the “Line Analysis ” dashboard. . . . . . . . . . . 54
+3.4 Analysis of the visuals of the “Financial Analysis” dashboard. . . . . . . . . 55
+3.5 Analysis of the visuals of the “Delay Analysis” dashboard. . . . . . . . . . . 57
+4.1 Sprint 2 Backlog. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 61
+4.2 Text description of use case "Generate AI report". . . . . . . . . . . . . . . 62
+4.3 Traditional AI vs Generative AI. . . . . . . . . . . . . . . . . . . . . . . . 64
+4.4 Comparison of Language Models. . . . . . . . . . . . . . . . . . . . . . . . 66
+5.1 Sprint 3 Backlog. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 75
+5.2 Text description of use case "Authenticate". . . . . . . . . . . . . . . . . . 81
+5.3 Text description of use case "Display Fill Rate". . . . . . . . . . . . . . . . 82
+5.4 Text description of use case "Add employee". . . . . . . . . . . . . . . . . . 83
+6.1 Sprint 4 Backlog. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 92
+6.2 Text description of use case "Scan Badge". . . . . . . . . . . . . . . . . . . 95
+6.3 Text description of use case "Send complaint". . . . . . . . . . . . . . . . . 96
+6.4 Text description of use case "Show bus position". . . . . . . . . . . . . . . 96
+ix
+===== PAGE 13 =====
+List of Acronyms
+SEBN-TN2: Sumitomo Electric Bordnetze EL FEJJA
+SaaS: Software as a Service
+HR: Human Resources
+iOS: iPhone Operating System
+BI: Business Intelligence
+ETL: Extract, Transform, Load
+KPI: Key Performance Indicator
+DW: Data Warehouse
+RDBMS: Relational Database Management System
+SQL: Structured Query Language
+DB: Database
+UI: User Interface
+SPA: Single Page Application
+MVC: Model–View–Controller
+REST API: Representational State Transfer Application Programming Interface
+AI: Artificial Intelligence
+GenAI: Generative Artificial Intelligence
+GAN: Generative Adversarial Network
+GPT: Generative Pre-trained Transformer
+LLM: Large Language Model
+API: Application Programming Interface
+x
+===== PAGE 14 =====
+GENERAL INTRODUCTION
+In today’s fast-paced digital environment, businesses are re-evaluating how to do business
+differently. To optimize operations and improve decision-making processes, more orga-
+nizations are looking for unique ways for data analytics, artificial intelligence, and web
+technology to enter organizations’ operations. The connection of data and technology
+into organizational workflows is a key driver of efficiency, competitiveness, and overall
+value. Transportation and human resources management are a major area affected by
+digital change, in particular large companies whose workforce mobility poses a significant
+operational and financial challenge.
+Data is now a key resource for organizations to drive improved performance. If raw
+data can be transformed into actionable intelligence with the effective use of tools and
+methods, organizations can use insights gathered from the intelligence to influence strate-
+gic decisions. Business Intelligence (BI), using interactive dashboards and analytics with
+real-time comparison, is a useful model for how businesses are leveraging data. Not only
+that, but Generative AI now opens up creating intelligent personalized interfaces that
+make the user experience more flexible and functional.
+This is the context in which my end-of-studies internship took place. Hosted within
+SEBN-TN2 which is concerned with the optimization of its employees’ transport, the aim
+of this project was to design and create a complete, intelligent, and expandable solution
+that uses modern web development, Business Intelligence tools, and AI; for monitoring,
+managing, and improving employee transportation processes.
+This project was not only suitable for my degree which was obtained with a special-
+ization in Business Intelligence, but also allowed me to exercise, deepen and expand my
+technical skills in a professional context. The solution that was realized includes: data
+visualization dashboards, generative AI supported dashboard generation, and the reali-
+sation of a complete web application with full-stack development for HR and employee
+.
+1
+===== PAGE 15 =====
+General Introduction
+To better describe the trajectory, methodology and impact of this project the report
+is composed of six chapters representing the six distinct stages of the project;
+First Chapter "General Context of the Project": This chapter conveys the context
+and motivation for the project, it will introduce the host company, the needs they have,
+the identified issues with relation to transport management and the objectives established
+for the internship, and present the overall methodology.
+Second Chapter,"Sprint 0 – preparation phase": This section identify the preliminary
+preparation and planning work completed at the beginning of the internship, it will ask
+the surveys as the identified functional and technical specifications and the choices of
+tools, technologies and architectural choices that were need to be made to appropriately
+complete the project.
+Thrd Chapter, "Sprint 1 – Dashboard Design and Development": In this chapter,
+I explain how I designed and built interactive and dynamic dashboards using Business
+Intelligence (BI) tools. These dashboards track key transportation indicators, such as
+bus usage and punctuality, as well as cost analysis, providing HR professionals with an
+effective, easy-to-understand, and quick-to-understand decision-making tool.
+Fourth Chapter, "Sprint 2 – Chatbot-Driven Dashboard Generation and Insight Anal-
+ysis": Inthischapter, Ihighlighttheinnovativeaspectofthisproject: theuseofgenerative
+AI to dynamically generate personalized dashboards based on user requests.
+Fifth Chapter, "Sprint 3 – Transport Management": This chapter describes the cre-
+ation of a responsive web platform for the HR department, enabling them to more effi-
+ciently manage employee transportation.
+Sixth Chapter, "Sprint 4 – Real-Time Employee Authentication and Transport Re-
+quest System": This chapter presents a real-time badge scanning system that authen-
+ticates employees instantly, ensuring secure access. Additionally, a web application was
+developedtoallowemployeestosubmittransportrequestsviaasimpleandsecuremethod.
+And finally, I will provide a general conclusion which serves to summarize all the work
+which has been done throughout this internship.
+2
+===== PAGE 16 =====
+CHAPTER 1
+GENERAL CONTEXT OF THE PROJECT
+1.1 Introduction
+This chapter outlines the general framework of the project by first introducing the host
+company. Then it evaluates the existing solutions, outlines the weaknesses of these solu-
+tions, and finally proposes suggestions to enhance service quality. Lastly, it highlights the
+methodology selected to achieve the objectives of the project.
+1.2 Host Organization Presentation
+Sumitomo Electric Bordnetze El Fejja S.A.R.L. is a subsidiary of Sumitomo Electric
+Industries, specializes in the manufacturing of electrical harnesses for the automotive
+industry. Located in Néopark El Fejja, Mornaguia, Manouba, Tunisia, the company was
+established in 2019 and it has over 1,500 employees.
+Figure 1.1: SEBN-TN2’s Logo [1].
+3
+===== PAGE 17 =====
+1.2. HOST ORGANIZATION PRESENTATION
+1.2.1 Organizational Structure of SEBN-TN2
+To ensure uninterrupted operations, SEBN-TN2 operates on a three-shift system, . The
+teams are structured as follows:
+• Morning Shift: 6:00 AM – 2:00 PM
+• Afternoon Shift: 2:00 PM – 10:00 PM
+• Night Shift:10:00 PM – 6:00 AM
+In addition, there is a fixed administrative schedule:
+• Administrative Shift:8:00 AM – 4:30 PM
+Production managers and quality control teams are responsible for each shift, and
+everything is inspected for efficiency and product quality. By maintaining this structure,
+SEBN-TN2 ensures consistent output and delivers value to the automotive industry.
+The departments are represented in the following organizational chart:
+Figure 1.2: Organizational chart of SEBN-TN2.
+1.2.2 Services provided by the company
+SEBN-TN2 provides a variety of services exclusively offered to customers in the automo-
+tive industry. The company produces wiring harnesses for vehicles, facilitating power and
+signal transmission. The company also develops customer-specific wiring systems (from
+design to series production) and specializes in new approaches for electric and hybrid
+vehicles, including high-voltage harnesses to support the wholesale electrification of the
+automotive sector.
+4
+===== PAGE 18 =====
+1.3. PROJECT PRESENTATION
+1.3 Project presentation
+This part introduces the project in an organized format by outlining its context, analyzing
+the current situation, identifying the key problem, and proposing an appropriate and
+effective solution.
+1.3.1 General context of the project
+This project was completed within the context of the applied Bachelor degree in Business
+Information Technology, focusing in Business Intelligence, at the Mahdia Higher Institute
+of Computer Science and the Mahdia Faculty of Economics and Management. Conducted
+over a four-month term at SEBN-TN2, this provided the opportunity to apply theory
+to business practice with regards to sophisticated data analysis and decision-making.
+The focus of this initiative was to develop an innovative solution for managing employee
+transportation, providing better supervision, and lowering costs.
+1.3.2 Analysis of the Existing System
+SEBN-TN2 provides transport to all its employees based on different time slots (morning,
+afternoon, night, and administrative time). The service is currently in the manual mode
+with rudimentary tools, like Excel sheets or written records, to plan routes and moni-
+tor attendance. Bus route planning, schedule management, and personnel deployment
+are handled randomly by managers, without the aid of digital decision-making tools or
+automated monitoring. That approach gives weak coordination and transparency into
+the actual utilization of assets (buses, routes, schedules). The information collected is
+disparate and not very helpful, which makes it difficult to perform intensive analysis or
+optimization actions.
+1.3.3 Criticism of the Current System
+An analysis of the existing system is a critical part of any change or improvement process,
+as it provides a clear understanding of existing operations, documents inefficiencies, and
+indicates areas of optimization opportunity. Breaking down employee transport manage-
+ment into minute details, we will be able to identify the causes of issues at the very root
+level and ensure that any recommended solution meets actual needs and challenges effec-
+tively. This preliminary analysis forms the basis for the planning of a more cost-effective,
+efficient, and reliable transport system. The analysis of the existing system revealed
+several flaws in the current management of the transport of employees:
+• Ineffective Decision-Making: Lack of consistent and central monitoring makes
+it difficult to correctly assess transport performance. Without a unified dashboard,
+5
+===== PAGE 19 =====
+1.3. PROJECT PRESENTATION
+weaknesses are difficult to identify or efficiently optimize route planning.
+• Lack of Control Over Bus Utilization:The lack of a proper verification system
+has resulted in some employees taking buses they are not authorized to take. This
+kind of control is leading to the improper use of transportation and the integrity of
+the system.
+• Lack of Flexibility:The current tools do not have the ability to properly manage
+changes or unplanned events in schedules. This requires managers to make route
+adjustments manually, which are time-consuming and can also lead to mistakes.
+• Enhanced Operating Risk:The lack of real-time bus tracking or employee track-
+ingleadstoproblemswithdelays, diversionorpeoplenotboardingontimenotbeing
+detected, which adds to the operating risk.
+In summary, SEBN-TN2’s employee transportation system relies on fragmented,
+manual processes, leading to inefficient management and limited visibility of re-
+source utilization. The absence of a centralized database and automation not only
+increases operational costs, but also makes monitoring much more difficult and
+timely responses to problems impossible. The lack of effective tools and an or-
+ganized operational overview indicates that SEBN-TN2 needs a solution—a unique
+value proposition such as the one planned in this project to improve employee trans-
+portation management.
+1.3.4 Problematic
+In this aspect, SEBN-TN2 also has numerous daunting problems in managing the issues
+of employees’ transportation. The lack of automated, intelligent, and centralized systems
+significantly impede the company from possessing a smooth, efficient, and responsive
+company. Human error, unavailability of reliable real-time data, and the absence of
+tracking devices discredit not only the profitability of the business, but also employee
+convenience. It is therefore imperative to reconsider how transportation works by relying
+on sophisticated technologies in tracking, validation and analysis of travel in an attempt
+to streamline routes, save unnecessary costs, and increase improved management of flow.
+1.3.5 Proposed Solution
+In order to rectify the concerns with SEBN-TN2’s employee transportation, this project
+proposes the utilization of a centralized, scalable system for intelligent transportation
+management. Thegoalofthisconceptistoprovideamodernandintegratedplatformthat
+allows Human Resources departments to oversee everyday bus operations in an effective
+manner while providing the employees with an intuitive mobile application to engage
+6
+===== PAGE 20 =====
+1.4. PROJECT MANAGEMENT METHODOLOGIES STUDY
+with the service. By providing real-time monitoring, centralized data information, and
+automatic reporting features, the solution will enhance the overall operations, reduce
+overall wasted costs, and improve quality of service and decision-making. To address
+these challenges, we propose a complete smart transportation management system that
+includes the following key components:
+• Dynamic Dashboards: A set of real-time dashboards for HR employees and
+decision-makerstotrackbususage, employeeattendance, delays, andoptimizecosts.
+• Chatbot:Integrated chatbot by which the HR employees can view personalized
+dashboards, access applicable analysis, and receive personalized recommendations
+in an interactive and frictionless way.
+• HR Platform for Transportation Management:A centralized web platform
+for HR to assign buses, view statistics, generate reports, and manage complaints.
+• Implementation of a Badge Scanning System:Employees scan their badge
+when boarding, automatically recording presence and verifying access rights.
+• Employee Mobile Application:A user-friendly app for transport requests, real-
+time tracking, and communication with HR.
+This solution aims to automate employee transport tracking, reduce costs, improve satis-
+faction, and provide a powerful decision-support system data visualization and intelligent
+features.
+1.4 Project Management Methodologies Study
+Project management is a critical discipline to organize, plan, coordinate, and monitor
+progress of a project in order to achieve some specified goals within defined time and
+cost frameworks. A project management methodology refers to an organized set of rules,
+practices, and processes that aim to guide the successful execution of a project. It provides
+a systematic framework that ensures enhanced control over scope, time, cost, quality, and
+risk. Various project management methods exists and understanding them is crucial, as
+it helps in selecting the most suitable method in accordance with the project context
+and requirement. Each method has its pros, cons, and process that can easily affect the
+success of a project. The aim of this section is to present various methods as GIMSI and
+Scrum.
+1.4.1 The GIMSI Method
+The GIMSI approach is a project management method for information systems projects.
+Created in a French-speaking environment, it is an integrated approach that covers the
+7
+===== PAGE 21 =====
+1.4. PROJECT MANAGEMENT METHODOLOGIES STUDY
+whole life cycle of an information system, from the identification of needs to the opera-
+tional deployment.
+1.4.1.1 GIMSI objectives
+GIMSI is designed to:
+• Organize the project management process methodically.
+• Guarantee consistency among all project phases and deliverables.
+• Bring all stakeholders together collaboratively.
+• Favor knowledge capitalization and reuse.
+1.4.1.2 Main Phases of GIMSI
+The GIMSI methodology is composed of five main phases that are illustrated in the figure
+1.3 and eplained below:
+1. Preliminary Study: Project justification, context analysis, and needs identifica-
+tion.
+2. Opportunity Study: Feasibility study and potential solutions analysis.
+3. Detailed Study: Functional requirements specification and target system model-
+ing.
+4. Implementation: Unit development and testing, integration.
+5. Deployment and Maintenance:Change management support, go-live, and con-
+tinuous improvement.
+Figure 1.3: Main Phases of GIMSI.
+8
+===== PAGE 22 =====
+1.4. PROJECT MANAGEMENT METHODOLOGIES STUDY
+1.4.1.3 Advantages of GIMSI
+The GIMSI methodology offers numerous advantages, including:
+• Good documentation at all stages for enhanced traceability.
+• Well-structured and well adapted to complex information systems.
+• Gives an overall overview of the to-be-built system.
+1.4.2 SCRUM Methodology
+Scrum is an adaptive project management framework that revolves around continuous
+change, teamwork, rapid delivery of working software, and customer satisfaction. Scrum
+is most suitable for projects with shifting requirements such as software development.
+Figure 1.4 shows the flow of the scrum process:
+Figure 1.4: SCRUM PROCESS [2].
+1.4.2.1 Key Principles of Scrum
+The key principles of Scrum include:
+• Iterative and Incremental:The project is divided into short periods referred to
+as sprints (typically 2 to 4 weeks).
+• Well-Defined Roles:As shown in the figure 1.5 Scrum has three roles:
+– Product Owner:Responsible for the product vision and product backlog,
+prioritizing backlog items based on the business value. The Product Owner’s
+9
+===== PAGE 23 =====
+1.4. PROJECT MANAGEMENT METHODOLOGIES STUDY
+goal is to move the team to deliver the highest impact based on prioritized
+tasks.
+– Scrum Master:Facilitates the process of Scrum, removes impediments for
+the team while forming and supporting the team and Product Owner, and
+encourages reflection and continuous improvement.
+– Development Team:self-organizing, cross-functional team that delivers a
+product increment in each Sprint, and is responsible for determining how to
+do the work.
+Figure 1.5: SCRUM Roles [3].
+• Continuous Delivery:A potentially releasable product increment is delivered at
+the end of each sprint.
+• Scrum Ceremonies: Daily Scrum, Sprint Planning, Sprint Review, and Sprint
+Retrospective.
+1.4.2.2 Advantages of Scrum
+The Advantages of Scrum include:
+• High responsiveness to changes.
+• Continuous client engagement.
+• Continuous improvement using retrospectives.
+• Complete visibility into project progress.
+10
+===== PAGE 24 =====
+1.5. CONCLUSION:
+1.4.3 Adopted Methodology
+For this project, Scrum was adopted due to its nature of flexibility and ability to handle
+altering requirements efficiently. The project requires an adaptable and iterative devel-
+opment process accommodating continuous user feedback and incremental value delivery.
+Scrum’s iterative short cycles and regular ceremonies enable the team to adapt quickly
+to changes and continually improve.
+1.5 Conclusion:
+In this first introductory chapter, I introduced the context of the host organization as
+well as the framework of the project. After providing a general overview, I conducted
+an in-depth analysis of the current situation, which allowed me to gain a comprehensive
+understanding of the project. These aspects are considered the initial requirements that
+I will work to address in the upcoming chapters.
+11
+===== PAGE 25 =====
+CHAPTER 2
+SPRINT 0: PREPARATION PHASE
+2.1 Introduction
+The Sprint 0 phase is an important one since it sets the stage for the entire development.
+During the first phase, I identify stakeholders, their needs, and evaluate the functional and
+non-functional requirements of the system. After going through the Scrum process, I am
+able to define the backlog of the product and track what the next sprints will look like. By
+following an iterative approach, I can accomplish incremental improvements while seeing
+how the project is progressing along its road map.
+2.2 Requirements specification
+Requirements specification is a vital stage of any BI project. It is the process of identi-
+fying and documenting stakeholder requirements and expectations. A good specification
+confirms that the entire project is to be to business objectives and end-user needs.
+2.2.1 Identification of system actors
+An actor in a system is any user or external entity that uses the system to perform
+some tasks or receive services. Actors are required in system design as they define roles,
+responsibilities, access rights, and features related to users. The clear identification of
+actors results in a more efficient, secure, and personalized experience for each type of user.
+There are three roles present in our transport management solution: theHR Manager,
+the HR Employee, andthe Employee.
+• The HR Manager: Has all the privileges, including managing users, managing
+transport,real-time bus tracking, accessing dynamic dashboards, and using an intel-
+ligent chatbot to generate personalized visual insights and receive recommendations.
+12
+===== PAGE 26 =====
+2.2. REQUIREMENTS SPECIFICATION
+• The HR Employee:Is responsible for managing transport, real-time bus tracking,
+and viewing dashboards for operational performance.
+• The Employee: Has the privileges to submit complaints, request line changes,
+make reservations, and track bus movements in real time, ensuring a seamless daily
+commute.
+2.2.2 Functional requirements
+Functional requirements correspond to the functionalities expected by users in order to
+effectively meet their business objectives. As part of optimizing employee transportation,
+SEBN TN2 wishes to implement a complete solution meeting the following functional
+requirements:
+• Integration of a process of data extracting, transforming, and loading information
+regarding employees, routes, buses, stops, service providers, etc.
+• Development of interactive dashboards for tracking punctuality, service provider
+efficiency, costs, etc.
+• Developing an intelligent chatbot to assist in the automatic generation of customized
+visuals and give recommendations based on transport data.
+• DevelopingadedicatedwebportalfortheHRdepartmentfortransportmanagement
+in integrated form, real-time bus tracking, and monitoring performance indicators.
+• Creating a system for a badge scanning system for secure and automated control of
+bus entry.
+• Implementation of a mobile application for workers to book seats, complain about
+problems, request changing the route and tracking buses.
+2.2.3 Non-Functional requirements
+In addition to the functional features, the system must also meet several non-functional
+requirements to ensure reliability, performance, and user-friendliness. It is essential that
+the platform complies with the following criteria:
+1. Availability:The system must be available at almost all times.
+2. Security: The system and data must be secured
+3. Usability: The interface must be intuitive and user-friendly for HR staff and em-
+ployees to navigate with minimal training.
+13
+===== PAGE 27 =====
+2.2. REQUIREMENTS SPECIFICATION
+4. Accessibility: The system should be accessible on both mobile and desktop, as
+well as compatible with Android and iOS.
+5. Scalability: The system should be scalable as the number of buses and employees
+increase without losing performance.
+6. Maintainability: The code should adhere to standard development practices and
+document to allow for maintenance updates and bug fixing.
+2.2.4 Requirements modeling
+Use case diagrams provide a modeling of the functional behaviour of a software system.
+It can also describe how it will be used by the stakeholder, and how it will also interact
+with the stakeholder. Our system is composed of the following use cases:
+• Scan Badge.
+• Reserve a seat.
+• Send complaint.
+• Request to change line.
+• Show bus position.
+• Display fill rate.
+• View dashboard.
+• Manage reservations.
+• Show complaints.
+• Manage employees.
+• Manage Buses.
+• Manage travel lines.
+• Manage changing Requests.
+• Manage users.
+• Generate AI reports.
+14
+===== PAGE 28 =====
+2.2. REQUIREMENTS SPECIFICATION
+Figure 2.1 shows the general use case diagram, it provides a good view of the associ-
+ation between actors and different use cases.
+Figure 2.1: Global Use Case Diagram.
+Asmentionedthesystemcontainsthreeidentifiedactors: Employee, HumanResources
+(HR) Employee and Human Resources Manager. The Employee interacts with the sys-
+tem by scanning their badge. They reserve rides and can submit complaints if there is
+something wrong with their ride. The HR Employee looks at the system in a global
+view, he has dashboards viewable to show them their data for transportation, the control
+and reservation management, verification, they will receive any complaints submitted by
+15
+===== PAGE 29 =====
+2.3. PROJECT MANAGEMENT WITH SCRUM
+Employees, and they manage all of the Employees’ transportation data management role.
+Both Employee and HR Employees have the ability to view buses in real time and must
+authenticate to use the system. Human resources managers are able to manage system
+users and can use the system to generate AI reports.
+2.3 Project Management with Scrum
+The Scrum process enables Business Intelligence project management to be more efficient
+due to the potential to easily adapt to change and user needs. It is therefore important to
+extensively define stakeholders and involve them in the development process. Secondly,
+organizing work according to a product backlog helps in prioritizing features to be devel-
+oped in each sprint. Finally, using a consistent method in every cycle ensures steady and
+controlled project progress.
+2.3.1 Identification of the Scrum Team
+For my project, I have identified the team members, who are as follows:
+• The Product Owner:Mr. Moetaz Fatin, Business Analyst and my professional
+supervisor, formalizes the feature to develop and the prioritization based on the
+business needs with reference to transportation activity from company SEBN-TN2.
+• The Scrum Master: Mr. Sofiene Boutaeib, PhD in Computer Science from
+ISIMA, and my academic supervisor, who ensures the progress of my project.
+• The team members:Ichrak Belghouthi, a BI developer, who is responsible for
+implementing the different features of the project and collaborate with the Product
+Owner for guidance and work closely with the Scrum Master for advice.
+2.3.2 Product backlog
+The product backlog is a prioritized list of features, improvements, bug fixes, and technical
+work that outlines the range of work for a project, particularly in an Agile and Scrum
+framework.The Product Owner manages the backlog and continually updates it based on
+feedback, new requirements, and business needs.
+16
+===== PAGE 30 =====
+2.3. PROJECT MANAGEMENT WITH SCRUM
+Table 2.1: Product Backlog.
+ID Functionality US ID User Story Priority
+1 Authentication 1 As a user, I want to authenticate my-
+self.
+High
+2 Conceptual Modeling 2 As a HR employee, I want a conceptual
+model that is in relation to the require-
+ments of the specifications document.
+High
+3 Dashboard Creation 3 AsHRemployee, Iwantcompletedash-
+boards bringing together key activity
+indicators to give a complete picture.
+High
+4 Create a chatbot 4 As an HR manager, I want to have ac-
+cess to a chatbot that can generate per-
+sonalized visualizations based on my
+specific needs.
+High
+5 Manage users 5.1 As an HR Manager, I want to view the
+users list.
+High
+5.2 As an HR Manager, I want to add a
+user.
+High
+5.3 As an HR Manager, I want to delete a
+user.
+High
+6 Manage Employees 6.1 As an HR employee, I want to view the
+employees list.
+High
+6.2 As an HR employee, I want to add an
+employee.
+High
+6.3 As an HR employee, I want to modify
+an employee.
+High
+6.4 As an HR employee, I want to delete
+an employee.
+High
+7 Manage Buses 7.1 As an HR employee, I want to view the
+Buses list.
+High
+7.2 As an HR employee, I want to add a
+Bus.
+High
+7.3 As an HR employee, I want to modify
+a Bus.
+High
+7.4 As an HR employee, I want to delete a
+Bus.
+High
+8 Manage Lines 8.1 As an HR employee, I want to view the
+Lines list.
+High
+8.2 As an HR employee, I want to add a
+Line.
+High
+8.3 As an HR employee, I want to modify
+a Line.
+High
+8.4 As an HR employee, I want to delete a
+Line.
+High
+17
+===== PAGE 31 =====
+2.3. PROJECT MANAGEMENT WITH SCRUM
+Table 5.1: Product Backlog (Continued).
+ID Functionality US ID User Story Priority
+9 Manage Stops 9.1 As an HR employee, I want to view the
+Stops list.
+High
+9.2 As an HR employee, I want to add a
+Stop.
+High
+9.3 As an HR employee, I want to modify
+a Stop.
+High
+9.4 As an HR employee, I want to delete a
+Stop.
+High
+10 View complaints 10 As an HR employee, I want to read
+complaints.
+High
+11 Show Bus Position 11 As an employee, I want to track buses
+in real time.
+High
+12 Display Fill Rate 12 As an employee, I want to view the fill
+rate for each bus line and shift.
+High
+13 Scan Badge 13 As an employee, I want to scan my
+badge.
+High
+14 Access to dashboards 14 As an HR employee, I want to see a
+well-structered Dashboard.
+Medium
+15 Manage Reservations 15.1 As an HR employee, I want to view the
+reservations list.
+Medium
+15.2 As an HR employee, I want to accept a
+reservation.
+Medium
+15.3 As an HR employee, I want to refuse a
+reservation.
+Medium
+16 Manage changing requests 16.1 As an HR employee, I want to view the
+changing requests list.
+Medium
+16.2 As an HR employee, I want to accept a
+changing requests.
+Medium
+16.3 As an HR employee, I want to refuse a
+changing requests.
+Medium
+17 Send complaints 17.1 As an employee, I want to send a com-
+plaint.
+Medium
+17.2 As an employee, I want to see my com-
+plaint’s history.
+Medium
+18 Request to change line 18 As an employee, I want to request to
+change my line.
+Low
+19 Reserve a Seat 19.1 Asanemployee, Iwanttoreserveabus. Low
+19.2 As an employee, I want to see my reser-
+vations’ history.
+Low
+2.3.3 Sprints Planning
+Since the project was developed using the Scrum methodology, sprint planning was critical
+in establishing the project workflow and continuous progress. By separating the work into
+18
+===== PAGE 32 =====
+2.3. PROJECT MANAGEMENT WITH SCRUM
+focused and time-boxed sprints we were able to prioritize tasks, to be more adaptable,
+and to better track deliverables at key project milestones.we have defined the following
+sprints:
+Sprint 1: Design and development of dashboards:
+• Design and implementation of the ETL process for employee transport tracking.
+• Design and development of interactive dashboards.
+Sprint 2: Chatbot-Driven Dashboard Generation and Insight Analysis:
+• Design and development of a chatbot to generate personalized visualizations based
+on user requests.
+Sprint 3: Transport management:
+• Authentication.
+• Transport Management.
+• Bus Tracking.
+• Dashboard Access.
+Sprint 4: Real-Time Employee Authentication and Transport Request Sys-
+tem:
+• Authentication.
+• Request Handling.
+• Bus Tracking.
+• Badge Scanning Interface.
+2.3.4 Project Planning
+Gantt charts are sites for visual planning, and they break down a project into clear
+phases and sprints, allow you to assign tasks to each period, and allow you to monitor
+the progression over time. Figure 2.2 represents my project’s Gantt chart:
+19
+===== PAGE 33 =====
+2.4. TECHNICAL ARCHITECTURE OF THE DECISION-MAKING SOLUTION
+Figure 2.2: Gantt chart.
+2.4 Technical architecture of the decision-making solu-
+tion
+My technical design adheres to the conventional ETL (Extract, Transform, Load) pipeline
+that corresponds to the three most significant phases of this project: Data Collection,
+Data Integration, and Data Delivery. The Figure 2.3 illustrates the different phases of
+our system and are as follows:
+• Data Collection: This is the phase where employee transport management data
+from diverse sources is gathered. In my case, data is extracted primarily from a
+central database that has data such as employee details, bus schedules, reservation,
+and history of tracking.
+• Data Integration: Once the data is collected, it is scrubbed and converted to
+make it homogeneous and of high quality. This means removing duplicates, fixing
+errors, reformating fields (e.g., text-based dates into standard date formats), and
+generating calculated fields so that the dataset is richer. The goal is to create a
+formatted, homogeneous dataset that will be easy to analyze efficiently.
+• Data Delivery: At this phase, the data is delivered to the destination system, a
+centralized database to be analyzed and visualized. It prepares the data for further
+processing, such as generating dashboards, tracking employee transport behavior,
+and supporting decision-making through visualization tools.
+20
+===== PAGE 34 =====
+2.5. OVERALL DESIGN OF THE DATA WAREHOUSE
+Figure 2.3: Technical architecture of the system [4].
+Now, we will present key BI concepts required to build a successful analytical sys-
+tem. These concepts include the Data Warehouse, the Data Mart, and the ETL process.
+They serve as the foundation for collecting, organizing, and delivering valuable insights
+to support data-driven decision-making.
+• Data Warehouse: A Data Warehouse is a consolidated repository of data from
+various sources in a centralized repository. It is tuned for reporting and analytical
+queries to allow organizations to track performance over time, identify trends, and
+make strategic decisions. In contrast to operational databases, a data warehouse is
+for quick access to historical and real-time data for the entire business.
+• Data Mart: A Data Mart is a small, focused incarnation of a data warehouse
+that is utilized for the needs of one business unit or department, say sales, HR,
+or logistics. It provides quicker access to relevant data tailored to given use cases
+so that groups can more effectively examine and respond to what matters most to
+them.
+• ETL (Extract, Transform, Load):The ETL process is responsible for extracting
+and aggregating data from a multitude of sources, transforming and cleansing it,
+and loading it into a central repository for analysis. It ensures that the data is
+presented to users in a format that is consistent, credible, and ready for visualization
+or decision support systems.
+2.5 Overall design of the data warehouse
+The overall structure of a data warehouse is the foundation of any business intelligence
+system. It dictates the organization, storage, and accessibility of information from varied
+21
+===== PAGE 35 =====
+2.5. OVERALL DESIGN OF THE DATA WAREHOUSE
+sources for analysis and decision-making. A well-designed data warehouse ensures data
+consistency, integrity, and performance by organizing information in such a way that
+supports effective querying and reporting. This part covers the general architectural
+specifications of a data warehouse, typically based on multidimensional models like the
+star schema or the snowflake schema, and how these facilitate analytical processing across
+business domains.
+2.5.1 Data Collection
+DatacollectionisafundamentaltaskineveryBIinitiative, asitformsthefoundationupon
+which KPIs are defined and meaningful insight is developed. Collecting accurate, relevant,
+and complete data ensures that the indicators selected do reflect the reality of operations
+and are used to make sound decisions. For the scope of this project, the HR department
+of SEBN-TN2 provided a set of Excel files with complete information about the employee
+transportation system of the company. The data sets include records of bus lines, shifts,
+providers, stops, and employee assignments that were crucial to understanding the system
+structure and defining the KPIs to monitor.
+2.5.2 Key Performance Indicators (KPIs) Selection
+In all BI systems, KPIs are key measurements used to measure and contrast the per-
+formance of different aspects of an organization. They provide valuable information on
+which strategic choices can be made based on, are tied to business objectives, and reflect
+areas where enhancements can be created. In the employee transport management sys-
+tem for SEBN-TN2, a set of precisely defined KPIs has been selected and grouped into
+thematic modules in an attempt to monitor operations efficiently and offer continuous
+optimization. These KPIs are presented below:
+• The "General Overview"module :
+–Total number of transported employees.
+–Total number of transportation lines.
+–Total number of available buses.
+–Number of employees per line and per shift.
+–Transportation cost per line.
+–Average bus capacity utilization rate.
+–Delay rate per shift and per line.
+–Total penalty cost per transportation provider.
+–Total amount of employee contributions.
+22
+===== PAGE 36 =====
+2.5. OVERALL DESIGN OF THE DATA WAREHOUSE
+• The "Line Analysis"module :
+–Total number of transportation lines.
+–Total number of transported employees.
+–Top 5 most saturated transportation lines.
+–Number of employees per line and shift.
+–Number of lines operated per provider.
+–Number of bus stops per line.
+–Bus occupancy rate per line.
+• The "Financial Analysis"module:
+–Total employee transportation cost.
+–Average transportation cost per employee.
+–Transportation cost per line and per bus capacity.
+–Total cost incurred per provider.
+–the total costs per shift.
+–Cost of a single trip, broken down by line and bus capacity.
+–Total employee contribution to transportation expenses.
+• The "Delay and Punctuality Analysis"module:
+–Overall delay percentage.
+–Overall punctuality percentage.
+–Delay rate by shift and line.
+–Average delay duration by shift and by provider.
+–Evolution of the delay rate per year.
+–Total penalty cost per service provider.
+–Delay rate per transportation provider.
+2.5.3 Data Warehouse Design Approaches
+Data warehouse design is a crucial step of setting up a robust BI system. Data warehouse
+is a centralized database storing historical, consolidated, subject-oriented data to support
+reporting and analytical operations. Two major methodologies have been developed over
+time for designing a data warehouse: the Inmon method and the Kimball method. Both
+offer varying approaches to structuring the data and mapping it with business needs.
+23
+===== PAGE 37 =====
+2.5. OVERALL DESIGN OF THE DATA WAREHOUSE
+2.5.3.1 Inmon Approach
+The Inmon approach, created by Bill Inmon, is the top-down approach. It begins with
+the development of a centralized, normalized enterprise data warehouse (EDW) that data
+marts are then developed from as and when needed. Data integration and consistency are
+given prime importance with all data standardized to enterprise-wide standards before it
+is used for reporting [5].
+Figure 2.4: Inmon Approach architecture [6].
+2.5.3.2 Kimball Approach
+The Kimball approach, supported by Ralph Kimball, is also called the bottom-up ap-
+proach to data warehouse design. It is about building data marts around specific business
+processes (e.g., transportation, sales, finance) and aggregating them later at a central
+data warehouse. The method relies heavily on the application of the dimensional model-
+ing technique, where data is organized in fact and dimension tables, usually in a star or
+snowflake schema [7].
+24
+===== PAGE 38 =====
+2.6. MULTIDIMENSIONAL MODELING
+Figure 2.5: Kimball Approach architecture [8].
+2.5.3.3 Adopted Approach
+For this project, the Kimball methodology was used. The reasons for the usage were the
+need for fast access to insight, business-driven KPIs as high-priority, and modularity of
+the transport processes being analyzed. The bottom-up approach facilitated the rapid
+development of subject-specific data marts that aligned with the organization’s short-
+term analytical needs. The simplicity of the dimensional model and performance gains
+also qualified it as the optimal solution for building interactive dashboards and deliver-
+ing an end-user-friendly reporting experience to stakeholders such as HR and operations
+managers.
+2.6 Multidimensional Modeling
+Multidimensional modeling is a fundamental concept in BI and data warehousing. It
+organizes the data into facts and dimensions to facilitate good analysis and reporting. A
+fact table contains quantitative data, typically numeric measures or KPIs, which define
+business events or transactions. Dimension tables contain descriptive properties of the
+facts such that users can slice and dice the data around various angles such as time,
+25
+===== PAGE 39 =====
+2.6. MULTIDIMENSIONAL MODELING
+location, or product. In the following section, we present the tables utilized in our mul-
+tidimensional model. They form the foundation of the analytical framework and support
+intensive and flexible exploration of the data.
+• Fact Table:
+– Fact_suivi:This is the fact table containing all information related to trans-
+portation tracking.
+• Dimension Tables:
+– dim_employee:Dimension table containing employee information.
+– dim_shifts:Dimension table containing shift information.
+– dim_provider:Dimension table containing provider information.
+– dim_stop:Dimension table containing stop information.
+– dim_line:Dimension table containing line information.
+– dim_bus:Dimension table containing bus information.
+– dim_arrivalTime:Dimension table containing arrival time information.
+2.6.1 Conceptual Model Analysis
+When working within the scope of data management and business intelligence, developing
+a conceptual model is in the structured organization of data that clearly illustrates the
+manner in which data integrates with a particular business goal or objective. A conceptual
+model is a logical and high-level representation of data and its relationship, providing a
+clear representation of data and relationships, prior to developing detailed design, and im-
+plementation directions. This section will cover three commonly used conceptual models
+in data architecture:
+• Star Schema Model: The Star Schema is a model that consists of one central
+fact table, and the rest of the schema is dimension tables. The design is simple,
+which lends itself well to analytical queries and facilitating quick retrieval of data
+and analysis in data warehousing environments.
+26
+===== PAGE 40 =====
+2.6. MULTIDIMENSIONAL MODELING
+Figure 2.6: Star Schema Model.
+• Snowflake Schema Model: The Snowflake Schema is an extension of the Star
+Schema. Unlike the Star Schema, with respect to each of the dimension tables,
+Snowflake will normalize them into more than one related table. This should reduce
+redundancy and offer more data integrity with respect to the source data, but it
+may necessitate more complex queries.
+Figure 2.7: Snowflake Schema Model.
+• Galaxy Schema Model (or Fact Constellation):The Galaxy Schema consists
+of several fact tables, and each fact table uses shared dimension tables. This model
+provides good data analytic capabilities to satisfy more complex analysis. In other
+words, it allows for simultaneous analytical assessment of several different business
+processes or analytic perspectives.
+27
+===== PAGE 41 =====
+2.6. MULTIDIMENSIONAL MODELING
+Figure 2.8: Galaxy Schema Model.
+2.6.2 Choice of the Conceptual Model:
+The decision was made for a snowflake schema to correctly model intricate relationships
+among some of the dimensions without sacrificing a clean, normalized design. The model
+joins all of the measures in the fact_suivi table and refers to several normalized dimension
+tables for an optimal balance between data consistency and analysis query performance.
+With the use of intermediary tables, like the ligne_bus bridge joining dim_lignes and
+dim_bus, we provide exact modeling of bus routes and assignments without duplication.
+Model Description: We designed a customized snowflake schema to suit the com-
+pany’s requirements in our project. The fact table, fact_suivi, at the middle records each
+transport event, and dimensions dim_employee, dim_shifts, dim_arrets, dim_lignes,
+and dim_bus enable detailed analysis on various business dimensions. This hierarchical,
+normalized structure (shown in figure 2.9) enables fast and logical data extraction, and
+reporting and visualization are consistent and easy.
+28
+===== PAGE 42 =====
+2.7. WORK ENVIRONMENT
+Figure 2.9: the Conceptual Model of the DW.
+2.7 Work Environment
+This section provides an overview of the work environment under which the project was
+developed during my internship. It has both hardware and software components used
+in all development and modeling processes. Understanding this environment is critical
+in understanding tools and resources available as well as constrains that would have
+influenced development choices.
+2.7.1 Hardware environment
+I used a personal laptop throughout the internship with the following details. These bits
+of equipment served all phases of development, ranging from coding and modeling to
+testing and deployment. The machine offered sufficient performance to sustain the varied
+tools and processes required by the project.
+• Type: Laptop.
+• Brand: HP.
+• Processor: 11th Gen Intel(R) Core(TM) i5-1135G7 @ 2.40GHz 2.42 GHz.
+• RAM: 8,00 Go.
+• Operating system:Windows 11.
+29
+===== PAGE 43 =====
+2.7. WORK ENVIRONMENT
+2.7.2 Software environment
+This part describes the software tools and platforms used for modeling, developing, and
+executing the project. It describes the development environment, library, database sys-
+tems, and frameworks that were core to the successful implementation of the application.
+Visual Studio Code:
+Visual Studio Code is a lightweight, cross-platform code editor for Windows, macOS,
+and Linux. Visual Studio Code natively supports JavaScript, TypeScript, and Node.js,
+and through its extensive extension ecosystem, developers can develop with almost any
+programming language and framework [9].
+Figure 2.10: VS Code Logo [9].
+MySQL:
+MySQL is an RDBMS that operates under the dual licensing model—open-source
+(GPL) and commercial. It is among the widely used database products applied globally
+by individual users, primarily for web applications, as well as professionals. MySQL is
+a strong competitor to other top-rated RDBMS databases such as Oracle, PostgreSQL,
+and Microsoft SQL Server [10].
+Figure 2.11: MySQL Logo [10].
+phpMyAdmin:
+phpMyAdmin is free and open-source software written in PHP that is used to handle
+MySQL databases through a web interface. phpMyAdmin offers support for MySQL
+as well as MariaDB, including wide-scale operations such as database, table, column,
+relationship, index, user, and permissions management. While it offers a straightforward
+graphical interface for everyday tasks, it also supports the direct execution of SQL queries
+for advanced tasks [11].
+30
+===== PAGE 44 =====
+2.7. WORK ENVIRONMENT
+Figure 2.12: phpMyAdmin Logo [11].
+XAMPP:
+XAMPP is a software bundle offering to install a local web server, FTP, and email
+server. It stands for "X (cross-platform), Apache, MariaDB, PHP, and Perl." It is easy
+to install and adaptable and has enabled a wide range of users, including those with no
+technical knowledge, to use it. It supports most of the most widely used operating systems
+and is for local development and testing [12].
+Figure 2.13: XAMPP Logo [12].
+Talend:
+Talend is a leader in Cloud and Big Data integration software. It allows organizations
+to make decisions in real time and become data-driven. With Talend, data is made more
+accessible, of higher quality, and can be transferred to the target systems at a higher
+speed [13].
+Figure 2.14: Talend Logo [14].
+Microsoft Power BI:
+MicrosoftPowerBIisabusinessanalyticsservicedevelopedbyMicrosoftwhichenables
+users to create customized and interactive data visualizations. Its ease of use enables
+even non-technical users to create their own reports and dashboards easily. It consists
+of a collection of tools, services, and connectors that all together move separated data
+sources into rich, interactive, and visual insights. Power BI supports integration with
+several data sources, including Excel documents, SQL databases, and also hybrid data
+warehouses—hosted either locally or in the cloud [15].
+31
+===== PAGE 45 =====
+2.8. CONCLUSION
+Figure 2.15: Power BI Logo [15].
+Draw.io:
+draw.io, or Diagrams.net, is an open-source application that is employed to generate
+diagrams and flowcharts. It possesses both automatic layout capabilities and user-defined
+layout capabilities. It contains a huge collection of shapes and graphics elements and can
+be utilized to generate rich, visually appealing diagrams according to the need of the user
+[16].
+Figure 2.16: Draw.io Logo [16].
+Overleaf:
+Overleaf is an internet platform that gives you all of the facilities to write and publish
+a document. It is great for professional typesetting, especially for academic and technical
+writing. The most useful thing about Overleaf is that it lends itself easily to collaborative
+work - you can work together on the same document at the same time [17].
+Figure 2.17: Overleaf’s Logo [17].
+2.8 Conclusion
+Sprint 0 was the foundation for successful initiation of our project. During this sprint, we
+targeted requirements gathering and modeling, establishing the technical and functional
+32
+===== PAGE 46 =====
+2.8. CONCLUSION
+scope, and setting up the project management framework upon the Scrum methodology.
+We also established the technical architecture, defined the KPIs, and created the overall
+data warehouse layout by knowing and choosing the most appropriate design strategies
+and modeling methods. In addition to this, we also established the instruments and
+technologies that will be used in supporting the development process and documented the
+hardware and software environment under which the project will be deployed. Having
+the basics in place, the project can now proceed to the subsequent phase. In Sprint 1,
+we will initiate the ETL process, focusing on data transformation and integration using
+Talend services. In parallel, we will also begin the development of the dashboards, laying
+the groundwork for the decision-making interface. This sprint marks the start of the live
+implementation of our business intelligence solution.
+33
+===== PAGE 47 =====
+CHAPTER 3
+SPRINT 1: DESIGN AND DEVELOPMENT OF
+DASHBOARDS
+3.1 Introduction
+This chapter outlines the main stages involved in creating dashboards. It begins with
+the data preparation and integration phase, followed by the dashboard design process,
+and concludes with the data presentation stage, aiming to ensure clear and effective
+visualization of the information.
+3.2 Requirements Definition
+This step is aimed at identifying, collecting and documenting the primary requirements for
+the information needed to design and develop the Dashboards based on the needs of the
+businessandtheusers. AfterconsultationwiththeProductOwner, heweretoidentifythe
+key requirements, focused on being able to monitor in detail the transportation activity
+across the business. These criteria shaped the direction and evolution of this sprint:
+• The first goal was to complete the full ETL (Extract, Transform, Load) process.
+Data had to follow this pipeline to ensure that it is verified, consistent, and ready
+for analysis.
+• The second goal was to develop a decent structured dashboard that would allow for
+insights.
+To satisfy these requirements, we have formed 4 modules which will monitor each
+particular aspect of transportation:
+1. Module 1: General View of Employee Transportation Activities
+34
+===== PAGE 48 =====
+3.2. REQUIREMENTS DEFINITION
+This module provides a general view of the company’s employee transportation
+activities, it enables to:
+–Visualize the total number of employees.
+–Visualize the total number of lines.
+–Visualize the total number of buses.
+–Visualize the number of employees per line and per shift.
+–Visualize the total cost per line and the capacity of the buses.
+–Visualize the delay rate of lines by shift
+–Visualize the total penalties per provider.
+–Visualize the total contributions from employees.
+2. Module 2: Line Analysis
+This module focuses on analyzing the lines, which are the set of stops where
+employees are collected, it enables to:
+–Visualize the total number of lines.
+–Visualize the total number of employees.
+–Visualize the top five most saturated lines.
+–Visualize the total number of employees per line and shift.
+–Visualize the total number of lines per provider.
+–Visualize the number of stops per line.
+–Visualize the total bus occupancy per line.
+3. Module 3: Financial Analysis
+This module focuses on financial analysis, allowing for the tracking of costs, it
+enables to:
+–Visualize the total transportation cost.
+–Visualize the cost per employee.
+–Visualize the total cost per line and bus capacity.
+–Visualize the total costs per provider.
+–Visualize the total costs per shift.
+–Visualize the cost of a single trip per line and bus capacity.
+–Visualize the total contributions.
+4. Module 4: Delay Analysis
+This module is dedicated to analyzing delays in the transportation system, it
+enables to:
+–Visualize the percentage of delays.
+35
+===== PAGE 49 =====
+3.3. SPRINT 1 BACKLOG
+–Visualize the percentage of punctuality.
+–Visualize the delay rate of lines by shift.
+–Visualize the average delay duration by shift and provider.
+–Visualize Evolution of the delay rate per year.
+–Visualize the total penalties per provider.
+–Visualize the delay rate per service provider.
+To filter the KPIs, we decided to use the following segments:
+Year, Month, Day, Line,and Shift.
+3.3 Sprint 1 Backlog
+Sprint 1 backlog, table 3.1, was created to record and order the essential tasks to initiate
+the project and establish the framework of the employee transport management system.
+Table 3.1: Sprint 1 Backlog.
+ID Functionality US ID User Story Duration
+in days
+1 Conceptual
+Modeling
+1 As an HR employee, I want a conceptual
+model that is in relation to the requirements
+of the specifications document.
+7
+2 Dashboard Cre-
+ation
+2 As an HR employee, I want complete dash-
+boards bringing together key activity indica-
+tors to give a complete picture.
+14
+3.4 Data integration phase (ETL)
+Prior to analyzing business data in dashboards, an ETL process must be completed to
+produce clean, reliable, and structured data for decision-making.
+3.4.1 General Overview of the ETL Process
+ETL simply stands for Extract, Transform and Load, it is a process used to integrate
+information from several sources into a centralized system for a consistent and reliable
+view of information.
+• Extract: The extraction phase consists of obtaining raw data from several source
+systems, such as databases, Excel files, web services, or application programming
+interfaces (APIs).
+36
+===== PAGE 50 =====
+3.4. DATA INTEGRATION PHASE (ETL)
+• Transform: In the transformation phase, the extracted data is cleaned, filtered
+and enriched. Specifically, duplicates may need to be removed, formats changed to a
+standard range, new metrics calculated, and connections identified. The transforma-
+tion process converts raw data into relevant, meaningful and organized information
+to reflect the real contextual business situation.
+• Load: In the end, the data will be loaded into a single and aggregated data ware-
+house or database. This repository is the single source of truth and optimized for
+data retrieval and dashboarding. After it has been loaded, the data will be pre-
+pared for visualization in reporting tools like Power BI to help with monitoring and
+decision making.
+Figure 3.1: The ETL Process [18].
+3.4.2 Data Extraction Phase (Extract)
+The extraction is the first step in ETL and is critical for collecting the raw data that is
+needed for transformation and analysis.
+After receiving the set of data from HR in the form of Excel files, the data was
+transferred from Excel into a MySQL relational database which was scalable and suitable
+for the ETL workflow and analytical tasks.
+The database consisted of five tables, which contained the transportation system of
+the employees. These tables will be detailed below to better understand their structure
+and content, which will facilitate the subsequent transformation and analysis steps.
+• "arrival_time" Table:The arrival_time table records bus arrival times for each
+route which allows detailed tracking of punctuality and schedule adherence. Our
+37
+===== PAGE 51 =====
+3.4. DATA INTEGRATION PHASE (ETL)
+data includes the timeframe from January 1st, 2022 to February 15th, 2025. The
+table contains a total of 109632 rows and 5 columns as illustrated in the figure 3.2.
+Figure 3.2: "arrival_time" table dimensions.
+• "employee" Table: The "employee" table contains specific information about
+the employees of the company. It contains 6 columns and has a total of 1,572
+rows as illustrated in the figure 3.3. Each row represents a unique employee, and
+the columns store key attributes such as employee ID, name, hire_date, and other
+relevant data necessary for analysis and tracking purposes.
+Figure 3.3: "employee" table dimensions.
+• "lignes" Table: The "lignes" table stores information about the various travel
+routes in the employee transportation system. It contains details such as the line
+ID, line name and the distance .It consists of 3 columns and a total of 24 rows,
+figure 3.4, with each row representing a distinct travel line.
+Figure 3.4: "lignes" table dimensions.
+• "arrets" Table:The table "arrets" has complete information about the stops that
+are associated with each travel line. Each record represents one of the stops where
+employees can get on or off the bus. it includes attributes such as the stop ID, stop
+name and associated line ID.The table consists of 5 columns and contains 96 rows,
+Figure 3.5.
+Figure 3.5: "arrets" table dimensions.
+38
+===== PAGE 52 =====
+3.4. DATA INTEGRATION PHASE (ETL)
+• "bus" Table: The "bus" table contains useful information about the buses that
+are used to transport employees. Every record is associated with a specific bus and
+includes attributes such as the bus ID, capacity, and the service provider responsible
+for the vehicle. It consists of 5 columns ans 27 rows as demonstrated in the figure
+3.6.
+Figure 3.6: "bus" table dimensions.
+We established the connection to the MySQL database using Talend’s built-in com-
+ponents as shown in the figure 3.7 below. The connection has proven to be reliable and
+provides consistent access to the source tables throughout the integration pipeline.
+Figure 3.7: MySQL Database Connection.
+For the extraction, thetDBInput component, figure 3.8, was utilized. This Talend
+component is used to connect to a database table or view and extract data through
+executing an SQL query. It is commonly the first component in an ETL job that extracts
+structured data from a relational source. Each of the source tables was connected to its
+own tDBInput component to ensure that all data could be accurately and completely
+extracted.
+39
+===== PAGE 53 =====
+3.4. DATA INTEGRATION PHASE (ETL)
+Figure 3.8: tDBInput.
+3.4.3 Data Transformation Phase (Transform)
+Before any analysis occurs, the data must first be transformed. This step is important
+to prepare the data for analysis by cleaning, standardizing, and structuring it to improve
+quality and consistency.
+• Identifying data quality issues: During our initial review of the data source,
+we noted several quality issues. First, we found inconsistencies in some references,
+pointing to deleted records, leading to a loss of referential integrity and a risk of an-
+alytical errors. Second, some information appeared multiple times in many entries,
+creating unnecessary redundancies, thus increasing the risk of inconsistencies during
+updates. Third, some columns consisted exclusively of non-descriptive identifiers,
+making interpretation difficult without first applying transformations or contextual
+mappings. For non-descriptive identifiers, this can complicate the understanding of
+the data, but also prevent direct analysis. Also, a structural issue was identified with
+the depiction of hierarchical relationships. In particular, equating entities possessing
+a direct one-to-many relationship in a hierarchy could potentially lead to duplicate
+identifiers and redundant information in an attempt to depict all related elements.
+In an effort to overcome this, an associative mechanism was created to efficiently
+manage the association in order to deliver data normalization, cancel out redun-
+dancy, and facilitate appropriate and easy analysis. These issues clearly highlight
+the need for a thorough transformation phase that ensures data quality, ensures
+consistency and, therefore, helps improve the reliability of information regarding
+this dataset.
+• Referential Integrity Treatment: During our review of the data, we identified
+a referential integrity issue: the "arrets" table had "id_ligne" values that did not
+exist in the "lignes" table. This happened because records from the "lignes" table
+were deleted without cascading updates to dependent records. figure 3.9 shows the
+SQL query used to identify these orphan values, and figure 3.10 displays the query
+results.
+40
+===== PAGE 54 =====
+3.4. DATA INTEGRATION PHASE (ETL)
+Figure 3.9: SQL Query to Identify Orphan Route IDs in ’arrets’ Table.
+Figure 3.10: Orphan Route IDs in ’arrets’ Table.
+In order to correct this, we used thetMap component which had a lookup in
+Talend to check for the existence of each id_ligne.Records in the arrets table with no
+matchesinligneswereremovedinthetransformation, ensuringtablewyisereferential
+security. Figure 3.11 shows the tMap configuration, where row1 corresponds to the
+arrets table and row2 to the lignes table.
+Figure 3.11: tMap component configuration with lookup.
+41
+===== PAGE 55 =====
+3.4. DATA INTEGRATION PHASE (ETL)
+• Data Redundancy Treatment:During the analysis of bus table also we noticed
+redundancy in data with regard to "prestataire", "num_tel", and "nom_directeur"
+being typical examples of repeated fields. This level of redundancy indicates a low
+level of normalization. Below, the query used to detect these redundancies and its
+result are presented in figures 3.12 and 3.13 respectively.
+Figure 3.12: SQL Query to detect "prestataire" redundancy.
+Figure 3.13: Redundancy Count of "Prestataire" .
+To remove redundancy, we used the "tUniqRow" component to get unique records
+for each service provider as illustrated in the figure 3.14.
+Figure 3.14: Normalization using tUniqRow.
+• Resolution of Non-Descriptive Shift Codes:In the employee table, the shift
+field was encoded using numeric IDs, figure 3.15 , that were not self-explanatory
+which limited the readability of the data.
+42
+===== PAGE 56 =====
+3.4. DATA INTEGRATION PHASE (ETL)
+Figure 3.15: Sample of non-descriptive numeric "shift" IDs.
+To clarify these values, we implemented a new shift dimension table with human-
+readable descriptions and time intervals. We used tMap combined with conditional
+expressions as illustrated in the figure 3.16.
+Figure 3.16: tMap component with conditional expressions.
+• Normalization of Relationships:Looking at the bus table, we identified a struc-
+tural flaw concerning the redundancy of id_ligne in some entries. The redundancy
+revealed an unstated many-to-one association between buses and lines, and we iden-
+tified a need for further normalization of the data model. To determine the issue, a
+SQL query was executed in an effort to determine the number of buses by line, and
+lines with more than one bus were queried. This query and its result are shown in
+figure 3.17 and figure 3.18, respectively.
+43
+===== PAGE 57 =====
+3.4. DATA INTEGRATION PHASE (ETL)
+Figure 3.17: SQL Query to detect "Buses" redundancy.
+Figure 3.18: Sample lines with more than one bus.
+To rectify the problem and standardize the schema, we created a new table named
+ligne_bus. This table strengthens the relationship between buses and lines and
+contains three columns: generated id constructed by using"L" + row1.id_ligne
++ "_B" + row1.id, id_ligne, and id_bus. The building and configuration of
+this table were performed using the tMap component in Talend, as shown in figure
+3.19.
+Figure 3.19: tMap component to create the "ligne_bus" table.
+3.4.4 Data Loading Phase (Load)
+After data transformation is completed, we now move to the next stage of loading the
+cleaned and structured data into the target database. With this step, we can ensure that
+the data is available to view and optimized for analytical or reporting products, which
+ultimately simplifies access for decision makers.
+tDBOutput (figure 3.20): is a Talend component, which is used to write data into a
+database. Using this component you can insert, update or delete records into a database
+44
+===== PAGE 58 =====
+3.4. DATA INTEGRATION PHASE (ETL)
+table. ThiscomponentisconfiguredtoworkwithdifferentdatabasetypessuchasMySQL,
+PostgreSQL, and Oracle. It is necessary to verify that the transformed data is correctly
+loaded into the target system.
+Figure 3.20: tDBOutput.
+3.4.5 Creating the dimension tables and the fact table
+This process started with the creation of an ETLjob, figure 3.21, to automate the
+creation and population of the dimension and fact tables in the target database. The
+ETL job incorporates theextraction, transformation, and loadingsteps of the ETL
+workflow in one package so that all data is processed uniformly.
+Figure 3.21: Job Creation.
+We began the process by creating the required dimension tables for our analysis:
+• "dim_employee": Derived from the employee table, this dimension contains de-
+tailed information about the employees.
+• "dim_shifts": Derived from the employee table as well, this dimension decodes
+the shift IDs into meaningful shift descriptions.
+45
+===== PAGE 59 =====
+3.5. DASHBOARD WIREFRAME DESIGN
+• "dim_arrets": Built from the arrets table, but included a lookup on the lignes
+table to ensure referential integrity and to add additional information (stops).
+• "dim_lignes": Contains detailed data related to the travel lines.
+• "dim_prestataire": Created to avoid redundancy and have a central source of
+information for the service providers taken from the bus table.
+• "dim_bus": Includes detailed information for the buses.
+• "dim_arrivaltime": Contains arrival times of buses per line across the entire
+range of the dates in our data set.
+• "ligne_bus" Junction Table: To properly model the many-to-many relationship
+between the buses and lines, we created a junction table linking the two dimensions
+together.
+Finally, we created the fact_suivi table, figure 3.22, maintaining the snowflake schema
+developed in the beginning of the project. This table consolidates all the transactional
+data in relation to employee transportation, and links all of the dimensions to enable a
+complete analysis of the transportation system.
+Figure 3.22: Populating the Fact Table.
+3.5 Dashboard Wireframe Design
+A basis for dashboard development is wireframe design that outlines how critical infor-
+mation and KPIs might look visually. I planned wireframes as low fidelity layouts about
+46
+===== PAGE 60 =====
+3.5. DASHBOARD WIREFRAME DESIGN
+the placement of charts, filters, navigation, etc., for each of the dashboard modules. The
+wireframe design phase is appropriate when the intention is to orient concepts around
+user experience and clarity, and I would not have to be focused on detailed visuals as
+they applied to usability. This is an important step to make sure the dashboards would
+be user friendly and user needs are acknowledged.
+3.5.1 Overview dashboard wireframe
+The overview dashboard wireframe presented in figure 3.23, offers a tidy and intuitive
+design that enables quick access to selected transportation activity metrics. At the top
+of the dashboard is the navigation button located next to the title identifying what the
+dashboard provides. Next to the title are informational cards that show the overall met-
+rics, such as total number of employees, trips, and buses. In the middle of the dashboard,
+there are charts that help to show trends, distributions, and comparisons between different
+transportation characteristics, such as shifts, lines.
+Figure 3.23: Wireframe of the overview dashboard.
+3.5.2 Line Analysis dashboard wireframe
+The wireframe for the line analysis dashboard, figure 3.24, is meant to provide an in-depth
+view of employee transportation lines. At the top, it has a navigation button, a distin-
+guishable title, and summary cards with high-level statistics. It also has a dropdown to
+filter the data by shift. In the central area, the dashboard accesses various visualizations,
+such as a treemap, stacked column chart, decomposition tree, area chart, and pie chart,
+and provides a more highly detailed view of the transportation lines with some additional
+dimensions.
+47
+===== PAGE 61 =====
+3.5. DASHBOARD WIREFRAME DESIGN
+Figure 3.24: Wireframe for the line analysis dashboard.
+3.5.3 Financial Analysis dashboard wireframe
+The financial analysis dashboard wireframe ,figure 3.25, is meant for viewing all trans-
+portation related expenses. It has a navigation button at the top and a clear title. There
+are summary cards for general financial measures, and a dropdown filter to filter the data
+by line. The middle section includes stacked bar chart, stacked column chart, scatter
+chart, and donut chart to analyze and view financial data in all perspectives.
+Figure 3.25: The financial analysis dashboard wireframe.
+48
+===== PAGE 62 =====
+3.6. DATA PRESENTATION PHASE
+3.5.4 Delay Analysis dashboard wireframe
+The delay analysis dashboard wireframe , figure 3.26 ,has been designed to measure and
+categorize on-time performance across transport lines. At the top of the page, there are
+the navigation button, the title, and the percentage cards indicating performance elements
+of major importance. The top navigation is complemented by a filter button to enhance
+interaction with the data. Next, in the middle of the page are visuals to illustrate delay
+rates (line chart), relative rates over a time series (clustered column chart), and utilization
+comparisons across different transports or shift periods (pie chart).
+Figure 3.26: The delay analysis dashboard wireframe.
+3.6 Data Presentation Phase
+This step is the stage of the process where we take raw processed and structured data
+and, through interactive dashboards, change that into actionable insights. I worked with
+Power BI to create dashboards that are interactive, easy to use, and the visuals are
+dynamic to allow users to interact with and examine the indicators of transportation
+performance. The dashboards contained a combination of indicators to create a number
+of visuals including KPIs, charts, and filters to allow decision-makers to monitor costs,
+on-time travel and operational performance, at-a-glance and in real-time. To reiterate
+from the beginning of this chapter , I identified four modules:
+1. Module 1: General View of Employee Transportation Activities
+2. Module 2: Line Analysis
+3. Module 3: Financial Analysis
+49
+===== PAGE 63 =====
+3.6. DATA PRESENTATION PHASE
+4. Module 4: Delay Analysis
+The dashboards were designed to be self-explanatory and easy to use, allowing stake-
+holders to explore key performance indicators through dynamic visuals. For example, bar
+charts, line graphs, pie charts, KPI cards, and slicers, which enable stakeholders to filter
+and drill down into subsets of data, were used for some visualizations. The navigation
+menu in the dashboard ,figure 3.27, allows users to seamlessly switch between different
+analysis modules. It is designed to provide easy access to all the key sections, enabling
+users to explore the data from different perspectives. This menu is consistent across
+all dashboards, ensuring a smooth user experience by maintaining a unified navigation
+structure throughout the platform.
+Figure 3.27: Navigation Menu.
+3.6.1 Overview Dashboard
+TheOverviewDashboard, figure3.28, providesanoverviewoftheemployeetransporta-
+tion system. It combines various key indicators regarding utilization, service capacity,
+costs, financial aspects, and punctuality. It provides decision-makers with key indicators
+on the overall health of the system (employee participation, number of routes and buses
+in operation, total costs, delay rates, etc.). It is intended to be a strategic entry point
+for monitoring transportation activities and identifying areas requiring further review or
+monitoring. The main visual elements of this dashboard are summarized and presented
+in the table below.
+50
+===== PAGE 64 =====
+3.6. DATA PRESENTATION PHASE
+Figure 3.28: General Overview Dashboard.
+The key visuals presented in this dashboard are explained in the table 3.2 below:
+Table 3.2: Analysis of the visuals of the “Overview” dashboard.
+Visual Analysis
+This KPI shows that the transportation services
+are being utilized by a total of 1,540 employees.
+This number indicates the general size of the sys-
+tem’s user interface, and it will help us assess de-
+mand for transportation service over all routes.
+This KPI shows that 27 buses have been allocated
+by the providers of the company. It illustrates the
+general extent of the transportation fleet and is
+informative for measuring capacity, coverage, and
+provider allocation.
+The dashboard indicates that there is a KPI with
+the number of lines that are presently operational,
+which is 24. This illustrates the geographical ex-
+tent of the transport network and segmentation.
+This card indicates that the total transport cost
+of the company is 315,120 TND. This value is re-
+flective of the initial measurement to evaluate fi-
+nancial performance, and to optimize usage and
+performance-related costs.
+51
+===== PAGE 65 =====
+3.6. DATA PRESENTATION PHASE
+Table 3.2: Analysis of the visuals of the “Overview” dashboard(continued).
+Visual Analysis
+This chart breaks down the number of em-
+ployees per bus line and per shift. The "Mjez
+El Beb" line transports the greatest number
+of employees (187) and "Dkhila" the small-
+est number (15). Regarding the shift distri-
+bution, the morning and evening shifts are
+the most used, and the administrative shift
+is used by the smallest employee group. This
+observation helps balance resources and shift
+assignments.
+This graph illustrates total transport cost by
+line versus respective bus capacities. It indi-
+cates that "Tborsok" is the most costly de-
+spite one 28 capacity bus. "Mjez El Beb"
+ranks second with two buses (one 28 capac-
+ity and another 52 capacity) costing 7,800
+TNDand12,600TNDrespectively. "Dkhila"
+is the least costly line, with a total cost of
+4,200 TND. Such results enable further cost-
+to-capacity analysis.
+This table slices up punctuality into more de-
+tails. Delay is more than 5% in lines such
+as "Tborba", "Mjez El Beb", and "Jdaida"
+in the morning and evening shift. "Mjez
+El Beb" has the highest rate of delay over-
+all, and the best performing one is "Dkhila"
+with a very small delay of 0.85%. The high-
+est number of delays (43.83%) occurs in the
+morning shift, while the administrative shift
+has only 5.27%.
+This chart breaks down the number of em-
+ployees per bus line and per shift. The "Mjez
+El Beb" line transports the greatest number
+of employees (187) and "Dkhila" the small-
+est number (15). Regarding the shift distri-
+bution, the morning and evening shifts are
+the most used, and the administrative shift
+is used by the smallest employee group. This
+observation helps balance resources and shift
+assignments.
+52
+===== PAGE 66 =====
+3.6. DATA PRESENTATION PHASE
+Table 3.2: Analysis of the visuals of the “Overview” dashboard(continued).
+Visual Analysis
+This is the total contribution made by
+the employees. The employees with more
+than one year of service contribute 20
+TND/month, and new employees contribute
+40 TND/month. The company target is to
+fund at least 20% of the total cost of trans-
+portthroughemployeecontributions, butthe
+actual is -44.15% below the target, indicating
+the cost-sharing arrangement is not perform-
+ing well.
+3.6.2 Line Analysis Dashboard
+The Route Analysis Dashboard, Figure 3.29, provides an in-depth understanding of
+the distribution and utilization of transit lines across the entire network. It integrates
+several indicators to facilitate decision-making regarding operator performance, staffing,
+and route planning. This dashboard helps identify the busiest lines, understand the
+distribution of employees by shift, and evaluate the distribution of work among operators.
+To assess coverage and efficiency, it also integrates indicators such as the number of stops
+and the occupancy rate per line. By allowing users to dynamically examine data based
+on the selected time slot, a shift filter enhances interactivity.
+Figure 3.29: Line Analysis Dashboard.
+53
+===== PAGE 67 =====
+3.6. DATA PRESENTATION PHASE
+The table 3.3 below is an explanation of the dashboard’s main visual elements.
+Table 3.3: Analysis of the visuals of the “Line Analysis ” dashboard.
+Visual Analysis
+A Treemap shows the Top 5 most populated
+lines, which is topped by "Mjez El Beb" with
+the highest number of employees (187), fol-
+lowed by "Testour" (141), "Tborba" (140),
+"Gbollat" (139), and "Jdaida" (121). This
+graph is useful for a quick glance at which
+lines are the most strained and may require
+redistribution of resources.
+A Pie Chart shows the distribution of lines
+by service providers, including BM with 11,
+MBT with 10, and Strict with 3. This gives
+a snapshot of provider involvement in the
+transport system.
+A Decomposition Tree is used to break down
+the number of stops per line, offering an in-
+teractive and dynamic view that gauges the
+complexity and scope of each route by allow-
+ing the drilling down into particular lines.
+An Area Chart displays the total occupancy
+bylineperbus, splittinglineswithmorethan
+one bus. It is utilized for examining capac-
+ity usage and determining whether buses are
+being well utilized across lines with different
+volumes of traffic.
+3.6.3 Financial Analysis Dashboard
+The purpose of the Financial Analysis Dashboard, figure 3.30, is to give a clear and
+concise picture of the total cost of employee mobility-related transportation. Its primary
+goals are to support data-driven financial decisions, detect inefficiencies, and make cost
+monitoring easier. This dashboard assists decision-makers in understanding how resources
+54
+===== PAGE 68 =====
+3.6. DATA PRESENTATION PHASE
+are being allocated and whether financial goals are being met by visualizing important
+metrics pertaining to expenses, cost distribution, and employee contributions.
+Figure 3.30: Financial Analysis Dashboard.
+The table 3.4 below is an explanation of the dashboard’s main visual elements.
+Table 3.4: Analysis of the visuals of the “Financial Analysis” dashboard.
+Visual Analysis
+This measures that the company is paying on
+average 204.62 TND per employee for trans-
+portation costs. This represents a critical fig-
+ure to measure per-capita efficiency as well as
+the setting of future budgeting levels or cost-
+cutting levels.
+This chart highlights sharp variations across
+service providers. MBT takes the lead with
+the highest total expense of 154,200 TND per
+month, followed by BM at 130,620 TND, and
+Strict at 30,300 TND. These variations may
+be attributed to the number of lines oper-
+ated, distance, or service quality. This anal-
+ysis may assist in decisions for contract rene-
+gotiation or provider performance measure-
+ment.
+55
+===== PAGE 69 =====
+3.6. DATA PRESENTATION PHASE
+Table 3.4: Analysis of the visuals of the “Financial Analysis” dashboard (continued).
+Visual Analysis
+This chart shows remarkable disparities in
+unit trip expenditures. "Tborsok", for in-
+stance, has the highest cost per trip even
+though it has the same bus capacity of 28
+seats at 250 TND, while the lowest-cost trips
+are taken by the "Mornaguia Centre" and
+"Mornagui K’sar Hdid" lines at 90 TND per
+28-seat bus. The principal reason for this dif-
+ference appears to be proximity to the com-
+pany from the terminal bus stop, and its ef-
+fect on fuel and operating expenses. This is
+a helpful observation to make for capacity
+planning and route planning.
+This pie chart shows that morning and
+evening shifts involve the highest total costs
+at 5,553 TND and 3,413 TND respectively,
+as opposed to 1,715 TND for the administra-
+tive shift.
+3.6.4 Delay Analysis Dashboard
+The Delay Analysis Dashboard, figure 3.31, gives a comprehensive image of the timeli-
+ness of transport services such that the organization is able to monitor delays and react
+to time-related inefficiencies. Its core function is to pinpoint areas of delays, observe
+trends, and promote service provider accountability. This dashboard enables data-driven
+decision-making by uncovering delay rate trends by provider lines, shifts, and providers. It
+is also employed in evaluating provider performance according to penalty levels and delay
+frequency with the capability for visualizing punctuality over time. Overall, this tool en-
+ables ongoing performance improvement and ensures reliability of workers’ transportation
+services.
+56
+===== PAGE 70 =====
+3.6. DATA PRESENTATION PHASE
+Figure 3.31: Delay Analysis Dashboard.
+The table 3.5 below is an explanation of the dashboard’s main visual elements.
+Table 3.5: Analysis of the visuals of the “Delay Analysis” dashboard.
+Visual Analysis
+The current delay percentage is 7.63%, which
+exceeds the company’s established margin of
+5%. This was established as the standard
+to ensure the efficacy and reliability of staff
+transportation. Exceeding this threshold can
+lead to Reduced productivity, as staff mem-
+bers arrive late in workplaces.
+It has a 92.37% punctuality rate, failing to
+meet its minimum requirement of 95% to
+guarantee that almost all trips arrive on
+schedule. This shortfall may be an indi-
+cation of weaknesses in operational perfor-
+mance and can lead to Negative impact on
+shift productivity and employee routines.
+57
+===== PAGE 71 =====
+3.6. DATA PRESENTATION PHASE
+Table 3.5: Analysis of the visuals of the “Delay Analysis” dashboard(continued).
+Visual Analysis
+The chart suggests that delay times are rel-
+atively similar, all of 14.74 to 16.19 minutes,
+from the most accurate provider Strict. That
+this consistency—while being the most accu-
+rate provider in other data—is present shows
+that even small inefficiencies can add up.
+The column cluster chart of the delay rate
+evolution by shift and year displays obvi-
+ous temporal trends for punctuality prob-
+lems. Indeed, the morning shift always has
+the highest delay rate, at 14.91% in 2024, be-
+fore dropping drastically to 1.88% in 2025.
+The delay rate pie chart by provider is a com-
+parative view of performance among service
+providers. The delays are predominantly a
+result of MBT at 53.26%, followed by BM at
+43.25%, and Strict at a significantly low rate
+ofonly3.49%. Thisdisparityindicatestheis-
+sue of unreliability with MBT and BM, with
+a bearing on review of performance, audit of
+services, or even re-negotiation of contracts.
+A comprehensive filtering menu, figure 3.32, allows users to refine the analysis
+based on multiple temporal and operational criteria:Year, Month, Day, Shift, Line.
+Figure 3.32: filtering menu.
+58
+===== PAGE 72 =====
+3.7. CONCLUSION
+3.7 Conclusion
+At this sprint level, I implemented the ETL process using Talend to structure and cen-
+tralize the data into a clean and reliable data warehouse. This foundation enabled the
+creation of dynamic dashboards divided into four key analysis modules: general overview,
+line analysis, financial analysis, and delay analysis. The next chapter will focus on the
+development of a chatbot designed to automatically generate dashboards using artificial
+intelligence, providing users with an intuitive and intelligent way to interact with and
+analyze transportation data.
+59
+===== PAGE 73 =====
+CHAPTER 4
+SPRINT 2: CHATBOT-DRIVEN DASHBOARD
+GENERATION AND INSIGHT ANALYSIS
+4.1 Introduction
+As a function of modernizing and automating the data analysis process for employee
+transportation, this sprint will develop an innovative feature: an intelligent chatbot that
+can provide direct user interaction, understand user’s natural language questions and
+dynamically generate a personalized dashboard with visualizations and KPIs, automated
+analysis and recommendations.
+4.2 Requirements Definition
+Following the discussion with the Product Owner, we have established the requirements
+for Sprint 2 in line with the overall project vision. The most critical objective of this sprint
+is to implement a chatbot system that can understand and handle user queries in natural
+language. This functionality is critical for enhancing user experience due to its provision
+of an effortless as well as natural interface for communicating with the data system. Uti-
+lizing a simple-to-use dialogue interface, users will be able to ask questions in their own
+words, without necessarily needing technical skills or knowledge of the underlying data
+structures. The system, suitably responding, will not just generate dynamic and interac-
+tive visualizations that are focused on the user’s intent, but also provide context-specific
+analysis and actionable recommendations. These are designed to help users better under-
+stand data, uncover significant findings, and make more informed decisions. With its focus
+on natural language processing, automatic generation of visualizations, and context-based
+suggestions, Sprint 2 aims to enhance the platform’s usability along with its intelligence
+significantly, all in accordance with the project’s overall objectives.
+60
+===== PAGE 74 =====
+4.3. SPRINT 2 BACKLOG
+4.3 Sprint 2 Backlog
+The Sprint 2 backlog outlines the set of prioritized tasks and user stories planned for this
+sprint. The table 4.1 below presents the backlog designed for Sprint 2.
+Table 4.1: Sprint 2 Backlog.
+ID Functionality US ID User Story Duration
+in days
+1 Authentication 1 As a user, I want to authenticate myself. 2
+2 Create a chatbot 2 As a user, I want to have access to a chatbot
+that can generate personalized visualizations
+based on my specific needs.
+19
+4.4 Sprint 2 Analysis
+This section presents the analysis that was conducted as part of Sprint 2. This involves the
+use case diagram that specifies the major functionalities created as part of this sprint. The
+diagram provides a clear and structured view of the main user interactions and system
+responses related to the new features that were created. In addition to the graphical
+representation, this section provides a detailed textual description of one of the most
+significant use cases: "Generate AI Report." This use case focuses on the interaction
+flow between the user and the system, demonstrating how the chatbot accepts natural
+language queries and provides suitable visualizations, analysis, and recommendations. It
+assists in emphasizing the value addition by the AI-based solution and enhanced decision-
+making capability provided to the end user. The narrative description and the diagram
+collectively provide a complete overview of the functional scope covered in Sprint 2 and
+how the features developed assist in achieving the goals of the sprint.
+4.4.1 Sprint 2 Use Case Diagram
+The use case diagram presented in figure 5.1 reflects an overview of the services offered
+during Sprint 2 with a particular focus on system-Human Resources Manager interactions.
+The Human Resources Manager being a single actor begins by authenticating through
+the Authenticate use case in order to access the platform securely. At login, the user has
+accesstoutilizethecentralcapabilityGenerateAIReport, whichenablesnaturallanguage
+writing questions and getting insightful reports supported by visualizations, analysis, and
+recommendations. The user can also see a list of reports generated earlier via the Show
+Reports History use case and download any report using the Download Report feature.
+The following chart illustrates the functional deliverables in Sprint 2 and indicates how
+the chatbot interface contributes value to data interaction as well as decision-making.
+61
+===== PAGE 75 =====
+4.4. SPRINT 2 ANALYSIS
+Figure 4.1: Sprint 3 Use Case Diagram.
+4.4.2 Text description of use case "Generate AI report"
+The use case "Generate AI Report" is the essential functionality that were designed in
+Sprint 2. It specifies how the Human Resources Manager employs the system in order
+to obtain AI-driven results through natural language queries. Table 4.2 presents the full
+textual description of this use case, including its primary actor, preconditions, postcon-
+ditions, and nominal and alternative scenarios.
+Table 4.2: Text description of use case "Generate AI report".
+Use Case Generate AI report
+Main Actor HR Manager
+Precondition the HR manager is authenticated
+Postcondition An ai report is generated
+Nominal Scenario
+1. The HR employee asks his ques-
+tion.
+2. The System displays a structered
+Dashboard with Description.
+Alternative scenario the system displays nothing if the ques-
+tion is out of the context.
+62
+===== PAGE 76 =====
+4.5. DEFINITION OF GENERATIVE ARTIFICIAL INTELLIGENCE
+4.5 Definition of generative Artificial Intelligence
+Generative AI is a specific sub-discipline of the broad artificial intelligence field that
+is designed to generate new and original content through learning from a vast pool of
+availableinformation. IncontrasttootherAI,whichhasprimarilybeenemployedfortasks
+such as classification, prediction, or decision-making based merely on already available
+information, generative AI goes the extra step by generating content that has not been
+available before. Legacy systems are only able to identify patterns or provide suggestions,
+whereas generative AI systems are capable of creating new material entirely in any number
+of varying formssuch as, but notlimited to, pictures, writing, sound, video, code, anddata
+visualizations. The technology is evolving continuously and will probably generate even
+more types of outputs that have not been conceived or even thought of yet. Generative
+AI is generally built on top of cutting-edge deep learning frameworks, and the most
+widely used one currently is the transformer model due to its superior performance and
+adaptability. These models are trained with large-scale, well-curated datasets that allow
+them to abstract the underlying patterns, structures, and relationships in the input data.
+As a result, generative AI can produce output not just coherent and contextually accurate,
+but also stylistically precise to human-authored content, whether in language or any other
+well-structured medium.
+4.5.1 Traditional AI vs Generative AI
+Table 4.3 is an integrated overview comparing Traditional AI and Generative AI. It
+highlights some of the most significant differences between these artificial intelligence
+technologies. The table openly enumerates their corresponding intended uses, showcasing
+how each methodology is crafted in an effort to address varying problems and yield varying
+kinds of outputs. It also illustrates the type of outputs each technology produces, show-
+casing how Traditional AI is primarily focused on classification and prediction, whereas
+Generative AI can produce brand new and original content. The table also explains how
+these technologies handle the data that they process and emphasizes major differences in
+data handling and learning styles. Finally, it defines common use cases and applications
+where each category of AI is optimally deployed, which helps to explain their uses and
+implications on a daily basis across various industries.
+63
+===== PAGE 77 =====
+4.5. DEFINITION OF GENERATIVE ARTIFICIAL INTELLIGENCE
+Table 4.3: Traditional AI vs Generative AI.
+Aspect Traditional AI Generative AI
+Purpose Solves predefined problems Creates new content (e.g., text, images,
+music)
+Output Predictions, classifications, deci-
+sions
+New, original content (e.g.,generated
+text, images)
+Data Type Structured data Structured and unstructured data
+Learning Pro-
+cess
+Supervised or unsupervised learn-
+ing
+Deep learning, such as GANs or trans-
+formers
+Applications Predictive analytics, fraud detec-
+tion, recommendation
+Chatbots, content generation, deep-
+fakes, creative tools
+Human Inter-
+vention
+Requires predefined rules or
+training
+Can generate content autonomously
+with minimal input
+Interpretability More interpretable and explained Often harder to explain due to com-
+plexity
+4.5.2 The Usefulness of Generative Artificial Intelligence in Busi-
+ness Intelligence
+Generative artificial intelligence is having a significant impact on BI by enabling a more
+intuitive, easier, and more automated experience for data analysis. Most importantly,
+generative AI understands natural language, thus allowing non-technical users to ask
+questions in their natural language and receive personalized dashboards, relevant visu-
+alizations, or even analytical summaries immediately. Further, it automates complex
+queries (SQL or otherwise) and report generation, allowing lower reliance on technical
+teams. Incorporating generative AI to BI systems means companies are realizing greater
+responsiveness, accuracy in decision-making, and democratized access to data intelligence.
+4.5.3 Generative AI Types
+1. Text-Based Generative AI
+• Examples: GPT-4, Mistral, and Llama.
+• Used for: Producing reports, summaries, and natural responses.
+• Strength: Natural language comprehension.
+• Weakness: Potential hallucinations when not anchored in data.
+2. Visual-Based Generative AI
+• Examples: DALL-E and Stable Diffusion.
+• Used for: Producing images/diagrams from prompts.
+• Strength: Ability to generate complex visuals.
+64
+===== PAGE 78 =====
+4.6. LARGE LANGUAGE MODEL
+• Weakness: Not not meant for structured data (e.g., SQL tables).
+3. Multimodal Generative AI
+• Examples: Gemini and GPT-4V.
+• Used for: Producing combinations of text and visuals (e.g., discussing a
+graph).
+• Strength: Natural interaction with heterogeneous data.
+• Weakness: Complexity of implementation.
+4. Code-Based Generative AI
+• Examples: GitHub Copilot and CodeLlama.
+• Used for: Generating SQL queries, producing analysis scripts, etc.
+• Strength: Automation of technical tasks.
+• Weakness: Possibility of producing syntactically or logically incorrect code.
+4.5.4 Selected Type
+The system architecture consists of a well-structured multimodal model integrating sev-
+eral constituents performing in harmony to produce effective results. The generative part
+of the model, the Mistral-Saba-24b, has two key tasks: first, it enables the system to
+properly interpret and understand natural language user inputs in an extremely intuitive
+and flexible way; second, it produces sophisticated textual analyses of the input data,
+producing rich narrative conclusions that are suitable for decision-making. Counterbal-
+ancing this generative aspect is a deterministic control layer that ensures the creation of
+visualizations that are strictly constricted to the underlying data to provide accuracy and
+reliability. It also ensures compliance with authorized business rules, playing an important
+validating role by preventing misclassification or inappropriate outputs. Together, these
+two layers constitute a strong framework that combines the imagination of generative AI
+with the precision of deterministic control.
+4.6 Large Language Model
+A large language model (LLM) is a type of artificial intelligence algorithm that is designed
+to produce and work with human-like text depending on large datasets and advanced deep
+learning techniques. LLMs are trained on huge amounts of text data, which enables them
+to understand context, summarize content, produce coherent and contextually relevant
+material, and even predict the next words or sentences in a sequence. LLMs are a sub-
+category of generative AI with a particular focus on producing text-based outputs. As a
+65
+===== PAGE 79 =====
+4.6. LARGE LANGUAGE MODEL
+result of this, the terms "large language model" and "generative AI" are closely linked
+with one another but not precisely interchangeable because generative AI also encom-
+passes models that produce images, audio, video, and other forms of data. The most
+notable architectures used for LLMs are transformer-based architectures such as GPT
+(Generative Pre-trained Transformer) and BERT (Bidirectional Encoder Representations
+from Transformers). These architectures have revolutionized the natural language pro-
+cessing field with use cases in chatbots, automated content creation, machine translation,
+and sentiment analysis. The ability to generate human-like language with high accuracy
+has made them an indispensable part of the majority of AI-driven systems currently in
+use.
+4.6.1 LLM Models Comparison
+This section gives a comparative analysis of a number of Language Models (LMs) with
+the aim of determining their individual strengths and weaknesses as they pertain to the
+particular requirements of our project. The aim of this exercise is not to realize each
+model discussed but to carry out focused experiments that will enable us to select the most
+appropriatemodeltointegrateintooursystem. Thisstepisrequiredtodeterminewhether
+the chosen model meets our particular functional requirements and performance criteria.
+By carefully choosing the most appropriate language model, we aim to guarantee the
+overall effectiveness, reliability, and appropriateness of AI-enabled functionality developed
+within the project, and hence the system’s ability to deliver correct and efficient results.
+Table 4.4: Comparison of Language Models.
+Model Provider Advantages Limitations
+Mistral (Mistral-
+saba-24b)
+Mistral
+(via Groq)
+- Open source, high performance,
+low latency (especially when com-
+bined with Groq)
+- Good cost to performance ratio
+- Multilingual
+- Less fine-tuned than
+GPT-4 for rare edge
+cases
+GPT-4 OpenAI - Best-in-class contextual under-
+standing
+- Generated text is great – and so
+is code
+- Very robust
+- Paid (higher cost)
+- Proprietary
+Llama 2 (70B) Meta - Good handling of natural lan-
+guage
+- Open source
+- Large open source community
+- Slightly less capable
+than GPT-4 for pure
+code generation
+66
+===== PAGE 80 =====
+4.7. INTEGRATION OF GROQ API
+4.6.2 Selected model
+We selectedthe Mistral (Mistral-saba-24b)large language model, which we were able
+to access through the Groq API. There were several important aspects to my decision.
+Mistral being open source allows me to know how it works, so it (to a degree) preserves
+some transparency and potential flexibility as we build. And it performs well on natural
+language understanding and code generation scenarios, especially when considering SQL
+generation for queries and long text analyses. Mistral also has strong multilingual capa-
+bilities, which is important for processing queries in French. There will be a low-latency
+response for my integration in Groq, which will allow for a smooth, interactive experi-
+ence for the user. Relative to proprietary solutions like GPT-4, it has a great balance of
+quality, speed, and cost. The combination of these factors make Mistral a great option
+for scalable, business-facing applications related to business intelligence.
+4.6.3 Working Mechanism of the Mistral-Saba-24b Model
+The Mistral-Saba-24b is built upon a highly advanced transformer architecture that has
+been specifically developed to maximize large-scale natural language processing. When
+it receives a query from a user via the interface, the model first breaks down the text
+into semantic units called tokens, allowing for an extensive examination of the input.
+With its training on massive datasets, Mistral then goes ahead to understand the general
+meaning of the query, identifying the user’s purpose and key factors necessary for cor-
+rect comprehension. The system applies preprocessing reasoning to categorize the query,
+routing it to appropriate SQL queries or relevant processing procedures. Based on this,
+the model constructs a structured text response that may comprise sophisticated data
+analysis, personalized suggestions, or instructions for designing interactive visualizations.
+In the interest of ensuring a fast and effective user experience, a caching mechanism holds
+the result of repetitive queries so that unnecessary API calls are avoided and response
+rates are improved. Mistral also capitalizes on the context enabled by data stored in a star
+schema so that it can return consistent and relevant responses, for example, suggesting
+actions based on trends observed, thereby enhancing the usability and relevance of the
+insights being served.
+4.7 Integration of Groq API
+Groq API is a high-performance interface specifically designed for delivering blazing-fast
+inference for big language models (LLMs). In our project of building interactive and
+dynamic dashboards from natural language requests, the choice of using Groq API was
+driven by its better performance and extremely low latency. These characteristics are
+important in providing real-time responsiveness, which is essential in providing a fluid
+67
+===== PAGE 81 =====
+4.7. INTEGRATION OF GROQ API
+and seamless user experience in the chatbot interface. Answering in real time to user
+queries provides an interactive experience where users can ask complex questions and
+receive instant visual analytics without such delays. Developing on the Groq API makes
+it possible to handle high data volumes in a seamless way and high-level AI computations,
+so it is possible to provide visual insights near real-time. This responsiveness not just
+makes the business intelligence platform more useful but also brings a higher level of
+user satisfaction by minimizing waiting and enabling faster decision-making through real-
+time information. Overall, the integration of Groq API is among the most significant
+features of offering a next-gen, interactive BI solution addressing the level of expectation
+for performance by today’s users.
+4.7.1 API Key and Authentication
+Having chosen Groq as our vendor for our large language model (LLM) needs, the inte-
+gration of their API into the application is built with strong and efficient authentication.
+The system begins by implementing the use of a single authentication key for an individ-
+ual, which regulates that solely identified access to the Groq API is provided. In order to
+integrate it to be used, the ChatGroq class is invoked within the system, with various re-
+quired parameters being set. These include the authentication key itself, the model to use
+(in this case, the mistral-saba-24b model), and a temperature parameter set to 0 to make
+the responses deterministic and reproducible from the model. The authentication key is
+loaded securely from a .env config file using the os.getenv("GROQ_API_KEY") function
+that prevents any exposure of sensitive credentials in the application’s source code. This
+solution conforms to best practices in security and key management in software develop-
+ment. In summary, this configuration, figure 4.2, provides a secure and reliable connection
+to Groq’s robust LLM functionality to allow seamless creation of responsive and accurate
+natural language responses for the application.
+Figure 4.2: Setting up Groq LLM with API key in project.
+4.7.2 Groq Cloud Usage
+The chatbot operates by directly interacting with Groq Cloud, where it sends the users’
+questions in natural language. These questions are then submitted and executed on the
+Large Language Model (LLM) stored on Groq Cloud, specifically the Mistral-SABA-24B
+model in our case. This intelligent model reads and understands the questions of the
+68
+===== PAGE 82 =====
+4.8. ARCHITECTURE DIAGRAM OF THE INTELLIGENT AGENT
+users to deliver right and contextually relevant responses. Such responses can be in the
+form of SQL queries to retrieve data or detailed instructions for constructing interactive
+visualizations, which are then passed back to the chatbot interface for visualization to the
+user. Groq Cloud offers a full-featured real-time monitoring dashboard, as illustrated in
+figure 4.3, providing graphical displays of API consumption and resource utilization. This
+dashboard shows critical metrics like the quantity of requests run within specified time
+intervals and tokens used by the Mistral-SABA-24B model. To ensure optimization of API
+use, prevention of quota exhaustion allocated, and provision of continuous availability and
+best quality of the service in our project scenario, access to such detailed monitoring tools
+is indispensable. By implementing this dashboard, we will be able to monitor active usage
+of Groq Cloud usage limits and implement dynamic rate-limiting rules for our API calls
+based on real-time consumption volumes, thereby guaranteeing an effective and smooth
+user experience.
+Figure 4.3: API activity and resource consumption.
+4.8 Architecture diagram of the intelligent agent
+This vertical architecture diagram, figure 4.4, depicts theAI-based transportation an-
+alytics systemthat processes natural language queries through a multi-layered pipeline
+before serving them up as actionable insights. Centralized is ahybrid query processor
+that combines pre-defined SQL templates with queries generated from LLM, all rigorously
+proved against the database schema. After users ask questions via the Streamlit interface,
+the system initially leverages a Mistral-powered validator to determine whether the query
+is relevant to SEBN-TN2’s transportation operations (routes, staff, buses, etc.) and sec-
+ondarily conducts spelling correction automatically. The engine subsequently attempts to
+find matches for the question from cached questions or, if not possible, generates dynami-
+callyoptimizedSQLusingconstrainedLLMprompting. Executedqueriesundergovarious
+tests like syntax checking and column checking before reaching the MySQL database via
+SQLAlchemy. Processed results are subjected to smart visualization selection (Plotly
+69
+===== PAGE 83 =====
+4.8. ARCHITECTURE DIAGRAM OF THE INTELLIGENT AGENT
+charts for trends, tables for raw data, indicators for KPIs) and final enrichment through
+Mistral’s analytical commentary. The system maintains tight-knit integration amongst
+components without hallucinations through schema-aware prompt engineering and val-
+idation gates so that each user query passes through from natural language input to
+validated business insight through this structured vertical workflow. Edge cases like fuzzy
+category matching and fallback visualizations are managed by special modules, and the
+architecture remains robust for experts but accessible for casual users.
+Figure 4.4: Architecture diagram of the intelligent agent.
+70
+===== PAGE 84 =====
+4.9. REALIZATION
+4.9 Realization
+Once authenticated, the user is directed to the main interface of the dashboard generation
+platform as shown in the Figure 4.5. The interface is minimalist, clean, and intuitive.
+On the left-hand side, a separate pane displays the history of all the previous analysis
+requests so that the users can conveniently look at earlier queries and results.
+In the center of the screen, an interaction area takes center stage. This is where all the
+output generated — SQL queries, findings, and interactive visualizations — is displayed
+dynamically. It is the main output section for the chatbot’s response.
+At the top of the interface, there is a text entry field for the user to input natural
+language questions regarding the business data. This prompt is forwarded to the chatbot
+for processing using Groq Cloud and the appropriate response is thus displayed in the
+middlesection. Thelayoutoffersaseamlessuserexperiencebypresentingallthenecessary
+elements in sight and within reach.
+Figure 4.5: Main Interface of the Dashboard Generation Platform.
+Figure 4.6 illustrates the result of the natural language query provided by the user,
+in this case "Analyse des employés". The figure illustrates how the system interprets the
+input given by the user and displays the respective analysis in a structured and compact
+manner. It illustrates the capability of the chatbot to interpret the question asked in
+natural language and offer appropriate insights in the form of graphical representation
+and summaries, facilitating the user to understand employee-related data effectively.
+71
+===== PAGE 85 =====
+4.9. REALIZATION
+Figure 4.6: Natural language query submitted by the user: “Analyse des employés”.
+When this request was executed, the chatbot created an interactive dashboard auto-
+matically made up of four informative visualizations shown in the figure 4.7 and 4.8.
+They include two bar graphs reporting the number of employees by shift and bus line, a
+scatter plot indicating the total employee contribution (cotisation) to transport cost by
+shift, and a line graph illustrating the yearly trend in worker numbers from 2022 to the
+second month of 2025. The implicit selection of each of the charts with respect to the
+underlying data structure was both relevant and understandable.
+Figure 4.7: Analytical visualization of the number of employees per shift and per bus line.
+72
+===== PAGE 86 =====
+4.9. REALIZATION
+Figure 4.8: Analytical visualization of the total employee contribution and the yearly
+trend in worker numbers.
+Below the graphics, there is a special section aimed at presenting automatic analysis
+and strategic recommendations. The intention behind this feature is to assist decision-
+makers by making it easier to comprehend emerging trends and identify possible oppor-
+tunities or avenues of action. In addition, to provide more usability and facilitate more
+use of the insights, there is a button provided which enables users to download the entire
+PDF report to a local machine. This report can be easily circulated to stakeholders or
+retained for reference. This functionality is depicted in figure 4.9.
+Figure 4.9: Automatic analysis and strategic recommendation.
+This is a demonstration of what generative AI is capable of in the field of business
+intelligence. By translating natural language queries into actionable, data-driven findings
+in a few seconds, the system significantly eases the process of analytics. Besides speeding
+73
+===== PAGE 87 =====
+4.10. CONCLUSION
+analysis, the chatbot lowers hurdles to advanced BI features, making them accessible
+to many more individuals. This enables even non-technologists to merely engage with
+advanced data and make well-informed, data-driven decisions with confidence. All of
+this is accomplished through a simple, smart, and natural conversational interface that
+simplifies interaction and empowers users at every level of the organization.
+4.10 Conclusion
+In conclusion, this sprint highlights the implementation of more advanced artificial intel-
+ligence techniques, combining natural language understanding with dynamic data visual-
+ization and automated analysis to combine the system to provide users with a smarter,
+easier, and more efficient method of extracting insights from their data. This marks a
+significant advancement in delivering modern, user-friendly, and intelligent analytics for
+the organization. In the next sprint, focus will be laid in developing the employee man-
+agement platform wherein core functionalities such as employee data registration, bus
+allocation, attendance tracking, and real-time monitoring would be implemented to lay
+down the foundation of a comprehensive and intelligent transport management system.
+74
+===== PAGE 88 =====
+CHAPTER 5
+SPRINT 3:TRANSPORT MANAGEMENT
+5.1 Introduction
+This chapter aims to clarify the progression of Sprint 3 implementation.It is divided into
+three sections: the first section contains the backlog and analysis, including the global
+use case diagram for the sprint, along with the detailed use cases diagrams; the second
+section focuses on the design phase, and the third section looks at the implementation
+phase using the developed user interfaces.
+5.2 Sprint 3 Backlog
+Sprint 3 backlog outlines the entire set of prioritized user stories and features to be
+developed during this phase. It covers essential functionalities essential for handling the
+system, including login for users, viewing dashboards, employee and bus administration,
+and real-time tracking. It is a formal plan to guide development efforts and align with
+project goals and user needs.
+Table 5.1: Sprint 3 Backlog.
+ID Functionality US ID User Story Duration
+in days
+1 Authentication 1 As a user, I want to authenticate my-
+self.
+1
+2 Manage users 2.1 As an HR Manager, I want to view the
+users list.
+1
+2.2 As an HR Manager, I want to add a
+user.
+1
+2.3 As an HR Manager, I want to delete a
+user.
+1
+75
+===== PAGE 89 =====
+5.2. SPRINT 3 BACKLOG
+Table 5.1: Sprint 3 Backlog (Continued).
+ID Functionality US ID User Story Priority
+3 Manage Employees 3.1 As an HR employee, I want to view the
+employees list.
+1
+3.2 As an HR employee, I want to add an
+employee.
+1
+3.3 As an HR employee, I want to modify
+an employee.
+1
+3.4 As an HR employee, I want to delete
+an employee.
+1
+4 Manage Buses 4.1 As an HR employee, I want to view the
+Buses list.
+1
+4.2 As an HR employee, I want to add a
+Bus.
+1
+4.3 As an HR employee, I want to modify
+a Bus.
+1
+4.4 As an HR employee, I want to delete a
+Bus.
+1
+5 Manage Lines 5.1 As an HR employee, I want to view the
+Lines list.
+1
+5.2 As an HR employee, I want to add a
+Line.
+1
+5.3 As an HR employee, I want to modify
+a Line.
+1
+5.4 As an HR employee, I want to delete a
+Line.
+1
+6 Manage Stops 6.1 As an HR employee, I want to view the
+Stops list.
+1
+6.2 As an HR employee, I want to add a
+Stop.
+1
+6.3 As an HR employee, I want to modify
+a Stop.
+1
+6.4 As an HR employee, I want to delete a
+Stop.
+1
+7 View complaints 7 As an HR employee, I want to read
+complaints.
+1
+8 Display Fill Rate 8 As an employee, I want to view the fill
+rate for each bus line and shift.
+1
+9 Access to dashboards 9 As an HR employee, I want to see a
+well-structered Dashboard.
+1
+10 Manage Reservations 10.1 As an HR employee, I want to view the
+reservations list.
+1
+10.2 As an HR employee, I want to accept a
+reservation.
+1
+10.3 As an HR employee, I want to refuse a
+reservation.
+1
+76
+===== PAGE 90 =====
+5.3. SPRINT 3 ANALYSIS
+Table 5.1: Sprint 3 Backlog (Continued).
+ID Functionality US ID User Story Priority
+11 Manage changing requests 11.1 As an HR employee, I want to view the
+changing requests list.
+1
+11.2 As an HR employee, I want to accept a
+changing requests.
+1
+11.3 As an HR employee, I want to refuse a
+changing requests.
+1
+5.3 Sprint 3 Analysis
+In this section we present a general analysis of the work done in Sprint 3. We begin
+by presenting the general use case diagram to provide a graphical system interaction
+overview. We then proceed to a detailed explanation of each of the significant use cases,
+explaining their function, actors, and specific workflow. Particular attention will be given
+to important features such as user authentication, highlighting how different components
+of the system interact to ensure secure and proper functioning. This analysis is aimed at
+defining the functional scope and guide subsequent development phases.
+5.3.1 Sprint 3 Use Case Diagram
+Figure 5.1 illustrates the overall use case diagram for Sprint 3
+77
+===== PAGE 91 =====
+5.3. SPRINT 3 ANALYSIS
+Figure 5.1: Sprint 3 Use Case Diagram.
+5.3.2 Detailed use case study
+The detailed use case study is meant to provide a better understanding of how the system
+has to behave under various scenarios. It captures the interaction among the users and the
+system for each specific feature, such that all the functional requirements become clearly
+defined and evident. It guides both the design and development processes by indicating
+expected behavior, user actions, and system responses.
+5.3.2.1 Use case diagram for the “Authenticate” functionality
+This use case diagram, figure 5.2, presents the authentication process for a human re-
+sources employee. It shows that the employee must first enter their email address, followed
+by their password, which are the necessary information to verify their identity. These ac-
+tions trigger the Authenticate use case, during which the system validates the information
+provided to ensure secure access. This mechanism guarantees that only authorized hu-
+man resources employees can log in, thus protecting the sensitive information and the
+78
+===== PAGE 92 =====
+5.3. SPRINT 3 ANALYSIS
+general security of the system. The diagram outlines the most important steps of the
+authentication as well as the user-system interaction within the process.
+Figure 5.2: Use case diagram for the “Authenticate” functionality.
+5.3.2.2 Use case diagram for the “Display Fill Rate” functionality
+This use case diagram, figure 5.3, illustrates the process of displaying the fill rate of
+buses that are used to transport workers. The situation begins with the login of an
+Human Resources employee for safe access. After authentication, the user may choose a
+specific shift, a date, and the direction of travel (for instance, to or from work). Based on
+these selections, the system carries out the "Show passengers" task to query and display
+the quantity of employees that commuted by bus based on the specified criteria. Lastly,
+the system calculates and displays the fill rate, enabling HR to track bus occupancy and
+schedule transport more efficiently.
+79
+===== PAGE 93 =====
+5.3. SPRINT 3 ANALYSIS
+Figure 5.3: Use case diagram for the “Display Fill Rate” functionality.
+5.3.2.3 Use case diagram for the “Manage employees” functionality
+This use case diagram, figure 5.4, emphasizes the employee management functionalities
+offered to the Human Resources users of the system. On successful authentication, HR
+personnel can look at the employee list, providing a summary of all staff records. They
+can also insert new employees, modify existing employee information, and delete employee
+records as needed. These operations are the basic management operations through which
+HR can maintain valid and updated employee data. The diagram shows the HR actor use
+case and the main system operations within successful employee management.
+Figure 5.4: Use case diagram for the “Manage employees” functionality.
+The use cases’Manage Lines’, ’Manage Stops’, and’Manage Buses’have the
+80
+===== PAGE 94 =====
+5.3. SPRINT 3 ANALYSIS
+same functional logic and format as the ’Manage Employees’ use case. Each use case
+allows the HR employee to performadd, edit, anddelete function on the corresponding
+entities (lines, stops, buses) via a defined interface,all with the same pre-conditions, post-
+conditions and user interaction scenarios.
+5.3.3 Text descriptions of use case scenarios
+Text descriptions of use case scenarios provide a sequential account of how a user interacts
+with the system to accomplish a goal.The table 5.2 represents the text descriptions of
+the use case "Authenticate" , The table 5.3 represents the text descriptions of the use
+case "Display Fill Rate" and finally the table 5.4 represents the text descriptions of the
+use case "Add employee".
+5.3.3.1 Text description of use case "Authenticate"
+Providing a textual description of the "Authenticate", table 5.2, use case has certain
+advantages in terms of understanding and communicating the important steps in user
+authentication.
+Table 5.2: Text description of use case "Authenticate".
+Use Case Authenticate
+Main Actor HR employee
+Precondition The user has an active account in the system
+Postcondition The user has access to features associated with
+their profile
+Nominal Scenario
+1. The user is in the login page.
+2. The system shows the authentication form.
+3. The user enters his username and password
+4. The user clicks "Login".
+5. The system checks the entered data.
+6. The system sends the user to Home page
+Alternative scenario The user submits incorrect data or missing data:
+1. The system shows an error message.
+2. resume to step 2 of the nominal scenario.
+81
+===== PAGE 95 =====
+5.3. SPRINT 3 ANALYSIS
+5.3.3.2 Text description of use case "Display Fill Rate"
+Assigning the "Display Fill Rate" use case a text description ,table 5.3, yields a clear,
+structured view of how the system is helpful to HR staff in acquiring access to some
+operating data.
+Table 5.3: Text description of use case "Display Fill Rate".
+Use Case Display Fill Rate
+Main Actor HR employee
+Precondition the HR employee is authenticated
+Postcondition The passenger count per line is presented
+Nominal Scenario
+1. The HR employee chooses the shift, the date
+and the direction.
+2. The system shows the number of employees
+per line.
+5.3.3.3 Text description of use case "Add employee"
+The text description of the "Add Employee" use case, table 5.4, gives a concise but
+comprehensive description of the process through which HR employees are able to add
+new staff records into the system.
+82
+===== PAGE 96 =====
+5.4. CONCEPTION
+Table 5.4: Text description of use case "Add employee".
+Use Case Add employee
+Main Actor HR employee
+Precondition the HR employee is authenticated
+Postcondition Employee added
+Nominal Scenario
+1. The HR employee accesses the employee list
+interface.
+2. The HR employee clicks on the add button.
+3. the system displays the add form.
+4. The HR employee fill out the form and click
+the add button.
+5. The system validates the data.
+6. The system saves The changes and displays
+a success message.
+Alternative scenario HR employee enters missing data or an existing
+employee ID:
+1. The system shows an error message.
+2. resume the step 3 of the nominal scenario.
+5.4 Conception
+The section is dedicated to the stage of project conception, which is the critical phase
+in the transformation of functional requirements into a clearly defined and formulated
+technical vision. It serves as a link between analysis and development, making the system
+organized and in accordance with users’ requirements. Here we will unveil the important
+design specifics that describe the way the system has to be structured and how the various
+parts of the system will interact. Here we minimize development-time mistakes as well as
+make the application simpler to scale and maintain in the future.
+5.4.1 Sequence Diagrams
+the sequence diagrams gives a dynamic view by showing the interaction between the ele-
+ments of a system over time for specific functionalities. They describe how objects com-
+municate with one another through sending messages to achieve user-driven operations
+such as authentication or staff administration.
+83
+===== PAGE 97 =====
+5.4. CONCEPTION
+5.4.1.1 Authenticate sequence diagram
+This sequence diagram, figure 5.5, illustrates the authentication of a user who is an HR
+employee logging into the system. The process begins when the HR employee enters their
+credentials and initiates the login action. The system first checks whether all the fields
+are completed. If any field is blank, it immediately displays an error message that all
+the fields must be completed and halts the login process. If validation passes, the system
+then tries to verify the user’s credentials by searching for the user in the database. If
+the user is not found, a message duly informs them of invalid credentials or a nonexistent
+account. If the user is found the system marks the user as authenticated successfully and
+checks this state before redirecting the user to the Home Page, granting access to the
+application’s features. Overall, the diagram effectively explains successful and failed login
+attempts with emphasis on error handling, data validation, and secure authentication.
+Figure 5.5: Sequence diagram of the “Authenticate” functionality.
+5.4.1.2 Display Fill Rate sequence diagram
+This sequence diagram, figure 5.6, illustrates the "Fill Rate" consultation process by
+which an employee of Human Resources can consult employee transportation fill rates by
+line. The process begins when the HR employee interacts with the system by selecting
+a specific shift and specifying the direction of travel (inbound or outbound). Once these
+choices are made, the system starts to calculate the fill rate of each of the transport lines.
+For each line, the system collects the list of workers scanned, constructs this data into a
+84
+===== PAGE 98 =====
+5.4. CONCEPTION
+fill rate list, and ultimately presents the results graphically to the HR user. Should the
+HR employee want to examine more specific details, they may click on a specific line,
+and the system will present a detailed view for the scanned employees of the line. This
+sequence neatly supports both a summary view of transport occupancy and the ability
+to drill down to detailed line-level data, enabling the HR personnel to better manage and
+optimize transport usage.
+Figure 5.6: Sequence diagram of the “Display Fill Rate” functionality.
+5.4.1.3 Add employee sequence diagram
+This sequence diagram, figure 5.7, illustrates the Add Employee process in the system,
+showing how a Human Resource (HR) user inputs new employee details with validation
+and duplication prevention. The process starts when the HR user inputs the employee
+details. The system performs input validation to ensure that all mandatory fields are
+completed. If any field is left blank, the system displays an error message requesting
+the user to fill in the blank fields: Once the form is filled in correctly, the system checks
+whether an employee with the same matricule (employee ID) does not already exist in the
+database. If there is a duplicate, the system blocks the addition and shows an appropriate
+error message indicating that the employee already exists. If no duplication is found, the
+system adds the new employee, verifies the successful insertion, and then displays a success
+message to the user. Finally, the employee list is refreshed to display the newly inserted
+employee. This flow illustrates the value of input validation, duplicate prevention, and
+85
+===== PAGE 99 =====
+5.4. CONCEPTION
+meaningful user feedback in maintaining data integrity and improving the overall user
+experience of adding an employee.
+Figure 5.7: Sequence diagram of the “Add employee” functionality.
+5.4.2 Class Diagram
+The class diagram provides a static representation of the system by showing the prominent
+classes, their methods, variables, and how they interact with each other. It serves as a
+pattern for object-oriented application design and facilitates organizing code. Figure 5.8
+illustrates the class diagram of Sprint 3:
+86
+===== PAGE 100 =====
+5.5. REALIZATION
+Figure 5.8: Class Diagram of Sprint 3.
+5.5 Realization
+This section is dedicated to present some of the main interfaces of the platform. It serves
+to illustrate the visual aspect of the system and provides an overview of the work carried
+out during development.
+5.5.0.1 Authentication interface
+The user interface of the application begins with the Login Page, figure 5.9, consist-
+ing of two text fields to input the email and password, and a "Send" button to invoke
+authentication.
+87
+===== PAGE 101 =====
+5.5. REALIZATION
+Figure 5.9: the HR employee authentication interface.
+5.5.0.2 Home interface
+Upon successful authentication, the user is routed to the Home Page, figure 5.10. The
+page is made simple and easy to go through. The user’s name appears at the top left,
+while a navigation sidebar on the left gives direct access to different modules. The date
+and time appear at the top right to keep the user informed. The middle part displays an
+overview of transport data in the form of easy-to-glance cards. Under these cards are two
+buttons — one is to the Fill Rate page,figure 5.11, and the other to the Tracking module.
+Figure 5.10: The Home interface of the web platform.
+88
+===== PAGE 102 =====
+5.5. REALIZATION
+5.5.0.3 Fill rate interface
+The Fill Rate interface,figure 5.11 ,displays the bus lines as cards. After the HR user
+selects the options they require (e.g., shift, direction, date), the system shows how many
+employees per line. When the user clicks a button on a particular line card (Figure 5),
+a detail view is displayed where the list of employees who used the respective bus is
+indicated.
+Figure 5.11: Fill rate interface.
+When the user clicks a button on a particular line card, figure 5.12 , a detail view is
+displayed where the list of employees who used the respective bus is indicated.
+89
+===== PAGE 103 =====
+5.5. REALIZATION
+Figure 5.12: Modal of the scanned employees.
+5.5.0.4 Employees interface
+Figure 5.13 illustrates the Employees interface.
+Figure 5.13: Manage employees interface.
+There is a "Add Employee" button in the top right corner. When clicked, it will show
+a form, figure 5.14, where the employee details can be manually entered by the HR user.
+The form has data fields for employee details and is designed to enable quick and accurate
+data entry.
+90
+===== PAGE 104 =====
+5.6. CONCLUSION
+Figure 5.14: Add employee form.
+5.6 Conclusion
+During this sprint, we managed to develop the Human Resources platform through which
+the HR team can manage all the aspects related to employee transportation. The platform
+includes core features such as employee management, fill rate monitoring, and access to
+transportation dashboards that provide a centralized and user-friendly interface for effec-
+tive operational management. We move to Sprint 4, which is one of the most important
+parts of the system. This sprint is involved in developing the badge scanning interfaces
+and the mobile application for the employees, both of which play a very crucial role in
+real-time data capture and simple day-to-day usage by the employees.
+91
+===== PAGE 105 =====
+CHAPTER 6
+SPRINT 4: REAL-TIME EMPLOYEE AUTHENTICATION
+AND TRANSPORT REQUEST SYSTEM
+6.1 Introduction
+This chapter describes the results of Sprint 4, in terms of a backlog and analysis, design
+and implementation of the operational functionality created through user interfaces in
+this sprint
+6.2 Sprint 4 Backlog
+The Sprint 4 backlog introduces functionalities that enhance the employee’s interaction
+with the system, with features on the user side taking top priority. These include badge
+scanning, complaints sending, bus seat booking, and even real-time bus tracking location.
+The user stories are prioritized in a way that important functionalities are delivered early
+to ensure a seamless and responsive experience for the employees while catering to their
+operational needs in the transportation system.
+Table 6.1: Sprint 4 Backlog.
+ID Functionality US ID User Story Duration
+in days
+1 Authentication 1 As a user, I want to authenticate myself. 1
+2 Scan Badge 2 As an employee, I want to scan my badge. 14
+3 Show Bus Posi-
+tion
+3 As a user, I want to track buses in real time.2
+4 Send complaints 4.1 As an employee, I want to send a complaint.1
+4.2 As an employee, I want to see my complaints
+history.
+1
+92
+===== PAGE 106 =====
+6.3. SPRINT 4 ANALYSIS
+Table 6.1: Sprint 4 Backlog (continued).
+ID Functionality US ID User Story Duration
+in days
+5 Request to
+change line
+5 As an employee, I want to request to change
+my line.
+1
+6 Reserve a Seat 6.1 As an employee, I want to reserve a bus. 1
+5.2 As an employee, I want to see my reserva-
+tions history.
+1
+6.3 Sprint 4 Analysis
+ThissectiondisplaystheanalysiscompletedduringSprint4, whichpertainstothefeatures
+implemented within this sprint. It begins with a global use case diagram that provides
+an overview of the system’s interactions. A detailed look at the most significant use
+cases is then given to describe their behavior and logic. Finally, textual descriptions of
+the various use case situations are provided to specify how the system must act under
+different circumstances in order to provide a clear and structured understanding of the
+requirements before implementation.
+6.3.1 Sprint 4 Use Case Diagram
+Figure 6.1 illustrates the overall use case diagram for Sprint 4
+Figure 6.1: Sprint 4 Use Case Diagram.
+93
+===== PAGE 107 =====
+6.3. SPRINT 4 ANALYSIS
+6.3.2 Detailed use case study
+This section provides a careful analysis of the prominent use cases realized in Sprint 4.
+Each use case is addressed individually to determine the actors, interaction sequence,
+and the emergent outcomes. This scrutiny is needed to develop an understanding of the
+system’s behavior and to guide the subsequent design and implementation phases.
+6.3.2.1 Use case diagram for the “Scan Badge” functionality
+This use case, figure 6.2, explains the flow through which an employee scans his/her
+badge to authenticate and obtain access to the platform.
+Figure 6.2: Use case diagram for the “Scan Badge” functionality.
+6.3.2.2 Use case diagram for the “Send complaint” functionality
+This diagram, figure 6.3, illustrates the use case through which an authenticated employee
+is capable of sending a complaint and viewing his/her complaint history.
+Figure 6.3: Use case diagram for the “send complaint” functionality.
+6.3.2.3 Use case diagram for the “Show bus position” functionality
+This use case, figure 6.4, explains how an authenticated employee can view the location
+of the bus in real-time.
+94
+===== PAGE 108 =====
+6.3. SPRINT 4 ANALYSIS
+Figure 6.4: Use case diagram for the “Show bus position” functionality.
+6.3.3 Text descriptions of use case scenarios
+This part provides textual explanations of the various use case scenarios. These descrip-
+tions are meant to illustrate, step by step, how each function should operate in real-case
+situations. They are a helpful complement to the diagrams in that they provide a clearer
+view of user input and system output.
+6.3.3.1 Text description of use case "Scan Badge"
+Table 6.2 details the step-by-step interaction between the user and the system during the
+badge scanning process, ensuring accurate tracking and validation.
+Table 6.2: Text description of use case "Scan Badge".
+Use Case Scan Badge
+Main Actor Employee
+Precondition Employee not authorized to use the bus
+Postcondition Employee authorized to use the bus
+Nominal Scenario
+1. The employee scans their badge.
+2. The system authorizes access to
+the bus.
+3. The employee is checked in.
+Alternative scenario The employee does not belong to this
+bus and the system does not authorize
+access
+95
+===== PAGE 109 =====
+6.3. SPRINT 4 ANALYSIS
+6.3.3.2 Text description of use case "Send complaint"
+Table 6.3 explains the detailed steps involved when a user submits a complaint, highlight-
+ing the system’s response to ensure effective issue management.
+Table 6.3: Text description of use case "Send complaint".
+Use Case Send complaint
+Main Actor Employee
+Precondition The employee is authenticated
+Postcondition complaint sent
+Nominal Scenario
+1. the employer enters his complaint
+and clicks on the send button.
+2. The system shows success mes-
+sage .
+3. The system saves the complaint.
+Alternative scenario The system displays an error message if
+theemployeesendsanemptycomplaint
+6.3.3.3 Text description of use case "Show bus position"
+Table 6.4 details the sequence of actions and system responses involved in displaying the
+real-time location of a bus, providing clarity on how this feature operates to assist users
+effectively.
+Table 6.4: Text description of use case "Show bus position".
+Use Case Show bus position
+Main Actor Employee
+Precondition Employee is authenticated
+Postcondition The bus is tracked
+Nominal Scenario
+1. The Employee chooses the shift.
+2. The system shows the history of
+bus positions.
+Alternative scenario The system shows no position available
+if the bus is not running.
+96
+===== PAGE 110 =====
+6.4. CONCEPTION
+6.4 Conception
+This section focuses on our system design phase, during which we define the structural and
+behavioral foundations of the application. The aim is to specify exactly how individual
+system components communicate and how data is structured and processed. To this end,
+we present two useful modeling tools: the sequence diagram and the class diagram.
+6.4.1 Sequence Diagrams
+The sequence diagram shows process interactions in order of time. The diagram depicts
+the objects and processes utilized and messages passed in sequence that are required to
+realize the functionality.
+6.4.1.1 Scan Badge sequence diagram
+The sequence diagram in figure 6.5 illustrates the badge scanning process in the system
+to activate an employee to use the transport service by scanning his/her badge. It starts
+when the employee scans his/her badge and the system authenticates it. It initially
+checks whether the badge has already been scanned before. If it did, the system denies by
+displaying a message the badge has been scanned previously, denies access, sends an alert,
+and updates the unauthorized scan list. In case it is a new scan, the system then verifies
+whether the employee is authorized to use the transportation. If the employee is not
+authorized, access is denied and the unauthorized list is updated. But in the event that
+the authorized employee, the system gives access, lists on the approved list, and records
+the scan. This system keeps only approved staff members able to use the transport service,
+prevents the repetition of scans, and maintains a record of both approved and unapproved
+accesses.
+97
+===== PAGE 111 =====
+6.4. CONCEPTION
+Figure 6.5: Sequence diagram of the “Scan Badge” functionality.
+6.4.1.2 Send complaint sequence diagram
+The sequence diagram illustrated in figure 6.6 indicates the flow of submitting complaints,
+where an employee is capable of submitting a transport-related complaint through the
+system. The process begins when the staff member fills out the complaint form and clicks
+on the send option. The system then verifies the input to avoid leaving the complaint field
+blank. If the field is blank, the system halts the process and displays an error message
+asking the user to provide the required information. When the input is correct, the
+system continues to send the complaint and store it successfully in the database. When
+sent successfully, the system notifies the user through a success message stating that the
+complaint has been sent. This process ensures correct validation of the input, gives clear
+user feedback, and handles data optimally to make a secure and friendly experience in
+sending complaints.
+This method ensures proper input validation, effective feedback, and healthy data
+management, resulting in a smooth and user-friendly complaining process.
+98
+===== PAGE 112 =====
+6.4. CONCEPTION
+Figure 6.6: Sequence diagram of the “Send complaint” functionality.
+6.4.1.3 Show bus position sequence diagram
+The sequence diagram shown in figure 6.7 illustrates the process for tracking bus positions
+in the system. The process begins when the employee requests tracking. The system
+attempts to obtain badge scan records in order to examine if there is any data for tracking
+or not. In case no scan records are available, the system informs the user that there are no
+position details and further processing is discontinued. However, if there are scan records,
+the system processes relevant scan data. There is no position information returned if there
+is no specific scan available corresponding to the request. If there is a matching scan,
+the system constructs and returns the requested bus positions and tracking history. The
+action ensures employees receive accurate and timely information regarding bus locations,
+enhancing real-time tracking while facilitating transparency and reliability in managing
+employee transport.
+99
+===== PAGE 113 =====
+6.4. CONCEPTION
+Figure 6.7: Sequence diagram of the “Show bus position” functionality.
+6.4.2 Class Diagram
+The class diagram is the building block of object-oriented modeling. It is utilized for
+overall conceptual modeling of the application framework, and for detailed modeling,
+translating the models into programming code. Figure 6.8 illustrates the class diagram
+of sprint 4.
+100
+===== PAGE 114 =====
+6.5. REALIZATION
+Figure 6.8: Class Diagram of sprint 4.
+6.5 Realization
+In this section, we present a few of the user interfaces developed during Sprint 4. These in-
+terfaces show the practical application of the functionalities hitherto explored, illustrating
+how the platform supports employees on an everyday level.
+6.5.1 Scan badge Interface:
+The "Badge Scan" interface is intended to enable real-time employee access verification
+for company transportation services. It is used most frequently at a bus stop, at the
+beginning or end of a shift, to scan whether employees are allowed to board the bus.
+The page is centered with the company logo at the top for the sake of brand consistency.
+Directly below is a discreet title "Badge Scan" to declare the purpose of the interface. A
+panel of information is shown to show the transport information like the selected bus line,
+the corresponding work shift, and the travel direction (outward or return). These values
+are highlighted for visibility. Two main lists are also present on the interface: one showing
+authorized individuals and the other showing unauthorized individuals. When the badge
+is scanned by an employee, the system immediately processes the data from the badge
+101
+===== PAGE 115 =====
+6.5. REALIZATION
+and checks whether the person is scheduled for the current shift, on the desired line,
+and in the correct direction. The interface responds by presenting a brief notification
+message stating the result of the scan, including the name of the employee and other
+related information. When the bus is authorized for the employee to board, the interface
+displays a green success message of notification along with the employee name and status
+as shown in the figure 6.9. Meanwhile, the interface background color is altered to a light
+green tint in order to give a quick visual cue to the employee as well as the operator. The
+employee name is added to the "Authorized Persons" list, which helps to keep an updated
+attendance record for the current trip.
+Figure 6.9: Scan Result Interface – Authorized Badge.
+In case the employee is rejected, the interface shows a red error message containing the
+person’s name and the rejection reason, figure 6.10. The page background color is also
+briefly altered to light red to create visual feedback indicating that access is being denied.
+The employee’s name is recorded in the "Unauthorized Persons" list so the operator can
+take appropriate action or inquire further if needed.
+102
+===== PAGE 116 =====
+6.5. REALIZATION
+Figure 6.10: Scan Result Interface – Unauthorized Badge.
+In the situation an employee tries to scan their badge more than once, the system
+recognizes the duplicate scan and displays a warning message indicating that the badge
+has already been scanned.
+103
+===== PAGE 117 =====
+6.5. REALIZATION
+Figure 6.11: Scan Result Interface – Warning message.
+All the alert messages and background color changes disappear automatically after
+five seconds. This keeps the interface free from unwanted messages and ready for the next
+scan, allowing easy processing of a large number of employees in less time. Its objective is
+to streamline the employee boarding process, verify that only legitimate users of company
+transport access it, and provide for clear, real-time feedback to drivers. It improves
+command of operations and worker safety through precise and up-to-date tracking of
+company bus usage.
+6.5.2 Send complaints Interface
+The "Send complaints" user interface, figure 6.12, allows employees to report complaints
+or ideas from within the app. This is a simple and informative user interface that en-
+courages users to express their concerns while promoting polite communication. Towards
+the top of the screen, a customized AppBar with the title of "Réclamations" and an icon
+button is displayed, which may be tapped by users in order to view their past complaints.
+The AppBar is styled with the dark blue background and white icons to provide visual
+continuity throughout the app. Once the user has entered their message, they can submit
+it by clicking the "Submit" button, sending an invocation to the backend server. When
+104
+===== PAGE 118 =====
+6.5. REALIZATION
+the complaint has been successfully sent and received by the server and is valid, a success
+message is shown in a SnackBar, and the input field is cleared. If the submission failed
+due to some reason, such as a server or validation error, an appropriate error message
+is shown to inform the user. This feedback process keeps the user at all times informed
+about the result of his action.
+Figure 6.12: Send complaints Interface.
+The interface supports a history view option for submitted grievances. On tapping the
+history icon in the AppBar, the user initiates a call to fetch all complaints made by them
+ever. A loading spinner is shown while data is loading to indicate processing. When the
+complaints are loaded, the primary interface is blurred using a transparent background
+filter to ensure a modal popup is highlighted on the center of the screen. This mode,
+constructed in the form of a white padded rounded card, displays a list of past complaints
+in the order they were submitted as illustrated in the figure 6.13. Each complaints listed
+is in the form of a card whose color indicates its status: green if the administrator has
+marked the complaint as "read," and red if it remains unread. Each card displays the
+complaint text and submission date. This visual facilitates users to directly recognize
+addressed and pending issues. Underneath the modal, a "Close" button allows a user to
+close the view of history and return to the main interface.
+105
+===== PAGE 119 =====
+6.5. REALIZATION
+Figure 6.13: The history of submitted complaints.
+6.5.3 Track Bus Interface
+The Track Bus interface, figure 6.14, provides users with a real-time overview of the
+path of a single employee’s bus. Upon entering the page, the user is presented with a
+briefly titled heading and a warning message describing that the tracking data displayed
+is derived from live data, which at times may be inaccurate or erratic. This warning is
+intended to manage user expectations for the validity of the data. Under the warning,
+the interface displays the name of the bus line the employee is assigned to, giving context
+to the tracking information. The user chooses their shift—morning, afternoon, evening,
+or administrative—from a dropdown list. The filter reloads the scan data dynamically to
+show only the most recent records of bus stops relevant to the chosen shift, making the
+data current and specific. If there is no bus stop data for the selected criteria, a bold and
+centered "No stops available" message informs the user that there are no stops to display.
+Where data is present, however, the interface displays each stop in a tidy, card-designed
+list. Each card shows the name of the bus stop and the exact time the bus was scanned
+at the stop, with the most recent stop highlighted visually by a subtle blue background.
+This layout is simple for users to track the bus journey and view at a glance the latest
+bus movement.
+106
+===== PAGE 120 =====
+6.6. CONCLUSION
+Figure 6.14: Track Bus Interface.
+6.6 Conclusion
+In conclusion, Sprint 4 was an important step where we integrated all essential functional-
+ities of the application. Having implemented authentication, complaints, reservation, line
+changing requests, and bus tracking, we have officially finished the project through this
+sprint. Overall, the project is a complete product with all functions maturing together
+and ready to go into the real world.
+107
+===== PAGE 121 =====
+GENERAL CONCLUSION AND PERSPECTIVES
+This end-of-studies project represents the culmination of my academic journey in Business
+Intelligence and provided a valuable opportunity to apply my theoretical knowledge in
+a professional context. The primary objective was to design and develop an intelligent
+system to optimize employee transportation within an organization, leveraging modern
+technological trends such as web development, data analytics, and generative AI.
+Throughout the different stages of the project, I explored and integrated various disci-
+plines—from building dynamic dashboards to developing a secure, full-stack web applica-
+tion for managing transport requests. Each sprint contributed to a scalable, user-centered
+digital solution that addressed a real-world operational challenge, aligned with contem-
+porary trends in digital transformation.
+A particularly innovative aspect of this project was the incorporation of generative
+AI to create personalized dashboards. This feature demonstrated the potential of AI
+to enhance the flexibility, autonomy, and interactivity of Business Intelligence tools. It
+deepened my practical understanding of AI’s impact on how users interact with and derive
+insights from data.
+Beyond the technical achievements, this experience was also transformative on a per-
+sonal level. It taught me how to manage priorities, work collaboratively in an agile
+environment, adapt quickly to new technologies, and deliver functional solutions under
+time constraints. Most importantly, it reinforced the importance of user-centric design
+and iterative development.
+In conclusion, this internship was both a professional challenge and a rich learning
+experience. It allowed me to grow technically, personally, and professionally while con-
+tributing to a meaningful digital solution. I am confident that the skills, knowledge, and
+mindset I developed through this project will serve as a strong foundation for the next
+stages of my academic and professional career.
+Looking forward, there are several promising directions to keep enhancing and build-
+ing on the current system. While the current system is an effective model for employee
+108
+===== PAGE 122 =====
+General Conclusion
+transport management, there remain some places where future development can be added.
+They are including more advanced predictive analytics to predict transport demand and
+dynamically optimize route planning. In addition, extending the application of AI to
+natural language processing could enable interaction with the system even more naturally
+by voice . In addition, further work would also cover mobile application development for
+greater convenience and direct communication between employees and transport man-
+agers. Finally, enhancing security capabilities and scalability will be essential as the
+system grows to accommodate bigger organizations or multiple sites.
+109
+===== PAGE 123 =====
+BIBLIOGRAPHY
+[1] Sebn-tn2’s logo., 2025. https://www.keejob.com/offresemploi/companies/
+18991/sebn-tn2/ (Accessed: 4 February 2025).
+[2] Scrum process., 2025. https://www.pm-partners.com.au/insights/
+the-agile-journey-a-scrum-overview/ (Accessed: 4 February 2025).
+[3] Scrum roles., 2025. https://nulab.com/learn/project-management/
+quick-guide-scrum-roles-responsibilities/ (Accessed: 4 February 2025).
+[4] Technical architecture of the system., 2025. https://www.altexsoft.com/blog/
+complete-guide-to-business-intelligence-and-analytics-strategy-steps-processes-and-tools/
+(Accessed: 29 April 2025).
+[5] Inmon approach definition., 2025. https://datascientest.com/
+bill-inmon-biographie (Accessed: 29 April 2025).
+[6] Inmon approach., 2025. https://dwgeek.com/
+various-data-warehouse-design-approaches.html/ (Accessed: 29 April
+2025).
+[7] Kimball approach definition., 2025. https://datascientest.com/
+methode-de-kimball-tout-savoir (Accessed: 29 April 2025).
+[8] Kimball approach., 2025. https://dwgeek.com/
+various-data-warehouse-design-approaches.html/ (Accessed: 29 April
+2025).
+[9] Visual studio code., 2025. https://visualstudio.microsoft.com/fr/ (Accessed:
+20 March 2025).
+[10] Mysql., 2025. https://fr.wikipedia.org/wiki/MySQL.
+110
+===== PAGE 124 =====
+BIBLIOGRAPHY
+[11] phpmyadmin., 2025. https://fr.wikipedia.org/wiki/PhpMyAdmin (Accessed: 09
+April 2025).
+[12] Xampp., 2025. https://fr.wikipedia.org/wiki/XAMPP (Accessed: 09 April 2025).
+[13] Talend., 2025. https://www.synaltic.fr/blog/partenaires/talend#:~:
+text=Talend%20est%20l’un%20des,rapidement%20vers%20les%20syst%C3%
+A8mes%20cibles. (Accessed: 09 April 2025).
+[14] Talend’s logo., 2025.https://www.audaxis.com/news/sortie-de-talend-v5-3/
+(Accessed: 09 April 2025).
+[15] Power bi’s logo., 2025. https://www.jeveuxetredatascientist.fr/
+logo-power-bi/ (Accessed: 09 April 2025).
+[16] Draw.io’s logo., 2025. https://medium.com/@hasaliedirisinghe/
+user-guide-to-draw-io-6a1a4d7b5d33 (Accessed: 20 March 2025).
+[17] Overleaf’s logo., 2025. lhttps://fr.wikipedia.org/wiki/Overleaf (Accessed: 09 April
+2025).
+[18] Explanation of the etl process., 2025. https://medium.com/analytics-vidhya/
+understanding-etl-pipeline-76718d299a08 (Accessed: 29 April 2025).
+111
+===== PAGE 125 =====
+
+===== PAGE 126 =====
+Abstract
+As companies seek to prioritize their optimization of operational processes through
+business intelligence, automated and artificial intelligence systems and web technologies,
+the modernization and digital transformation of the current landscape has inspired my
+graduation project at SEBN TN2. This project proposes the design and development of
+an intelligent system for employee transportation optimization. The central objective was
+to generate a comprehensive and scalable solution that includes interactive dashboards for
+urgent insights, customizable reporting tools using generative AI and a web application
+for managing and requesting employee transportation safely and securely.
+The different project phases addressed multiple disciplines; including data visualiza-
+tion techniques for data-driven decisions, integration of generative AI to create a personal-
+ized and responsive user experience, and the design and development of a web application
+to meet the needs of Human resources and employees. The project therefore identified an
+innovated digital solution to a practical and operational realities to also, apply streamlined
+methods, agility, and user-centered design.
+keywords: Employee Transportation, Business Intelligence, Generative AI, Data Vi-
+sualization, Web Application.

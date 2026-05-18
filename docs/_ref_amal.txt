@@ -1,0 +1,2742 @@
+
+===== PAGE 1 =====
+Ministère de l’Enseignement Supérieur et de la Recherche Scientifique
+Université de Tunis
+Institut Supérieur de Gestion de Tunis (ISG)
+RAPPORT DE STAGE DE FIN D’ÉTUDES
+Pour l’obtention de la
+Licence Appliquée en Informatique Décisionnelle
+Mise en place d’un système décisionnel pour le produit
+automobile de l’assurance BIAT
+Entreprise d’accueil :
+Assurances BIAT – Siège social
+Élaboré par :
+Amal Siala
+Encadrants académiques :
+Mme. Maha ELARBI
+Mme. Imen OUESLATI
+Encadrant professionnel :
+Mr. Dhirar BEN YOUNESS
+Année universitaire : 2024 – 2025
+===== PAGE 2 =====
+Remerciements
+Ce travail marque l’aboutissement d’un parcours personnel et académique que je n’au-
+rais jamais pu accomplir sans le soutien, l’amour et la confiance de nombreuses personnes
+précieuses dans ma vie.
+Je tiens à remercier tout particulièrementMme Maha ELARBI , pour son écoute at-
+tentive, sa bienveillance constante et ses conseils éclairés, qui m’ont beaucoup aidée à
+progresser. Elle a toujours su m’encourager dans les moments de doute. Mes remercie-
+ments vont également àMme. Imen OUESLATI , pour son accompagnement, ainsi qu’à
+mes collègues Tahar et Rihab, pour leurs remarques constructives et leur aide précieuse
+tout au long de ce projet.
+Je remercie chaleureusementMr. Dhirar BEN YOUNESS , mon encadrant profession-
+nel, de m’avoir offert l’opportunité d’effectuer ce stage au sein de l’assurance BIAT. Cette
+expérience a été un vrai tournant dans mon parcours professionnel.
+À ma mère, je veux exprimer toute ma reconnaissance. Elle a tout donné pour moi,
+avec un courage immense et des sacrifices silencieux. Sa force et son amour sont à l’origine
+de chacune de mes réussites.
+Je remercie de tout cœur ma sœur, qui a toujours été là pour moi, une présence
+rassurante,unappuidanslesmomentsdifficiles,unesourcedeforceetd’affectioncontinue,
+ainsiquemon petit frère,poursaprésenceprécieusedansmavieetl’amourqu’ilm’apporte
+au quotidien.
+Merci àHeni, pour sa présence constante, ses encouragements, son écoute bienveillante
+et son soutien tout au long de cette aventure.
+J’adresse aussi ma gratitude à tous mes amis pour leur motivation, leur bienveillance
+et leur soutien indéfectible à chaque étape.
+Enfin, je dédie ce travail à matante, qui nous a quittés durant cette année difficile.
+Elle a été une seconde mère pour moi. J’aurais tant voulu qu’elle soit encore parmi nous
+pour partager ce moment et voir ce que j’ai accompli. Ce succès, je le lui offre de tout
+mon cœur, en hommage à son amour, à sa douceur et à tout ce qu’elle représentait pour
+moi.
+Je tiens également à remercier tous les enseignants qui m’ont accompagnée au cours de
+ces trois années. Leur savoir, leur patience et leur engagement ont profondément enrichi
+mon parcours. Je me sens extrêmement chanceuse d’avoir étudié à l’ISG, un établissement
+qui m’a offert l’opportunité d’apprendre, de grandir et de me préparer sereinement à
+l’avenir.
+i
+===== PAGE 3 =====
+Table des matières
+Introduction générale 1
+Chapitre 1 : Présentation générale du projet 2
+1.1 Introduction . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 2
+1.2 Présentation de l’assurance BIAT . . . . . . . . . . . . . . . . . . . . . . . 2
+1.2.1 Fiche signalétique . . . . . . . . . . . . . . . . . . . . . . . . . . . . 3
+1.2.2 Organigramme hiérarchique de l’entreprise . . . . . . . . . . . . . . 3
+1.2.3 Valeurs de l’assurance BIAT . . . . . . . . . . . . . . . . . . . . . . 4
+1.2.4 Historique de l’assurance BIAT . . . . . . . . . . . . . . . . . . . . 4
+1.2.5 Présentation du département contrôle de gestion . . . . . . . . . . . 5
+1.3 Contexte du projet . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 5
+1.3.1 Analyse et critique de l’existant . . . . . . . . . . . . . . . . . . . . 6
+1.3.2 Problématique . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 6
+1.3.3 Solution proposée . . . . . . . . . . . . . . . . . . . . . . . . . . . . 6
+1.4 Méthodologie de gestion du projet . . . . . . . . . . . . . . . . . . . . . . . 7
+1.4.1 Méthodologie Scrum . . . . . . . . . . . . . . . . . . . . . . . . . . 7
+1.4.1.1 Avantages de Scrum . . . . . . . . . . . . . . . . . . . . . 7
+1.4.1.2 Limites de Scrum . . . . . . . . . . . . . . . . . . . . . . . 8
+1.4.2 Méthodologie GIMSI . . . . . . . . . . . . . . . . . . . . . . . . . . 8
+1.4.2.1 Avantages de GIMSI . . . . . . . . . . . . . . . . . . . . . 9
+1.4.2.2 Limites de GIMSI . . . . . . . . . . . . . . . . . . . . . . 9
+1.4.2.3 Comparaison entre Scrum et GIMSI . . . . . . . . . . . . 10
+1.5 Méthodologie adoptée . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 10
+1.6 Planification du projet . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 11
+1.7 Conclusion . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 11
+Chapitre 2 : Identification de l’environnement 12
+2.1 Introduction . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 12
+2.2 Environnement de l’entreprise . . . . . . . . . . . . . . . . . . . . . . . . . 12
+2.3 Processus de l’assurance BIAT . . . . . . . . . . . . . . . . . . . . . . . . . 13
+2.4 Établissements de l’assurance BIAT . . . . . . . . . . . . . . . . . . . . . . 13
+2.5 Activités de l’assurance BIAT . . . . . . . . . . . . . . . . . . . . . . . . . 13
+2.6 Les acteurs de l’assurance BIAT . . . . . . . . . . . . . . . . . . . . . . . . 14
+2.7 Les garanties de l’assurance automobile . . . . . . . . . . . . . . . . . . . . 15
+2.8 Conclusion . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 16
+ii
+===== PAGE 4 =====
+Table des matières Table des matières
+Chapitre 3 : Conception 17
+3.1 Introduction . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 17
+3.2 Définition des principales exigences . . . . . . . . . . . . . . . . . . . . . . 17
+3.2.1 Exigences fonctionnelles . . . . . . . . . . . . . . . . . . . . . . . . 17
+3.2.2 Exigences non fonctionnelles . . . . . . . . . . . . . . . . . . . . . . 18
+3.3 Construction du tableau de bord . . . . . . . . . . . . . . . . . . . . . . . 18
+3.3.1 Présentation du tableau de bord . . . . . . . . . . . . . . . . . . . . 18
+3.3.2 Importance de la construction d’un tableau de bord . . . . . . . . 19
+3.4 Collecte des informations . . . . . . . . . . . . . . . . . . . . . . . . . . . . 19
+3.5 Sélection des indicateurs . . . . . . . . . . . . . . . . . . . . . . . . . . . . 19
+3.6 Système de tableaux de bord . . . . . . . . . . . . . . . . . . . . . . . . . . 21
+3.6.1 Approches de conception d’entrepôt de données . . . . . . . . . . . 21
+3.6.1.1 Approche Inmon . . . . . . . . . . . . . . . . . . . . . . . 21
+3.6.1.2 Approche Kimball . . . . . . . . . . . . . . . . . . . . . . 22
+3.6.1.3 Comparaison des approches Inmon et Kimball . . . . . . 22
+3.6.1.4 Approche adoptée . . . . . . . . . . . . . . . . . . . . . . 22
+3.6.2 Schémas d’entrepôt de données . . . . . . . . . . . . . . . . . . . . 23
+3.6.2.1 Schéma en étoile . . . . . . . . . . . . . . . . . . . . . . . 24
+3.6.2.2 Schéma en flocon de neige . . . . . . . . . . . . . . . . . 24
+3.6.2.3 Schéma en constellation de faits . . . . . . . . . . . . . . 25
+3.6.2.4 Schéma adopté . . . . . . . . . . . . . . . . . . . . . . . . 26
+3.7 Data Mart . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 26
+3.8 Modèles de conception des tableaux de bord . . . . . . . . . . . . . . . . . 27
+3.8.1 Modèle de l’entrepôt de données . . . . . . . . . . . . . . . . . . . . 28
+3.8.2 Prototypage des dashboards métiers . . . . . . . . . . . . . . . . . . 28
+3.8.2.1 Modèle de dashboard pour l’analyse client . . . . . . . . . 28
+3.8.2.2 Modèle de dashboard pour l’analyse des contrats . . . . . 29
+3.8.2.3 Modèle de dashboard pour l’analyse des agences . . . . . . 30
+3.9 Conclusion . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 30
+Chapitre 4 : Implémentation et audit 31
+4.1 Introduction . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 31
+4.2 Processus ETL . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 31
+4.3 Outils ETL choisis . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 31
+4.3.1 Langage de programmation : Python . . . . . . . . . . . . . . . . . 32
+4.3.2 Environnement de développement : Spyder . . . . . . . . . . . . . . 32
+4.3.3 Bibliothèques Python utilisées . . . . . . . . . . . . . . . . . . . . . 33
+4.3.4 Sources de données . . . . . . . . . . . . . . . . . . . . . . . . . . . 34
+4.3.5 Destination des données . . . . . . . . . . . . . . . . . . . . . . . . 34
+4.3.6 Outil de visualisation : Power BI . . . . . . . . . . . . . . . . . . . 34
+4.4 Extraction des données . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 34
+4.5 Transformation des données . . . . . . . . . . . . . . . . . . . . . . . . . . 35
+4.5.1 Transformation des données avec Python . . . . . . . . . . . . . . . 36
+4.5.2 Transformation complémentaire avec Power BI . . . . . . . . . . . . 38
+4.6 Chargement des données . . . . . . . . . . . . . . . . . . . . . . . . . . . . 39
+4.7 Création des tableaux de bord . . . . . . . . . . . . . . . . . . . . . . . . . 39
+4.7.1 Tableau de bord analyse des clients . . . . . . . . . . . . . . . . . . 39
+4.7.2 Tableau de bord analyse des contrats . . . . . . . . . . . . . . . . . 41
+iii
+===== PAGE 5 =====
+Table des matières Table des matières
+4.7.3 Tableau de bord analyse des agences . . . . . . . . . . . . . . . . . 43
+4.8 Audit . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 45
+4.9 Conclusion . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 45
+Chapitre 5 : Analyse avancée des données des clients de l’assurance BIAT :
+Prévision, segmentation et prédiction 46
+5.1 Introduction . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 46
+5.2 Prévision du chiffre d’affaires et du nombre de clients . . . . . . . . . . . . 46
+5.2.1 Notions de base des séries temporelles . . . . . . . . . . . . . . . . . 46
+5.2.2 Analyse exploratoire des données . . . . . . . . . . . . . . . . . . . 47
+5.2.3 Étude de la stationnarité . . . . . . . . . . . . . . . . . . . . . . . . 47
+5.2.3.1 Vérification de la stationnarité avec le test ADF . . . . . . 47
+5.2.3.2 Stabilisation de la série temporelle . . . . . . . . . . . . . 48
+5.2.4 Division des données en des ensemble d’entraînement et de test . . 49
+5.2.5 Création des modèles . . . . . . . . . . . . . . . . . . . . . . . . . . 49
+5.2.5.1 Le modèle Holt-Winters . . . . . . . . . . . . . . . . . . . 49
+5.2.5.2 Le modèle XGBoost . . . . . . . . . . . . . . . . . . . . . 50
+5.2.5.3 Le modèle ARIMA saisonnier (SARIMA) . . . . . . . . . 52
+5.2.6 Évaluation de la performance des modèles . . . . . . . . . . . . . . 53
+5.2.6.1 Les métriques d’évaluation . . . . . . . . . . . . . . . . . . 53
+5.2.6.2 Résultats obtenus . . . . . . . . . . . . . . . . . . . . . . . 55
+5.2.7 Déploiement . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 55
+5.3 Segmentation des clients . . . . . . . . . . . . . . . . . . . . . . . . . . . . 56
+5.3.1 Préparation des données . . . . . . . . . . . . . . . . . . . . . . . . 56
+5.3.2 Détermination du nombre optimal de clusters et application de l’al-
+gorithme K-Means . . . . . . . . . . . . . . . . . . . . . . . . . . . 56
+5.3.2.1 Choix du nombre de clusters . . . . . . . . . . . . . . . . 56
+5.3.2.2 Application de l’algorithme K-Means pour la segmentation 57
+5.3.3 Export des données segmentées . . . . . . . . . . . . . . . . . . . . 58
+5.3.4 Intégration dans Power BI . . . . . . . . . . . . . . . . . . . . . . . 59
+5.4 Prédiction du comportement des clients . . . . . . . . . . . . . . . . . . . . 60
+5.4.1 Préparation des données . . . . . . . . . . . . . . . . . . . . . . . . 60
+5.4.2 Construction des modèles . . . . . . . . . . . . . . . . . . . . . . . 61
+5.4.2.1 Random Forest . . . . . . . . . . . . . . . . . . . . . . . . 61
+5.4.2.2 Régression Logistique . . . . . . . . . . . . . . . . . . . . 62
+5.4.3 Métriques d’évaluation . . . . . . . . . . . . . . . . . . . . . . . . . 62
+5.4.4 Résultats obtenus . . . . . . . . . . . . . . . . . . . . . . . . . . . . 63
+5.4.5 Déploiement . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 65
+5.4.5.1 Interface d’accueil . . . . . . . . . . . . . . . . . . . . . . 65
+5.4.5.2 Interface de prédiction du comprtement des clients . . . . 65
+5.5 Conclusion . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 67
+Conclusion générale 68
+iv
+===== PAGE 6 =====
+Liste des figures
+1.1 Logo de l’assurance BIAT . . . . . . . . . . . . . . . . . . . . . . . . . . . 2
+1.2 Organigramme de l’assurance BIAT . . . . . . . . . . . . . . . . . . . . . . 4
+1.3 Processus de Scrum . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 7
+1.4 Processus GIMSI . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 8
+1.5 Diagramme de Gantt représentant la planification du projet . . . . . . . . 11
+3.1 Extrait du fichier Excel contenant les données contractuelles de BIAT As-
+surance . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 21
+3.2 Illustration du schéma en étoile . . . . . . . . . . . . . . . . . . . . . . . . 24
+3.3 Illustration du schéma en flocon de neige . . . . . . . . . . . . . . . . . . . 25
+3.4 Illustration du schéma en constellation de faits . . . . . . . . . . . . . . . . 26
+3.5 Modèle de l’entrepôt de données . . . . . . . . . . . . . . . . . . . . . . . . 28
+3.6 Dashboard "Analyse des clients" . . . . . . . . . . . . . . . . . . . . . . . . 29
+3.7 Dashboard "Analyse des contrats" . . . . . . . . . . . . . . . . . . . . . . . 29
+3.8 Dashboard "Analyse des agences" . . . . . . . . . . . . . . . . . . . . . . . 30
+4.1 Logo Python . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 32
+4.2 Logo Spyder . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 32
+4.3 Logo Pandas . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 33
+4.4 Logo Openpyxl . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 33
+4.5 Logo Numpy . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 33
+4.6 Logo Power BI . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 34
+4.7 Extraction Excel . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 35
+4.8 Exemple de script Python pour l’extraction des fichiers Excel . . . . . . . . 35
+4.9 Chargement et nettoyage des fichiers Excel . . . . . . . . . . . . . . . . . . 36
+4.10 Création de dictionnaires de mappage pour les agents et les régions . . . . 37
+4.11 Création des colonnes . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 37
+4.12 Création de la colonneStatut et normalisation du mois . . . . . . . . . . . 37
+4.13 Script d’export final de la base consolidée . . . . . . . . . . . . . . . . . . . 38
+4.14 Étapes de transformation effectuées dans Power Query . . . . . . . . . . . 38
+4.15 Tableau de bord "Analyse des clients" . . . . . . . . . . . . . . . . . . . . . 40
+4.16 Tableau de bord "Analyse des contrats" . . . . . . . . . . . . . . . . . . . . 42
+4.17 Tableau de bord "Analyse des agences" . . . . . . . . . . . . . . . . . . . . 43
+5.1 Script de préparation des données . . . . . . . . . . . . . . . . . . . . . . . 47
+5.2 Script du test statistique ADF . . . . . . . . . . . . . . . . . . . . . . . . . 48
+5.3 Résultats du test ADF . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 48
+5.4 Script de division des données temporelles en ensembles d’entraînement et
+de test . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 49
+5.5 Script de l’implémentation du modèle Holt-Winters . . . . . . . . . . . . . 50
+5.6 Illustration des résultats de prévision du chiffre d’affaires à l’aide du modèle
+Holt-Winters . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 50
+v
+===== PAGE 7 =====
+Liste des figures Liste des figures
+5.7 Illustration des résultats de prévision du nombre de clients à l’aide du
+modèle Holt-Winters . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 50
+5.8 Script de l’implémentation du modèle XGBoost . . . . . . . . . . . . . . . 51
+5.9 Illustration des résultats de prévision du chiffre d’affaires à l’aide du modèle
+XGBoost . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 51
+5.10 Illustration des résultats de prévision du nombre de clients à l’aide du
+modèle XGBoost . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 52
+5.11 Script de l’implémentation du modèle SARIMA . . . . . . . . . . . . . . . 52
+5.12 Illustration des résultats de prévision du chiffre d’affaires à l’aide du modèle
+SARIMA . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 53
+5.13 Illustration des résultats de prévision du nombre de clients à l’aide du
+modèle SARIMA . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 53
+5.14 Script de comparaison des modèles de prévision . . . . . . . . . . . . . . . 54
+5.15 Dashboard "Tableau de bord prévisionnel" . . . . . . . . . . . . . . . . . . 56
+5.16 Script de l’implémentation de la méthode Elbow . . . . . . . . . . . . . . . 57
+5.17 Illustration du résultat de l’application de la méthode Elbow . . . . . . . . 57
+5.18 Script de l’implémentation de l’algorithme K-Means . . . . . . . . . . . . 58
+5.19 Visualisation de la segmentation des clients par K-Means . . . . . . . . . . 59
+5.20 Tableau de bord "Segmentation des clients" . . . . . . . . . . . . . . . . . . 59
+5.21 Aperçu des données sources après nettoyage . . . . . . . . . . . . . . . . . 61
+5.22 Script de l’implémentation du modèle Random Forest . . . . . . . . . . . . 62
+5.23 Script de l’implémentation du modèle Régression Logistique . . . . . . . . 62
+5.24 Matrice de confusion du modèle Random Forest . . . . . . . . . . . . . . . 64
+5.25 Matrice de confusion du modèle Régression Logistique . . . . . . . . . . . . 64
+5.26 Page d’accueil . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 65
+5.27 Interface interactive de prédiction du comportement des clients . . . . . . . 66
+5.28 Exemple de prédicition du comportement des clients . . . . . . . . . . . . 66
+vi
+===== PAGE 8 =====
+Liste des tableaux
+1.1 Fiche signalétique de l’assurance BIA . . . . . . . . . . . . . . . . . . . . . 3
+1.2 Historique de l’assurance BIAT . . . . . . . . . . . . . . . . . . . . . . . . 5
+1.3 Comparaison entre Scrum et GIMSI . . . . . . . . . . . . . . . . . . . . . . 10
+2.1 Comparatif des garanties selon les formules d’assurance auto proposées par
+BIAT . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 15
+3.2 Liste des KPI pour l’analyse des clients . . . . . . . . . . . . . . . . . . . . 20
+3.3 Liste des KPI pour l’analyse des contrats . . . . . . . . . . . . . . . . . . . 20
+3.4 Liste des KPI pour l’analyse des agences . . . . . . . . . . . . . . . . . . . 21
+3.5 Approche Inmon . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 22
+3.6 Approche Kimball . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 23
+3.7 Comparaison entre les approches Inmon et Kimball . . . . . . . . . . . . . 23
+3.8 Description des tables de faits et de dimensions du data mart . . . . . . . . 27
+4.9 Description des visuels du tableau de bord "Analyse des clients" . . . . . . 40
+4.10 Description des visuels du tableau de bord "Analyse des contrats" . . . . . 42
+4.11 Description des visuels du tableau de bord "Analyse des agences" . . . . . . 44
+5.12 Résultats obtenues par les trois modèles en comparaison (SARIMA, Holt-
+Winters et XGBoost) pour la prévision du chiffre d’affaires en terme de
+RMSE et MAE . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 54
+5.13 Résultats obtenues par les trois modèles en comparaison (SARIMA, Holt-
+Winters et XGBoost) pour la prévision du nombre de clients en terme de
+RMSE et MAE . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 55
+5.14 Description des visuels du tableau de bord "Segmentation des clients" . . . 60
+5.15 Métriques d’évaluation des modèles . . . . . . . . . . . . . . . . . . . . . . 63
+5.16 Comparaison des performances des deux modèles . . . . . . . . . . . . . . 64
+vii
+===== PAGE 9 =====
+Liste des acronymes
+BIAT Banque Internationale Arabe deTunisie
+BI Business Intelligence
+ETL Extract Transform Load
+IT Information Technology
+KPI Key Performance Indicator
+SID Système d’Information Décisionnel
+IFRS International Financial Reporting Standards
+ADF Augmented Dickey-Fuller
+XGBoost Extreme Gradient Boosting
+SARIMA Seasonal AutoRegressive Integrated Moving Average
+RMSE Root Mean Squared Error
+MAE Mean Absolute Error
+viii
+===== PAGE 10 =====
+Introduction générale
+Dans un environnement économique en constante évolution, la réussite des entreprises
+repose de plus en plus sur la maîtrise de l’information et la capacité à s’adapter rapide-
+ment aux changements. Pour rester compétitives, les organisations doivent mettre en place
+des stratégies de contrôle et de pilotage efficaces, en s’appuyant sur des outils capables
+de transformer les données en leviers décisionnels. La Business Intelligence (BI) s’impose
+aujourd’hui comme un élément clé de cette transformation. Elle permet aux entreprises
+d’analyser leurs données métiers, de suivre les indicateurs de performance (KPIs), d’éva-
+luer les risques et de mieux comprendre le comportement de leurs clients. Grâce à des
+tableaux de bord dynamiques et des outils de visualisation, les décideurs disposent désor-
+mais d’une vision globale et synthétique de leur activité, facilitant des décisions éclairées
+et réactives. C’est dans cette optique que s’inscrit ce projet de fin d’études, réalisé au
+sein de l’assurance BIAT. Il vise à concevoir et à mettre en place un système d’informa-
+tion décisionnel, capable d’accompagner l’entreprise dans l’analyse de ses données liées au
+produit automobile. Le projet intègre la construction de tableaux de bord interactifs, la
+prévision d’indicateurs clés, ainsi que la segmentation et la prédiction du comportement
+des clients. Ce rapport est structuré comme suit :
+— Le premier chapitre "Cadre général du projet", introduit l’environnement de travail
+au sein de l’assurance BIAT. Il expose les objectifs du projet, décrit l’existant, puis
+justifie la méthodologie adoptée en la comparant à d’autres approches pour la
+planification du projet.
+— Le deuxième chapitre "Identification de l’environnement", présente en détail l’en-
+treprise, son environnement ainsi que le produit assurance automobile.
+— Letroisièmechapitre"Conception",portesurl’identificationdesexigencesfonction-
+nelles et non fonctionnelles, la définition des KPIs, ainsi que les étapes essentielles
+ayant guidé la création des tableaux de bord.
+— Le quatrième chapitre "Implémentation et audit", est dédié à l’implémentation
+technique. Il met en évidence les outils utilisés, décrit le processus ETL ainsi que
+les étapes de création des tableaux de bord interactifs.
+— Le cinquième chapitre "Analyse avancée des données des clients de l’assurance
+BIAT:Prévision,segmentationetprédiction",présentelapartieanalytiqueavancée
+du projet. Il développe les modèles de prévision, de classification et de prédiction
+mis en œuvre pour anticiper le comportement des clients et appuyer la prise de
+décision stratégique.
+L’ensemble de ces travaux vise à doter l’assurance BIAT d’un outil stratégique fondé
+sur les données, pour mieux anticiper les risques, suivre la performance et renforcer la
+relation avec ses clients.
+1
+===== PAGE 11 =====
+Chapitre 1
+Cadre général du projet
+1.1 Introduction
+Dans ce chapitre, nous visons à offrir une compréhension claire du périmètre du projet.
+Nous commencerons par une présentation générale, suivie d’une analyse des exigences
+spécifiques. Ensuite, nous exposerons les grandes lignes du projet et du stage, en étudiant
+l’existant, en identifiant les axes d’amélioration et en proposant des solutions aux défis
+rencontrés. Enfin, nous présenterons l’approche adoptée pour assurer une organisation
+structurée et efficace tout au long du projet.
+1.2 Présentation de l’assurance BIAT
+L’assurance BIAT est une filiale du groupe Banque Internationale Arabe de Tunisie
+(BIAT), spécialisée dans les assurances multibranches. Grâce à une stratégie axée sur
+l’innovation et une expertise solide, elle a connu une croissance continue en s’appuyant
+sur une équipe hautement qualifiée. Aujourd’hui, l’assurance BIAT dispose de 14 agences
+réparties sur le territoire Tunisien, ainsi que 3 centres d’expertise, offrant ainsi des services
+adaptés aux besoins variés des clients. La figure 1.1 montre le logo de l’assurance BIAT,
+représentant visuellement l’identité de l’entreprise.
+Figure 1.1 : Logo de l’assirance BIAT [1]
+2
+===== PAGE 12 =====
+Chapitre 1 1.2. Présentation de l’assurance BIAT
+1.2.1 Fiche signalétique
+Le tableau 1.1 montre les principales informations administratives et juridiques de la
+compagnie d’assurance BIAT.
+Tableau 1.1 : Fiche signalétique de l’assurance BIAT [1]
+Dénomination Assurances BIAT
+Siège social Immeuble Assurances BIAT – Les Jardins du Lac –
+Lac 2, 1053 Les Berges du Lac, Tunis
+Date de création Décembre 2002
+Capital social 22 000 000 DT
+Nombre d’actions 220 000 actions (valeur nominale : 100 DT chacune)
+Origine Tunisienne
+Forme juridique Société Anonyme (S.A) faisant appel public à l’épargne
+Registre du commerce B160631997
+Matricule fiscal 0601492D
+Contact Tél : (+216) 31 300 100 / Fax : (+216) 71 197 810 /
+Email : contact@assurancesbiat.com.tn
+Branches exploitées Multibranches( Assurance vie, automobile, incendie,
+santé, etc.)
+1.2.2 Organigramme hiérarchique de l’entreprise
+La figure 1.2 illustre l’organigramme fonctionnel de la compagnie d’accueil, assurances
+BIAT. Au sommet de la hiérarchie se trouve la Direction Générale, appuyée par plusieurs
+départements stratégiques tels que le Département Actuariat et Risk Management, le
+Département Audit, Contrôle Permanent et Conformité, la Division Inspection et le Dé-
+partement Réassurance. L’organisation est structurée autour de six grands pôles : Le Pôle
+Assurances Dommages et Responsabilités, le Pôle Assurances de Personnes, le Pôle Com-
+mercial, le Pôle Comptabilité, Contrôle de Gestion et Recouvrement, le Pôle Systèmes
+d’Information, Transformation et Organisation, et enfin le Pôle Financier, Ressources
+Humaines, Logistique et Contentieux. C’est au sein du Pôle Comptabilité, Contrôle de
+Gestion et Recouvrement que se trouve le Département Budget et Contrôle de Gestion,
+mis en évidence sur la figure. Ce département, dans lequel mon stage a été effectué, joue
+un rôle clé dans la supervision et l’optimisation des performances financières de la compa-
+gnie. Il intervient dans l’élaboration des budgets, le suivi des KPIs, et l’analyse des écarts
+afin de proposer des ajustements opérationnels. Il contribue aussi à la définition des stra-
+tégies et à la conduite des plans d’action visant à améliorer l’efficacité et la rentabilité
+globale de l’entreprise.
+3
+===== PAGE 13 =====
+Chapitre 1 1.2. Présentation de l’assurance BIAT
+Figure 1.2 : Organigramme de l’assurance BIAT [1]
+1.2.3 Valeurs de l’assurance BIAT
+L’assurance BIAT repose sur des valeurs fondamentales qui guident ses actions et ses
+décisions pour offrir des services d’assurance de qualité. Les valeurs de l’assurane BIAT
+être décrites comme suit [1] :
+— Engagement client : Offrir des solutions adaptées aux besoins des assurés avec un
+accompagnement personnalisé.
+— Excellence : Maintenir des standards élevés en matière de gestion des risques et de
+services financiers.
+— Innovation : Intégrer des outils digitaux et des solutions intelligentes pour améliorer
+la gestion des contrats et des sinistres.
+— Éthique et transparence : Assurer une communication claire avec les clients et
+partenaires pour une relation de confiance.
+— Responsabilité sociale : Contribuer au développement économique et social en Tu-
+nisie à travers des solutions d’assurance adaptées.
+1.2.4 Historique de l’assurance BIAT
+L’assurance BIAT créée en décembre 2002. Depuis, elle a connu une évolution constante
+à travers l’expansion de ses services et l’innovation technologique, comme le montre le
+tableau 1.2.
+4
+===== PAGE 14 =====
+Chapitre 1 1.3. Contexte du projet
+Tableau 1.2 : Historique de l’assurance BIAT [1]
+Année Événement clé
+2002 Fondation de l’assurance BIAT et intégration au groupe
+BIAT.
+2005–2010 Expansion des services avec le lancement de nouvelles
+branches (auto, santé, habitation, etc.).
+2015 Développement du secteur assurance vie grâce à la bancassu-
+rance en partenariat avec les agences BIAT.
+2018 Digitalisation des services avec la mise en place de plateformes
+en ligne pour la gestion des contrats et sinistres.
+2020 Adaptation post-COVID avec de nouveaux produits d’assu-
+rance pour les risques sanitaires et économiques.
+2023 Introduction de l’intelligence artificielle et du machine lear-
+ning pour améliorer la gestion des risques et clients.
+1.2.5 Présentation du département contrôle de gestion
+Mon stage a été effectué au sein du département contrôle de gestion d’assurance BIAT.
+Ce département joue un rôle central dans la supervision des performances financières,
+l’élaboration et le suivi budgétaire, le respect des normes comptables et réglementaires,
+ainsi que dans la réalisation de projets spécifiques à la demande de la direction générale.
+Ses principales activités peuvent être résumées comme suit :
+— Élaboration et suivi budgétaire : Planification du budget de l’entreprise et aligne-
+ment des prévisions financières avec les objectifs stratégiques.
+— Suivi des performances financières : Analyse quotidienne du chiffre d’affaires afin
+de détecter les tendances, évaluer les écarts et ajuster les stratégies.
+— Gestion des normes et de la réglementation : Étude de l’impact du passage aux
+normes International Financial Reporting Standards (IFRS) et suivi des exigences
+réglementaires pour garantir la conformité.
+— Gestion de projets spécifiques : Prise en charge de projets ponctuels liés aux orien-
+tations stratégiques décidées par la direction générale [1].
+1.3 Contexte du projet
+Ce projet s’inscrit dans le cadre de la Licence Nationale en Business Computing, spécialité
+Business Intelligence (LNBC-BI) à l’Institut Supérieur de Gestion de Tunis (ISG-Tunis).
+Il a pour objectif de préparer les étudiants à la vie professionnelle en les confrontant
+à des problématiques réelles rencontrées en entreprise. Réalisé au sein d’une compagnie
+d’assurances spécialisée dans la gestion multibranche, ce stage a permis de concevoir une
+solution intégrant des volets décisionnels, prévisionnels, de segmentation et de prédiction
+du comportement des clients. Cette approche vise à valoriser les données disponibles afin
+de faciliter l’analyse, orienter les décisions stratégiques et anticiper les besoins ou les
+risques liés à la clientèle.
+5
+===== PAGE 15 =====
+Chapitre 1 1.3. Contexte du projet
+1.3.1 Analyse et critique de l’existant
+Actuellement, l’entreprise d’accueil gère ses activités à l’aide d’outils internes et de sys-
+tèmes d’information classiques. Les données sont collectées via des formulaires, saisies
+manuellement, puis stockées dans des bases dispersées entre plusieurs services. Les rap-
+ports de performance sont générés périodiquement, le plus souvent sous forme de fichiers
+Excel. Cette méthode de gestion présente plusieurs limites : L’absence de centralisation
+ralentit l’accès à l’information, le manque de normes freine l’analyse fiable de la rentabilité
+ou de la fidélité des clients, et aucun système n’est en place pour anticiper les évolutions
+futures. Pour répondre à ces défis, une solution complète a été conçue dans le cadre de
+ce projet, combinant plusieurs volets complémentaires : la création de tableaux de bord
+dynamiques pour une visualisation claire des KPIs, l’intégration de modèles de prévision
+pour anticiper les évolutions clés, la segmentation des clients pour mieux orienter les ac-
+tions commerciales et de gestion des risques, ainsi que la prédiction du comportement des
+clients afin d’identifier en amont les profils à risque ou à fort potentiel. Cette approche
+offre à l’entreprise un outil d’aide à la décision efficace, favorisant un pilotage plus agile,
+une meilleure réactivité, et une amélioration globale de la stratégie opérationnelle.
+1.3.2 Problématique
+L’assurance BIAT ne dispose actuellement ni de tableaux de bord interactifs pour le suivi
+en temps réel de ses indicateurs clés, ni de modèles de prévision dynamiques permettant
+d’anticiper l’évolution de ces indicateurs. Elle ne bénéficie pas non plus de segmentation
+automatisée de ses clients assurés en assurance automobile, ni d’un système de prédiction
+de leur comportement. L’absence de ces outils freine la capacité de l’entreprise à analyser
+finement la rentabilité des contrats, à anticiper les risques ou les départs de ces assurés
+et à piloter efficacement ses actions commerciales. Ces lacunes limitent la prise de dé-
+cision stratégique et nuisent à la performance globale dans un secteur de plus en plus
+concurrentiel.
+1.3.3 Solution proposée
+Pour accompagner la prise de décision au sein de l’assurance BIAT, nous proposons la
+mise en place d’un système décisionnel structuré, dédié à l’exploitation des données liées
+au produit automobile. Cette solution vise à combler les lacunes constatées, notamment
+l’absence de visualisations dynamiques, de prévisions fiables et d’outils d’analyse avan-
+cée. Elle permet d’améliorer significativement l’analyse des performances, la connaissance
+client et la gestion des risques. La démarche suivie repose sur les étapes suivantes :
+— Collecteetcentralisationdesdonnéesclientsetcontratsissuesdedifférentessources
+internes, afin de construire une base de données unifiée, cohérente et exploitable;
+— Nettoyage, structuration et transformation des données pour garantir leur qualité
+et permettre des analyses précises et fiables;
+— Modélisation d’un data warehouse orienté assurance automobile, répondant aux
+besoins métiers spécifiques de la gestion des contrats, des sinistres et des perfor-
+mances clients;
+— Détermination des KPIs portant sur le chiffre d’affaires, la fidélité client, les pertes
+et gains générés, ainsi que le taux de résiliation;
+— Conception de tableaux de bord interactifs dans Power BI facilitant le suivi en
+temps réel de ces KPIs et permettant une lecture dynamique des tendances;
+6
+===== PAGE 16 =====
+Chapitre 1 1.4. Méthodologie de gestion du projet
+— Intégration de modèles de prévision pour anticiper l’évolution des variables clés
+telles que le chiffre d’affaires, le taux de churn, le taux de fidélité et le nombre de
+contrats;
+— Segmentation des clients selon leur fidélité et leur ancienneté pour adapter les
+actions de fidélisation ou de prévention;
+— Mise en place d’un module de prédiction du comportement des clients permettant
+d’identifier les clients à risque de résiliation ou à fort potentiel;
+— Déploiement d’une interface de visualisation intégrée dans Power BI, regroupant
+tableaux de bord, prévisions, segmentations et prédicition pour soutenir une prise
+de décision rapide, proactive et orientée données.
+1.4 Méthodologie de gestion du projet
+La gestion efficace d’un projet nécessite l’adoption d’une méthodologie adaptée à ses be-
+soins spécifiques. Dans le cadre de ce projet, nous avons étudié deux approches largement
+utilisées en BI : Scrum et GIMSI. Chacune présente des avantages et des inconvénients.
+1.4.1 Méthodologie Scrum
+Scrumestuneapprocheagilequireposesurundéveloppementitératifetincrémental.Bien
+qu’elle soit principalement utilisée dans le développement logiciel, elle s’adapte également
+à d’autres types de projets nécessitant une grande flexibilité et une réactivité constante
+faceauxchangements.Ellesebasesurdescyclescourtsappelés"sprints",avecdesréunions
+quotidiennes et une réévaluation continue des priorités [2]. La figure 1.3 illustre de manière
+synthétique le processus de Scrum, en mettant en évidence les différentes étapes clés du
+product backlog au sprint backlog, en passant par le daily scrum meeting, jusqu’à la
+livraison de l’incrément de produit à la fin de chaque sprint.
+Figure 1.3 : Processus de Scrum [2]
+1.4.1.1 Avantages de Scrum
+Scrum présente plusieurs avantages qui en font une méthode particulièrement adaptée
+aux projets décisionnels nécessitant agilité, réactivité et visibilité continue sur les KPIs.
+Ces avantages peuvent être résumés comme suit [3] :
+— Flexibilité : S’adapte aux changements rapides et aux besoins évolutifs;
+— Améliore la collaboration : Encourage le travail d’équipe et la communication
+constante;
+7
+===== PAGE 17 =====
+Chapitre 1 1.4. Méthodologie de gestion du projet
+— Livraisons fréquentes : Permet d’avoir des résultats progressifs à chaque sprint;
+— Réactivité aux imprévus : Facilité d’ajustement en cas de changement de priorités;
+— Implication des parties prenantes : Le client peut interagir régulièrement et donner
+son feedback;
+— Amélioration continue : Chaque sprint permet d’optimiser et d’améliorer le projet.
+1.4.1.2 Limites de Scrum
+Malgré ses nombreux avantages, la méthode Scrum présente certaines limites, notamment
+lorsqu’elle est appliquée à des projets décisionnels. Ces limites peuvent être résumées
+comme suit [4] :
+— Dépendance à l’équipe : Nécessite une équipe bien formée et engagée pour être
+efficace;
+— Difficulté de planification : Pas de vision globale dès le départ, ce qui peut poser
+un problème dans un projet décisionnel;
+— Exigence de réunions fréquentes : Les daily stand-ups et les rétrospectives prennent
+du temps;
+— Risque de dérive : Sans une gestion rigoureuse, le projet peut dévier des objectifs
+initiaux.
+1.4.2 Méthodologie GIMSI
+GIMSI (Goal-directed Iterative and Incremental Software Implementation ) est une mé-
+thodologie structurée spécifiquement conçue pour les projets décisionnels et les tableaux
+de bord en BI [5]. Elle suit un processus clair et organisé, représenté dans la figure 1.4.
+Figure 1.4 : Processus GIMSI [5]
+— G : Généralisation : Cette méthodologie peut être appliquée dans divers do-
+maines.
+8
+===== PAGE 18 =====
+Chapitre 1 1.4. Méthodologie de gestion du projet
+— I : Information: L’obtention d’informations pertinentes est l’objectif principal
+en informatique décisionnelle.
+— M : Méthode et Mesure: Grâce aux méthodes, il est possible de construire un
+système de contrôle efficace.
+— S : Système et Systémique: La méthodologie permet d’intégrer le système de
+pilotage dans l’organisation et repose sur un concept systémique.
+— I : Individualité et Initiative: Favorise la prise d’initiative et l’autonomie dans
+la gestion des projets. Elle est structurée en 10 étapes bien définies et classées en
+4 phases principales, comme illustré dans la figure 1.4.
+1. Identification : Analyse du contexte et des objectifs stratégiques.
+— Étape 1 : Analyse de l’environnement de l’entreprise et définition du projet.
+— Étape 2 : Identification des processus et des acteurs impliqués.
+2. Conception : Définition des tableaux de bord et des KPIs.
+— Étape 3 : Définition des objectifs tactiques.
+— Étape 4 : Construction des tableaux de bord.
+— Étape 5 : Sélection des KPIs.
+— Étape 6 : Collecte et structuration des données.
+— Étape 7 : Conception du système de reporting.
+3. Implémentation : Mise en œuvre technique et intégration du système.
+— Étape 8 : Sélection et configuration du logiciel.
+— Étape 9 : Déploiement et intégration au sein de l’entreprise.
+4. Amélioration continue : Suivi et optimisation des performances.
+— Étape 10 : Audit et amélioration continue du tableau de bord.
+1.4.2.1 Avantages de GIMSI
+GIMSI présente plusieurs avantages qui justifient son utilisation dans le cadre de projets
+décisionnels. Ces avantages peuvent être résumés comme suit [6] :
+— Conçu pour les projets décisionnels : Idéal pour les tableaux de bord et la gestion
+des KPIs;
+— Vision globale dès le départ : Planification structurée avec une roadmap définie;
+— Approche méthodique : Étapes bien définies, facilitant l’organisation du projet;
+— Meilleure gestion des indicateurs : Sélection rigoureuse des KPIs pour une meilleure
+analyse;
+— Adaptabilité aux entreprises : Peut être utilisé dans différents domaines nécessitant
+des tableaux de bord;
+— Fiabilité des données : Intègre des techniques de gestion et de validation des don-
+nées.
+1.4.2.2 Limites de GIMSI
+Bien que GIMSI soit particulièrement adaptée aux projets décisionnels, elle présente cer-
+taines limites qu’il est important de prendre en compte. Ces inconvénients peuvent être
+résumés comme suit [7] :
+— Moins flexible : Moins adapté aux changements rapides en cours de projet;
+— Implémentation plus longue : Nécessite du temps pour structurer et organiser les
+données;
+9
+===== PAGE 19 =====
+Chapitre 1 1.5. Méthodologie adoptée
+— Complexité méthodologique : Demande une bonne maîtrise des outils BI et de
+gestion des KPIs;
+— Exigeant en ressource : Nécessite des équipes spécialisées en analyse de données et
+reporting;
+— Approche rigide : Peu d’ajustements possibles en cours de projet une fois la struc-
+ture définie.
+1.4.2.3 Comparaison entre Scrum et GIMSI
+Le tableau 1.3 présente une comparaison entre deux approches de gestion de projets Scrum
+et GIMSI. Cette comparaison se base sur plusieurs critères clés tels que le processus,
+la planification, l’objectif, l’adaptabilité et les limites. On remarque que Scrum est une
+méthode agile, itérative et très flexible, adaptée aux projets en constante évolution. En
+revanche, GIMSI suit une approche plus structurée avec une planification définie dès le
+début, ce qui le rend plus approprié pour des projets ayant des objectifs bien clairs et
+nécessitant une méthodologie rigoureuse.
+Tableau 1.3 : Comparaison entre Scrum et GIMSI [8]
+Critères Scrum GIMSI
+Processus Itératif et incrémental Structuré en étapes bien dé-
+finies
+Planification Début de chaque sprint Plan dès le début
+Objectif Développement agile de lo-
+giciels
+Conception de tableaux de
+bord
+Adaptabilité Forte flexibilité aux change-
+ments
+Approche structurée et mé-
+thodique
+Limites Difficile à gérer pour les pro-
+jets très cadrés
+Moins flexible que Scrum
+pour les évolutions rapides
+1.5 Méthodologie adoptée
+Dans le cadre de ce projet, la méthodologie GIMSI a été utilisée, car elle s’avère parfai-
+tement adaptée à la conception et à la mise en œuvre de systèmes décisionnels. Contrai-
+rement à Scrum, qui est une méthode agile généraliste principalement utilisée dans le
+développement logiciel, GIMSI est spécialement conçue pour répondre aux besoins spé-
+cifiques de la BI notamment la réalisation de tableaux de bord. Elle structure le projet
+autour d’étapes clés comme l’identification des besoins, la définition des KPIs, la modé-
+lisation des données et la validation des livrables avec les utilisateurs. GIMSI offre ainsi
+un cadre méthodologique rigoureux, centré sur les objectifs décisionnels et la fiabilité des
+données, ce qui est essentiel dans un contexte comme celui de l’assurance BIAT. De plus,
+cette entreprise ne suit pas de méthodologie agile telle que Scrum dans ses processus
+internes, ce qui renforce la pertinence du choix de GIMSI pour garantir la cohérence,
+l’efficacité et la réussite du projet.
+10
+===== PAGE 20 =====
+Chapitre 1 1.6. Planification du projet
+1.6 Planification du projet
+La planification des différentes étapes du projet a été structurée à l’aide d’un diagramme
+de Gantt, présenté dans la figure 1.5. Ce diagramme permet de visualiser de manière chro-
+nologique l’ensemble des tâches réalisées, depuis l’analyse du besoin jusqu’au déploiement
+de la solution finale. Il permet également de suivre l’avancement du projet, d’identifier les
+périodes critiques et de garantir une gestion efficace du temps et des ressources mobilisées.
+Figure 1.5 : Diagramme de Gantt représentant la planification du projet
+1.7 Conclusion
+En conclusion, ce chapitre a mis en lumière les limites du système actuel de gestion des
+données chez l’assurance BIAT. Pour y répondre, une démarche complète a été proposée,
+intégrant des outils de BI, de prévision, de segmentation et de prédiction. La méthodologie
+GIMSI a été choisie pour structurer le projet et guider sa mise en œuvre. Le chapitre
+suivant portera sur l’analyse de l’environnement de l’entreprise afin d’identifier ses besoins
+réels.
+11
+===== PAGE 21 =====
+Chapitre 2
+Identification de l’environnement
+2.1 Introduction
+Ce chapitre propose une analyse approfondie de l’écosystème organisationnel de l’assu-
+ranceBIAT,enexaminantsonmodèleéconomique,sesprocessusetsesprincipauxacteurs.
+Grâce à une approche méthodique, nous visons à mieux comprendre le contexte global
+de l’entreprise et ses interactions avec les influences externes. Cette analyse détaillée per-
+mettra d’apporter des éclairages pertinents, d’orienter le développement des stratégies et
+de proposer des recommandations pour l’optimisation et l’expansion des activités.
+2.2 Environnement de l’entreprise
+L’assurance BIAT, acteur majeur du secteur des assurances en Tunisie, gère un large
+éventail de produits et services visant à répondre aux besoins diversifiés de ses clients.
+Grâce à une expertise approfondie et à une approche axée sur l’innovation, elle a mis en
+place plusieurs initiatives et solutions clés :
+— Assurance auto : Une couverture complète pour protéger les véhicules des particu-
+liers et des entreprises contre divers risques (accidents, vol, incendie, responsabilité
+civile);
+— Assurance santé : Une protection adaptée aux besoins des assurés, incluant des
+garanties pour les soins médicaux, hospitaliers et pharmaceutiques;
+— Assurance vie et prévoyance : Des solutions d’épargne et de prévoyance visant à
+garantir la sécurité financière des assurés et de leurs bénéficiaires;
+— Assurance habitation : Une protection contre les risques liés au domicile, incluant
+les catastrophes naturelles, incendies et vols;
+— Assurance voyage : Un service d’assistance et de couverture pour les frais médicaux
+et imprévus lors des déplacements à l’étranger;
+— BIAT assistance : Un service d’assistance rapide et personnalisé en cas de sinistre
+ou d’urgence, disponible pour les clients nécessitant une prise en charge immédiate;
+— Digitalisation des services : Un portail client en ligne permettant aux assurés de
+gérer leurs contrats, déclarer des sinistres et suivre leurs remboursements en toute
+autonomie;
+— Gestion des risques : Un système analytique permettant d’optimiser l’évaluation
+des risques et d’adapter les stratégies de tarification et de prévention.
+Grâce à ces services, l’assurance BIAT renforce sa position sur le marché et continue
+d’innover pour offrir une meilleure expérience client tout en améliorant la gestion des
+12
+===== PAGE 22 =====
+Chapitre 2 2.3. Processus de l’assurance BIAT
+sinistres et des contrats.
+2.3 Processus de l’assurance BIAT
+L’assurance BIAT est une compagnie d’assurance Tunisienne qui propose une gamme
+complète de solutions adaptées aux besoins des particuliers et des entreprises. Elle repose
+sur un ensemble de processus visant à optimiser la gestion des contrats, la prise en charge
+des sinistres et l’amélioration de l’expérience client. Grâce à une approche innovante et
+digitalisée, l’assurance BIAT met en œuvre des solutions performantes pour garantir une
+couverture efficace et un suivi optimal des assurés [1].
+2.4 Établissements de l’assurance BIAT
+L’assurance BIAT s’appuie sur un ensemble d’établissements répartis sur le territoire
+tunisien pour assurer le bon fonctionnement de ses activités. En plus de ses 14 agences
+commerciales, elle dispose de :
+— 3 centres d’expertise automobile : Chargés de l’évaluation des sinistres liés aux
+véhicules assurés. Ces centres permettent une gestion rapide, fiable et centralisée
+des dommages matériels;
+— 1 siège social : Situé aux Jardins du Lac 2 à Tunis, il regroupe les services de direc-
+tion, les départements stratégiques (contrôle de gestion, actuariat, informatique,
+etc.) et les équipes de support;
+— Services techniques et de gestion : Répartis entre les unités centrales à Tunis et
+les agences, ils assurent la gestion quotidienne des contrats, la relation client, les
+indemnisations et la conformité réglementaire;
+Ce maillage d’établissements permet à l’assurance BIAT de garantir un service de proxi-
+mité, tout en maintenant une structure centralisée pour la coordination stratégique et la
+qualité de gestion.
+2.5 Activités de l’assurance BIAT
+L’assurance BIAT propose plusieurs activités détaillées ci-dessous :
+— Gestion des sinistres : L’assurance BIAT met en place un système de gestion des
+sinistres permettant un traitement rapide et efficace des déclarations. L’objectif est
+d’optimiser le délai de prise en charge et de garantir un remboursement fluide et
+transparent pour les assurés;
+— Assurance vie et prévoyance : L’entreprise offre une gamme complète de solutions
+de prévoyance et d’épargne adaptées aux besoins des particuliers et des entreprises.
+Ces produits visent à sécuriser l’avenir des assurés en leur offrant une protection
+financière en cas d’imprévus;
+— Assurance automobile : Un large éventail de couvertures est proposé, allant de
+la responsabilité civile obligatoire aux assurances tous risques, permettant aux
+clients de protéger efficacement leurs véhicules et de bénéficier d’une assistance en
+cas d’accident;
+— Assurance santé : L’assurance BIAT propose des contrats adaptés aux besoins
+de ses clients, couvrant les frais médicaux, hospitaliers et pharmaceutiques. Des
+13
+===== PAGE 23 =====
+Chapitre 2 2.6. Les acteurs de l’assurance BIAT
+solutionssur-mesuresontmisesenplacepourrépondreauxattentesdesparticuliers
+et des entreprises;
+— Assurance habitation et multirisque : Cette offre permet de protéger les biens
+immobiliers contre divers risques tels que l’incendie, le vol, les dégâts des eaux et
+les catastrophes naturelles;
+— Digitalisation et portail client : L’assurance BIAT investit dans la digitalisation
+de ses services afin d’améliorer l’expérience client. Un portail en ligne permet aux
+assurés de gérer leurs contrats, de déclarer leurs sinistres et de suivre leurs rem-
+boursements en temps réel;
+— Formation et sensibilisation : L’assurance BIAT propose des programmes de forma-
+tion et de sensibilisation à destination de ses agents et partenaires afin de renforcer
+leurs compétences en matière de gestion des risques, de conseil client et de confor-
+mité réglementaire;
+— Coaching et accompagnement : Un service d’accompagnement personnalisé est pro-
+posé aux entreprises et aux professionnels souhaitant optimiser leur couverture et
+mieux gérer leurs risques. L’assurance BIAT offre des conseils stratégiques pour
+améliorer la gestion des contrats et la relation client;
+— Assistance et services complémentaires : Un service d’assistance est disponible
+24h/24 et 7j/7 pour aider les assurés en cas de sinistre ou d’urgence. Des pres-
+tations complémentaires, telles que l’expertise des dommages et l’indemnisation
+rapide, sont mises en place pour garantir une satisfaction optimale.
+Grâce à ces différentes activités, l’assurance BIAT s’engage à offrir des solutions adaptées
+aux besoins de ses clients tout en assurant un service de qualité et en innovant continuel-
+lement pour s’adapter aux évolutions du marché [1].
+2.6 Les acteurs de l’assurance BIAT
+L’assurance BIAT repose sur l’implication de plusieurs acteurs aux profils variés, chacun
+jouant un rôle déterminant dans le bon fonctionnement de l’écosystème assurantiel. Voici
+les principaux intervenants :
+— Clients : Les particuliers et les entreprises souscrivant aux produits d’assurance
+(auto, santé, vie, habitation, etc.). Ils sont les principaux bénéficiaires des services
+offerts et interagissent directement avec la compagnie pour la gestion de leurs
+contrats et sinistres;
+— Courtiers et agents d’assurance : Professionnels chargés de conseiller les clients et
+de leur proposer les solutions d’assurance les mieux adaptées à leurs besoins. Ils
+jouent un rôle clé dans la distribution des produits et la fidélisation des assurés;
+— Experts en sinistres : Spécialistes chargés d’évaluer les dommages en cas de si-
+nistre et de déterminer les indemnisations appropriées. Ils assurent une gestion
+transparente et efficace des déclarations;
+— Organismes de régulation : Institutions comme la commission de supervision des
+assurances ou les autorités financières, chargées de veiller à la conformité des pra-
+tiques de l’assurance BIAT avec la réglementation en vigueur;
+— Professionnels de la santé : Médecins, hôpitaux et cliniques partenaires qui colla-
+borent avec l’assurance BIAT dans le cadre des assurances santé pour offrir des
+prestations médicales aux assurés;
+— Développeurs et analystes en data science : Experts en informatique et en analyse
+de données qui participent à la digitalisation des services, à l’amélioration des outils
+14
+===== PAGE 24 =====
+Chapitre 2 2.7. Les garanties de l’assurance automobile
+d’aide à la décision et à l’optimisation de la gestion des risques;
+— Gestionnaires et personnel administratif : Employés de l’assurance BIAT qui as-
+surent la gestion des contrats, le suivi des clients et le bon fonctionnement des
+opérations internes.
+2.7 Les garanties de l’assurance automobile
+L’assurance automobile est un contrat qui protège le conducteur et son véhicule contre les
+risques liés à la circulation (accidents, vol, incendie, etc.). Elle permet de rouler en toute
+tranquillité, en prenant en charge les dommages causés à autrui ou au véhicule assuré selon
+la formule choisie (standard, collision ou tous risques) [1]. L’assurance BIAT propose trois
+formules modulables d’assurance automobile, adaptées aux besoins variés de ses clients —
+particuliers comme professionnels. Ces formules offrent une panoplie de garanties allant
+de la couverture minimale obligatoire à une protection complète du véhicule assuré.
+— Formule standard : Couvre les garanties de base comme la responsabilité civile,
+l’incendie, le vol, et certaines protections juridiques;
+— Formule collision : Inclut les garanties de la formule standard avec des options
+supplémentaires comme le bris de glace ou les dommages collision;
+— Formule tous risques : Offre la couverture la plus complète avec prise en charge
+des dommages au véhicule assuré, forces de la nature, bonus en cas de non-sinistre,
+etc.
+Les trois formules proposées par l’assurance BIAT se distinguent par le niveau de couver-
+ture qu’elles offrent. Le tableau 2.1 présente une comparaison claire des garanties incluses
+dans chaque formule :
+Tableau 2.1 : Comparatif des garanties selon les formules d’assurance auto proposées
+par BIAT [1]
+Garanties principales Standard Collision Tous Risques
+Responsabilité civile Oui Oui Oui
+Incendie Oui Oui Oui
+Vol Oui Oui Oui
+Défense et recours Oui Oui Oui
+Conducteur + Oui Oui Oui
+PTA (Personnes transportées
+à titre gratuit)
+Option Option Option
+Assistance Oui Oui Oui
+AAA (Assistance Accident
+Auto)
+Oui Oui Oui
+Bris de glace Non Oui Oui
+Bris isolé des optiques avant Non Oui Non
+Dommages collision Non Oui Non
+Dommages au véhicule assuré Non Non Oui
+Forces de la nature
+(inondation, grêle...)
+Non Option Oui
+Avance sur frais de réparation Non Non Oui
+Véhicule de remplacement Non Non Oui
+Bonus en cas de non-sinistre Non Non Oui
+15
+===== PAGE 25 =====
+Chapitre 2 2.8. Conclusion
+— Avantages spécifiques à la formule Standard :
+— Garanties de base à un tarif accessible;
+— Couverture des dommages aux tiers;
+— Protection du conducteur incluse;
+— Assistance en cas de panne ou accident;
+— Option : Couverture des personnes transportées à titre gratuit.
+— Avantages spécifiques à la formule Collision :
+— Toutes les garanties de la formule standard;
+— Bris de glace et bris isolé des optiques avant couverts;
+— Dommages collision pris en charge;
+— Option : couverture contre les forces de la nature (inondation, grêle, etc.);
+— Option : Véhicule de remplacement.
+— Avantages spécifiques à la formule Tous Risques :
+— Avance financière pour la réparation du véhicule;
+— Véhicule de remplacement pris en charge;
+— Bonus en cas de non-sinistre.
+2.8 Conclusion
+Ce chapitre nous a permis de découvrir l’assurance BIAT, une entreprise qui joue un rôle
+clé dans le secteur des assurances en proposant des solutions adaptées aux besoins des
+particuliers et des entreprises. En comprenant son approche stratégique et son engagement
+envers l’innovation, nous pouvons concevoir un tableau de bord décisionnel capable de
+répondre aux exigences techniques du secteur, tout en facilitant la gestion des risques, la
+prévision de l’évolution des indicateurs clés, et l’anticipation des comportements clients.
+Cette approche permet à l’assurance BIAT de renforcer sa performance globale et de
+soutenir une démarche d’amélioration continue.
+16
+===== PAGE 26 =====
+Chapitre 3
+Conception
+3.1 Introduction
+La phase de conception de la méthode GIMSI joue un rôle essentiel dans le développement
+d’unsystème detableaude bordpourunentrepôt dedonnées. Àl’image delaplanification
+d’un bâtiment, cette étape permet de définir clairement les objectifs du tableau de bord,
+tant sur le plan fonctionnel (Exigences fonctionnelles) que non fonctionnel (Exigences non
+fonctionnelles). Elle implique le choix des indicateurs clés, la collecte d’informations et la
+mise en place d’un système aligné sur les objectifs de l’entreprise. Ce chapitre explore ces
+éléments en soulignant leur importance pour la performance du tableau de bord.
+3.2 Définition des principales exigences
+Dans cette section, nous examinerons à la fois les exigences fonctionnelles et non fonc-
+tionnelles afin de mieux comprendre les besoins du projet.
+3.2.1 Exigences fonctionnelles
+Les exigences fonctionnelles définissent l’ensemble des services attendus par les utilisa-
+teurs finaux afin d’assurer une exploitation optimale des données issues de l’assurance
+automobile. Elles incluent :
+— La création de tableaux de bord interactifs pour analyser des clients, des contrats,
+et les performances des agences;
+— La mise en place de filtres dynamiques permettant d’explorer les indicateurs clés
+selon différentes dimensions;
+— L’intégration de visualisations de prévision pour anticiper l’évolution de certains
+indicateurs stratégiques;
+— La conception d’un tableau de bord dédié à la segmentation des clients selon des
+critères de comportement et de fidélité;
+— La mise en place d’une interface prédictive, sous forme de chatbot intelligent, per-
+mettant d’estimer le comportement futur d’un client à partir de ses données histo-
+riques.
+17
+===== PAGE 27 =====
+Chaptitre 3 3.3. Construction du tableau de bord
+3.2.2 Exigences non fonctionnelles
+Une fois les exigences fonctionnelles satisfaites, il est essentiel de prendre en compte les
+exigences non fonctionnelles tout au long du développement du projet. Ces exigences
+définissent les standards internes du produit final. Parmi elles, on trouve :
+— Efficacité : Le système doit garantir des temps de réponse rapides, que ce soit lors
+du chargement des tableaux de bord ou de l’utilisation des filtres dynamiques;
+— Lisibilité : Les interfaces graphiques doivent être homogènes, bien organisées et
+facilement compréhensibles par les utilisateurs, même sans expertise technique;
+— Ergonomie : La navigation doit être fluide et intuitive, avec un agencement clair
+des KPIs, segments et filtres;
+— Simplicité : Les visualisations doivent être accessibles à tous les profils d’utilisa-
+teurs, avec une logique de lecture claire et sans surcharge d’informations;
+— Performance : L’ensemble du système doit pouvoir gérer un volume important
+de données (contrats, clients, historiques,etc.) sans ralentissement ni erreur d’affi-
+chage;
+— Fiabilité des résultats : Les modèles de prévision, de segmentation et de prédiction
+doivent s’appuyer sur des données nettoyées et validées pour garantir la cohérence
+des résultats affichés;
+— Réactivité : Les temps de réponse pour la génération des prédictions doivent être
+courts, même avec de grandes bases de données;
+— Adaptabilité : Les résultats des analyses prédictives doivent pouvoir s’actualiser
+facilement en fonction des filtres;
+— Accessibilité intelligente : Le chatbot prédictif intégré doit être simple d’utilisation;
+— Clarté des interprétations : Les segments clients et les prévisions doivent être affi-
+chés de manière visuelle et lisible.
+3.3 Construction du tableau de bord
+Dans cette phase, nous explorons le concept de tableau de bord décisionnel en mettant
+l’accent sur son rôle au sein de l’assurance BIAT. La création d’un tableau de bord consiste
+à concevoir une interface visuelle permettant de présenter les KPIs et les données essen-
+tielles de manière claire, synthétique et accessible. L’objectif est d’offrir aux équipes de
+l’assurance BIAT un outil efficace pour visualiser, analyser et suivre l’évolution des don-
+nées relatives aux contrats, aux clients et aux performances des agences, tout en facilitant
+la prise de décision stratégique. La mise en place de ces tableaux de bord implique la
+sélection de sources de données fiables, la conception de visualisations adaptées aux dif-
+férents besoins métiers, ainsi que la configuration d’une interface intuitive répondant aux
+attentes spécifiques de l’entreprise en matière de gestion des activités et de pilotage.
+3.3.1 Présentation du tableau de bord
+Le tableau de bord constitue un outil central de pilotage, permettant de suivre en temps
+réel l’avancement des activités et de visualiser les indicateurs clés liés aux performances.
+Il offre aux parties prenantes une représentation synthétique et dynamique des données
+essentielles du projet, facilitant l’évaluation des résultats, la détection des écarts et la
+mise en œuvre d’actions correctives. Ce tableau permet de centraliser les informations,
+de garantir une communication cohérente entre les équipes, et de prendre des décisions
+18
+===== PAGE 28 =====
+Chaptitre 3 3.4. Collecte des informations
+rapides basées sur des données à jour. Cette section met en lumière l’intérêt stratégique
+de construire un tableau de bord efficace en gestion de projet, tout en détaillant ses
+principales étapes de conception et les bénéfices qu’il peut apporter à l’organisation[9].
+3.3.2 Importance de la construction d’un tableau de bord
+La mise en place d’un tableau de bord constitue un élément stratégique dans le secteur
+des assurances, où le suivi rigoureux des indicateurs est essentiel pour assurer une gestion
+efficace des contrats, des risques et des performances globales. À l’assurance BIAT, ces
+outils décisionnels offrent une vision claire en temps réel des activités clés et permettent
+aux décideurs de piloter avec précision les différentes dimensions de l’entreprise. Voici les
+principaux avantages apportés par l’utilisation d’un tableau de bord décisionnel :
+— Améliorer la visibilité et la transparence : Le tableau de bord centralise les données,
+facilitant ainsi l’évaluation rapide des performances commerciales ou du taux de
+fidélité. Cette transparence est un atout majeur dans un secteur aussi réglementé
+que l’assurance;
+— Optimiser la prise de décision basée sur les données : En s’appuyant sur des in-
+dicateurs clés fiables, les responsables peuvent anticiper les tendances, ajuster les
+stratégies de renouvellement ou de prévention, et réagir rapidement face à tout
+changement;
+— Renforcer la gestion des risques : Un tableau de bord bien conçu aide à détecter
+les anomalies, à suivre les sinistres en temps réel et à mettre en place rapidement
+des mesures correctives pour limiter leur impact.
+En conclusion, l’intégration de tableaux de bord décisionnels chez l’assurance BIAT repré-
+sente un levier fondamental de performance. En améliorant la transparence, la réactivité
+et la précision des analyses, ces outils contribuent à une gestion plus stratégique, proactive
+et orientée client. Ils permettent notamment un meilleur suivi des contrats automobiles,
+une anticipation des comportements assurés, et un pilotage global plus efficace [9].
+3.4 Collecte des informations
+L’extraction des données joue un rôle crucial dans le processus d’intégration des informa-
+tions, constituant la base de toute analyse ultérieure. Elle consiste à collecter des données
+issues de diverses sources telles que les bases de données, les feuilles de calcul et les fichiers
+texte. Une fois extraites, ces données sont converties dans un format homogène et exploi-
+table, facilitant ainsi leur analyse et permettant d’en tirer des informations précieuses. Ces
+données sont essentielles pour prendre des décisions éclairées et améliorer la performance
+globale d’une entreprise.
+3.5 Sélection des indicateurs
+La sélection des KPIs a été réalisée en collaboration avec l’encadrant académique et les
+experts métiers de l’assurance BIAT. Cette démarche a permis d’identifier les indicateurs
+les plus pertinents pour trois volets d’analyse : L’analyse des clients, l’analyse des contrats
+et l’analyse des agences. Les indicateurs sélectionnés couvrent plusieurs dimensions essen-
+tielles à la prise de décision, notamment la performance commerciale, la fidélisation des
+19
+===== PAGE 29 =====
+Chaptitre 3 3.5. Sélection des indicateurs
+clients, l’atteinte des objectifs stratégiques ainsi que l’analyse géographique.Les différents
+indicateurs sont présentés dans les tableaux suivants :
+— Le tableau 3.2 regroupe les indicateurs liés à l’analyse des clients. Il présente une
+vue d’ensemble sur la structure et le comportement de la clientèle, en mettant en
+évidence le nombre total de clients, les anciens clients, les nouveaux clients acquis,
+ainsi que leur impact sur le chiffre d’affaires global. Il intègre également des KPIs
+essentiels tels que le taux de churn, le taux de fidélité et le taux de renouvellement,
+permettant d’évaluer la qualité de la relation client et la stabilité du portefeuille.
+— Le tableau 3.3 regroupe les indicateurs liés à l’analyse des contrats. Il permet de
+suivre l’évolution du volume de contrats à travers les renouvellements, les rési-
+liations et les nouvelles souscriptions. Ce tableau met également en évidence la
+contribution de chaque catégorie de contrat au chiffre d’affaires, en différenciant le
+total généré par les renouvellements et celui généré par les nouveaux contrats. Il
+sert ainsi à évaluer la dynamique commerciale de l’entreprise.
+— Le tableau 3.4 contient les indicateurs liés à l’analyse des agences. Il fournit une
+vision consolidée de la performance des agences en mesurant des éléments tels que
+le nombre total d’agences, le chiffre d’affaires généré par chacune, et le nombre
+de clients qu’elles gèrent. Ces indicateurs sont essentiels pour comparer les perfor-
+mances régionales et optimiser la gestion du réseau d’agences.
+Tableau 3.2 : Liste des KPI pour l’analyse des clients
+Indicateur Description
+Nombre_Total_Clients Nombre total de clients.
+Nombre_Anciens_Clients Nombre d’anciens clients.
+Nouveaux_Clients Nombre de nouveaux clients.
+Total_CA Total du chiffre d’affaires.
+Total_CA_perdus Chiffre d’affaires perdu suite aux départs clients.
+Taux_Churn Pourcentage de clients perdus par rapport au nombre
+total de clients.
+Taux_Fidelite Pourcentage de clients fidèles par rapport au nombre
+total de clients.
+Taux_Renouvellement Pourcentage d’anciens clients qui ont renouvelé.
+Tableau 3.3 : Liste des KPI pour l’analyse des contrats
+Indicateur Description
+Nombre_Total_Contrats Nombre total de contrats.
+Nombre_Contrats_Renouveles Nombre total de contrats renouvelés.
+Nombre_Contrats_Resilies Nombre total de contrats résiliés.
+Nombre_Nouveaux_Contrats Nombre total de nouveaux contrats.
+Total_CA_Contrats_Renouveles Total du chiffre d’affaires des contrats renou-
+velés.
+Total_CA_Nouveaux_Contrats Total du chiffre d’affaires des nouveaux
+contrats.
+20
+===== PAGE 30 =====
+Chaptitre 3 3.6. Système de tableaux de bord
+Tableau 3.4 : Liste des KPI pour l’analyse des agences
+Indicateur Description
+Nombre_Total_Agences Nombre total d’agences.
+Chiffre_Affaire_Agence Chiffre d’affaires par agence.
+Nombre_Clients_Par_Agence Nombre de clients par agence.
+Figure 3.1 : Extrait du fichier Excel contenant les données contractuelles de BIAT
+Assurance
+Pour construire un entrepôt de données efficace, il est essentiel de bien comprendre les
+données disponibles. C’est pourquoi nous avons opté pour une méthode d’extraction com-
+plète, consistant à récupérer l’ensemble des tables depuis la source, comme illustré dans
+la figure 3.1.
+3.6 Système de tableaux de bord
+Dans cette section, nous examinerons de plus près divers schémas d’entrepôt de données,
+analyserons différentes approches de conception d’un entrepôt de données et explorerons
+leurs concepts.
+3.6.1 Approches de conception d’entrepôt de données
+Les méthodologies d’Inmon et de Kimball sont parmi les plus couramment utilisées pour
+structurer les entrepôts de données. Chacune offre des avantages distincts et est adap-
+tée à des besoins organisationnels spécifiques. Comprendre ces méthodologies est crucial
+pour concevoir une solution d’entreposage de données efficace, alignée sur les objectifs
+de l’entreprise et facilitant une gestion efficiente des données. Maîtriser ces approches est
+fondamental pour élaborer un entrepôt de données performant, adapté aux besoins de
+l’entreprise et facilitant une gestion efficiente de l’information.
+3.6.1.1 Approche Inmon
+L’approche proposée par Bill Inmon, considéré comme un pionnier de l’informatique déci-
+sionnelle, repose sur une vision centralisée du stockage des données. Connue sous le nom
+d’approchetop-down, qui consiste à construire un entrepôt de données global dès le dé-
+part, en intégrant toutes les données dans une structure unifiée. Le tableau 3.5 présente un
+récapitulatif des principales caractéristiques de l’approche Inmon, ainsi que ses avantages
+21
+===== PAGE 31 =====
+Chaptitre 3 3.6. Système de tableaux de bord
+Tableau 3.5 : Approche Inmon [10]
+Caractéristiques Avantages Limites
+L’entrepôt de données d’en-
+treprise est construit en pre-
+mier, puis les datamarts
+sont créés à partir de celui-
+ci.
+Fournit une vue complète et
+centralisée des données de
+toute l’entreprise.
+Le développement initial est
+long et nécessite des res-
+sources importantes.
+Les données sont organisées
+selon un modèle relationnel
+structuré, sans redondance.
+Assureunemeilleurequalité
+et cohérence des données.
+Les requêtes peuvent être
+plus complexes à écrire et
+plus lentes à exécuter.
+L’entrepôt intègre toutes les
+données provenant de diffé-
+rents services.
+Favorise une source unique
+et fiable d’information.
+Moins de flexibilité pour ré-
+pondre rapidement aux be-
+soins spécifiques des utilisa-
+teurs.
+Les datamarts sont alimen-
+tés depuis l’entrepôt princi-
+pal et non de manière indé-
+pendante.
+Assure l’uniformité des in-
+formations entre les dépar-
+tements.
+Moins adapté pour une mise
+en œuvre rapide ou pour les
+petites structures.
+L’approche est conçue pour
+répondre aux besoins glo-
+baux de l’organisation.
+Permet une évolution pro-
+gressive et structurée du
+système d’information déci-
+sionnel.
+Moins centrée sur les utili-
+sateurs finaux ou les besoins
+immédiats.
+tels que la cohérence des données et sa vision globale, mais aussi ses limites, notamment
+le coût initial élevé et la complexité de mise en œuvre.
+3.6.1.2 Approche Kimball
+Développée par Ralph Kimball, l’approchebottom-up consiste à construire l’entrepôt de
+données à partir de data marts indépendants, chacun centré sur une fonction métier.
+Ceux-ci sont ensuite intégrés pour former un système décisionnel global. Cette méthode
+se distingue par sa flexibilité, sa mise en œuvre rapide et son orientation métier. Le
+tableau 3.6 en résume les principales caractéristiques, avantages (simplicité, implication
+des utilisateurs) et limites (risque de redondance, absence de vision centralisée).
+3.6.1.3 Comparaison des approches Inmon et Kimball
+Le tableau 3.7 compare les deux approches principales de conception d’entrepôts de don-
+nées, Inmon et Kimball, en mettant en évidence leurs différences clés sur plusieurs aspects.
+3.6.1.4 Approche adoptée
+Aprèsavoiranalysélesbesoins,lescontraintesetlescaractéristiquesdenotreorganisation,
+nous avons choisi d’adopter l’approche Kimball. Ce choix s’explique par notre volonté de
+construire l’architecture décisionnelle de manière progressive, en commençant par des
+datamarts ciblés, faciles à développer, à maintenir et à faire évoluer. Cette méthode est
+mieux adaptée à notre contexte, dans lequel la flexibilité, l’agilité et l’implication métier
+sont essentielles pour le succès du projet décisionnel.
+22
+===== PAGE 32 =====
+Chaptitre 3 3.6. Système de tableaux de bord
+Tableau 3.6 : Approche Kimball [11]
+Caractéristiques Avantages Limites
+L’entrepôt de données est
+construit progressivement
+en partant des besoins spé-
+cifiques des départements.
+Mise en œuvre rapide pour ré-
+pondre aux besoins immédiats
+des utilisateurs.
+Peut entraîner une vision frag-
+mentée des données au niveau
+de l’entreprise.
+Utilisation de modèles di-
+mensionnels simples, tels
+que le schéma en étoile.
+Facilité de compréhension et
+d’utilisation pour les utilisa-
+teurs métiers.
+Risque de redondance des don-
+nées entre les différents data-
+marts.
+Intégration des données à
+partir de différents systèmes
+sources via des processus
+ETL.
+Flexibilité pour intégrer de
+nouvelles sources de données
+au fil du temps.
+Complexité accrue dans la ges-
+tion des processus ETL à me-
+sure que le système évolue.
+Conception orientée vers les
+besoins analytiques des uti-
+lisateurs finaux.
+Amélioration de la prise de dé-
+cision grâce à des analyses ci-
+blées.
+Moins adapté pour une vue
+d’ensemblecentraliséedesdon-
+nées de l’entreprise.
+Approche itérative permet-
+tant des ajustements en
+fonction des retours des uti-
+lisateurs.
+Capacité à s’adapter rapide-
+ment aux changements des be-
+soins métiers.
+Nécessite une coordination
+étroite entre les équipes pour
+maintenir la cohérence des
+données.
+Tableau 3.7 : Comparaison entre les approches Inmon et Kimball [11]
+Aspect Approche Inmon Approche Kimball
+Philosophieetméthodologie Centralisée, descendante et
+construite autour d’un modèle
+de données global.
+Décentralisée, ascendante et
+basée sur des data marts spé-
+cialisés intégrés.
+Intégration des données Standardisation et nettoyage
+poussés avant intégration des
+données.
+Intégration minimale, données
+chargées directement dans les
+data marts.
+Qualité des données Haute qualité assurée par un
+contrôle centralisé.
+Bonne qualité mais plus ciblée
+selon les besoins métiers.
+Flexibilité Peu flexible et difficilement
+modifiable après mise en place.
+Très flexible, facilement évolu-
+tive et adaptable.
+Temps et ressources Miseenplacelenteetcoûteuse. Déploiement rapide et peu
+coûteux.
+Adaptabilité organisation-
+nelle
+Idéale pour les grandes struc-
+tures complexes.
+Parfaite pour les entreprises
+dynamiques ou à ressources li-
+mitées.
+3.6.2 Schémas d’entrepôt de données
+Un schéma dans le contexte d’un entrepôt de données joue un rôle similaire à un plan
+d’architecte pour une base de données. Il définit les différents types d’enregistrements, les
+données qu’ils contiennent ainsi que les relations entre eux. Contrairement aux bases de
+23
+===== PAGE 33 =====
+Chaptitre 3 3.6. Système de tableaux de bord
+données relationnelles classiques, les entrepôts de données utilisent généralement l’un des
+troisprincipauxtypesdeschémas:Leschémaenétoile,leschémaenflocon et leschémaen
+constellationdefaits.Cesschémaspermettentd’organiserlesdonnéesdemanièreoptimale
+pour l’analyse décisionnelle. Dans cette section, nous présentons les trois modèles :
+3.6.2.1 Schéma en étoile
+Le schéma en étoile est l’un des modèles les plus simples et les plus couramment utilisés
+dans les entrepôts de données [12]. Il se compose d’une table de faits centrale, reliée à
+plusieurs tables de dimensions, formant ainsi une structure en étoile comme illustré dans
+la figure 3.2. La table de faits contient des mesures quantitatives telles que le total du
+chiffre d’affaires, le nombre total des contrats , le nombre total des clients,etc. Les tables de
+dimensions, quant à elles, décrivent le contexte des données en apportant des informations
+sur le temps, les régions, les clients ou les agences.
+— Avantages du schéma en étoile :
+— Simplicité de conception : Facile à comprendre et à mettre en œuvre, ce qui en
+fait un choix privilégié pour les projets décisionnels;
+— Performance des requêtes : Les requêtes sont rapides, car elles ne nécessitent
+que peu de jointures (entre la table de faits et quelques dimensions);
+— Facilité de maintenance : La structure est simple à maintenir, ce qui réduit le
+coût global de gestion.
+— Limites du schéma en étoile :
+— Redondance des données : Les tables de dimensions peuvent contenir des infor-
+mations dupliquées;
+— Moins adapté aux modèles complexes : Pour les structures très détaillées ou
+hiérarchiques, le modèle peut manquer de finesse et générer des performances
+moindres.
+Figure 3.2 : Illustration du schéma en étoile [13]
+3.6.2.2 Schéma en flocon de neige
+Le schéma en flocon est une version étendue du schéma en étoile, conçue pour modéliser
+des structures de données plus complexes. Comme dans le modèle précédent, une table de
+faits est reliée à des tables de dimensions (voir figure 3.3). Cependant, dans le schéma en
+24
+===== PAGE 34 =====
+Chaptitre 3 3.6. Système de tableaux de bord
+flocon de neige, les tables de dimensions sont normalisées en plusieurs sous-tables reliées
+entre elles. Cette structure donne au schéma l’apparence d’un flocon de neige[3].
+— Avantages du schéma en flocon de neige :
+— Adapté aux modèles complexes : Permet une modélisation précise grâce à la
+normalisation des données;
+— Optimisation du stockage : La normalisation réduit la redondance des données,
+ce qui permet une meilleure gestion de l’espace;
+— Amélioration de l’intégrité des données : La structure relationnelle permet un
+contrôle accru de la cohérence des informations.
+— Inconvénients du schéma en flocon de neige :
+— Complexité accrue : Sa structure est plus difficile à comprendre et à mettre en
+œuvre;
+— Performancedesrequêtesréduite:Lesnombreusesjointuresnécessairespeuvent
+ralentir les performances;
+— Maintenance plus lourde : L’augmentation du nombre de tables entraîne un
+suivi plus complexe.
+Figure 3.3 : Illustration du schéma en flocon de neige [3]
+3.6.2.3 Schéma en constellation de faits
+Le schéma en constellation de faits est une évolution avancée du schéma en étoile. Dans
+cette architecture, plusieurs tables de faits partagent un ensemble commun de tables de
+dimensionscommeillustrédanslafigure3.4).Cemodèleestparticulièrementutilelorsqu’il
+existe plusieurs processus métiers à analyser, chacun étant représenté par sa propre table
+de faits. Les dimensions partagées permettent de croiser les analyses tout en évitant la
+duplication excessive des données descriptives [14].
+— Avantages du schéma en constellation :
+— Adapté aux environnements complexes : Gère plusieurs processus métiers si-
+multanément;
+— Flexibilité élevée : Permet de concevoir des rapports complexes et croisés;
+— Optimisation analytique : Idéal pour les besoins en BI avancée.
+— Inconvénients du schéma en constellation :
+— Grande complexité : Plus difficile à comprendre et à maintenir;
+25
+===== PAGE 35 =====
+Chaptitre 3 3.7. Data Mart
+Figure 3.4 : Illustration du schéma en constellation de faits [15]
+— Performances potentiellement réduites : Les requêtes sur plusieurs tables de
+faits peuvent être plus lentes;
+— Coût de maintenance élevé : Demande plus de ressources pour la gestion conti-
+nue.
+3.6.2.4 Schéma adopté
+Après avoir analysé et comparé les différents types de schémas multidimensionnels, le
+choix s’est porté sur le schéma en étoile pour la mise en place de notre projet décision-
+nel. Cette décision repose sur la structure de nos données, organisées autour d’une table
+de faits centrale reliée à plusieurs dimensions dénormalisées. Le schéma en étoile permet
+d’optimiser les performances des requêtes, notamment pour les opérations d’agrégation et
+d’analyse fréquentes. Sa simplicité de conception et de lecture facilite également l’appro-
+priation du modèle par les utilisateurs métier, rendant ainsi cette solution parfaitement
+adaptée à nos besoins en BI.
+3.7 Data Mart
+Le tableau suivant présente une description détaillée des tables de dimensions et de faits
+utilisées dans notre data mart, en précisant leurs attributs ainsi que leur rôle fonctionnel
+(voir tableau 3.8).
+26
+===== PAGE 36 =====
+Chaptitre 3 3.8. Modèles de conception des tableaux de bord
+Tableau 3.8 : Description des tables de faits et de dimensions du data mart
+Nom de la table Attributs principaux Description
+Fait_contrat id_temps
+id_région
+id_agence
+id_client
+id_contrat
+chiffre_affaires
+Table de faits centrale contenant les données
+contractuelles. Elle est liée aux dimensions
+client, agence, région et temps. Elle regroupe
+les mesures quantitatives telles que le chiffre
+d’affaires, le nombre de clients et d’agences.
+Cette table constitue le socle des analyses dé-
+cisionnelles.
+dim_client id_client
+catégorie_client Table de dimension décrivant les caractéris-
+tiques des clients. Elle permet d’analyser les
+contrats selon le profil des assurés.
+dim_agence id_agence
+agence Table de dimension contenant les informa-
+tions sur les agences BIAT. Elle permet
+une analyse géographique et organisation-
+nelle des contrats.
+dim_région id_région
+région Table de dimension géographique associée
+aux agences. Elle facilite les analyses régio-
+nales des performances.
+dim_temps id_temps
+Année
+Mois
+Table de dimension temporelle permettant
+l’analyse des données selon différentes gra-
+nularités temporelles (mensuelle, annuelle,
+etc.).
+3.8 Modèles de conception des tableaux de bord
+Dans cette section, nous présentons les modèles de conception utilisés pour les tableaux de
+bord essentiels à la gestion des performances au sein de l’assurance BIAT. Nous décrirons
+notamment les tableaux de bord suivants :
+— Analyse des clients;
+— Analyse des contrats;
+— Analyse des agences.
+Chaque tableau de bord a été conçu avec l’objectif de fournir une visualisation claire des
+27
+===== PAGE 37 =====
+Chaptitre 3 3.8. Modèles de conception des tableaux de bord
+KPIsetdefaciliterlaprisededécisiongrâceàdesanalysesinteractivesetpersonnalisables.
+3.8.1 Modèle de l’entrepôt de données
+Notre entrepôt de données est basé sur le schéma en étoile, conformément à l’approche
+Kimball. Ce modèle repose sur une table de faits centrale (liée aux contrats) entourée
+de plusieurs tables de dimensions qui décrivent les axes d’analyse comme le temps, le
+client, l’agence. La simplicité du schéma en étoile permet une navigation intuitive et des
+performances optimales pour les requêtes analytiques. Il facilite également la génération
+de tableaux de bord dynamiques dans Power BI, en réduisant le nombre de jointures
+nécessaires, comme illustré dans la figure 3.5.
+Figure 3.5 : Modèle de l’entrepôt de données basé sur le schéma en étoile
+3.8.2 Prototypage des dashboards métiers
+3.8.2.1 Modèle de dashboard pour l’analyse client
+Le dashboard "Analyse des clients" fournit une vue claire et détaillée des principaux
+indicateurs liés à la gestion de la clientèle. Il met en avant des KPIs tels que l’évolution
+du chiffre d’affaires, le nombre total de clients, le taux de churn (résiliation) et le taux
+de fidélité. Ce dashboard permet également d’identifier les meilleurs clients par chiffre
+d’affaires ainsi que la répartition des clients selon leur type. Grâce à des visualisations
+telles que des courbes d’évolution, des diagrammes circulaires et des treemaps, l’utilisateur
+peut facilement détecter les tendances, mesurer la fidélité des clients et analyser les pertes
+de chiffre d’affaires liées aux départs. Les filtres disponibles par période, type de contrat,
+région et agence facilitent l’exploration des données comme illustré dans la figure 3.6.
+28
+===== PAGE 38 =====
+Chaptitre 3 3.8. Modèles de conception des tableaux de bord
+Figure 3.6 : Dashboard "Analyse des clients"
+3.8.2.2 Modèle de dashboard pour l’analyse des contrats
+Le dashboard "Analyse des contrats" permet de suivre et d’évaluer la performance des
+contrats établis avec les clients. Il présente des KPIs clés tels que le nombre total de
+contrats, le taux de résiliation, le taux de renouvellement, ainsi que le chiffre d’affaires
+généré par type de contrat. Les représentations visuelles incluent des histogrammes pour
+visualiser l’évolution des contrats dans le temps, des diagrammes circulaires pour illustrer
+la répartition des types de contrats, ainsi que des indicateurs numériques pour faciliter
+l’analyse rapide. Grâce aux filtres intégrés (par période, client, agence ou région), l’uti-
+lisateur peut explorer les données en fonction de critères précis, comme illustré dans la
+figure 3.7.
+Figure 3.7 : Dashboard "Analyse des contrats"
+29
+===== PAGE 39 =====
+Chaptitre 3 3.9. Conclusion
+3.8.2.3 Modèle de dashboard pour l’analyse des agences
+Le dashboard "Analyse des agences" propose une visualisation des performances commer-
+ciales par point de vente ou par région. Il regroupe des indicateurs tels que le nombre
+d’agences, le chiffre d’affaires global, et met en lumière les agences les plus performantes.
+Une carte géographique interactive permet de localiser les agences et d’effectuer une ana-
+lyse régionale de la répartition du chiffre d’affaires, tandis que des graphiques en barres
+et des diagrammes circulaires illustrent la répartition du chiffre d’affaires par agence et
+par zone géographique. Des filtres permettent d’affiner l’analyse selon la période, le type
+de contrat ou la région. Ce dashboard permet d’orienter les décisions stratégiques grâce
+à une lecture simple et visuelle, comme présenté dans la figure 3.8.
+Figure 3.8 : Dashboard "Analyse des agences"
+3.9 Conclusion
+La phase de conception est une étape clé dans le développement des tableaux de bord pour
+le projetd’assurance automobile. Endéfinissant lesobjectifs, en choisissant desindicateurs
+pertinents et en structurant une interface adaptée, nous avons pu transformer les données
+en informations utiles. Ce travail permet à l’assurance BIAT de suivre ses performances,
+d’identifier les tendances et de faciliter la prise de décision stratégique.
+30
+===== PAGE 40 =====
+Chapitre 4
+Implémentation et audit
+4.1 Introduction
+Pendantlaphased’implémentationdelaméthodeGIMSI,l’accentestportésurlesaspects
+techniques liés à la conception et au déploiement du système de tableaux de bord. Cette
+étape comprend le choix des outils les plus adaptés, leur intégration dans l’infrastructure
+existante, ainsi que la mise en place d’un processus de déploiement fluide, sécurisé et
+performant. L’objectif est d’assurer une transition optimale entre la phase de conception
+et l’utilisation effective des tableaux de bord par les utilisateurs finaux.
+4.2 Processus ETL
+Le processus ETL est une étape clé dans l’intégration des données issues de différentes
+sources, afin de les unifier dans un format cohérent pour l’analyse, le reporting ou d’autres
+usages. Voici les principales étapes du processus [16] :
+— Extraction : Les données sont collectées à partir de diverses sources, telles que
+des bases de données, des fichiers ou des API, afin de rassembler les informations
+nécessaires;
+— Transformation : Les données extraites sont nettoyées, vérifiées et transformées
+pour correspondre au format attendu par le système cible. Cette étape peut in-
+clure la suppression des doublons, le traitement des valeurs manquantes, ou encore
+l’application de filtres, d’agrégations ou de tris;
+— Chargement : Les données transformées sont ensuite chargées dans le système
+cible, qu’il s’agisse d’une base de données, d’un entrepôt de données ou d’un outil
+de visualisation. Elles y sont structurées pour permettre des analyses rapides et
+efficaces.
+Ce processus garantit l’exactitude, la cohérence et l’accessibilité des données pour appuyer
+la prise de décision. Il peut être automatisé à l’aide d’outils spécialisés afin d’accélérer son
+exécution et de limiter les erreurs.
+4.3 Outils ETL choisis
+Pour la mise en œuvre du processus ETL, nous avons opté pour une combinaison d’outils
+simples, performants et complémentaires. Nous avons utilisé spyder pour la phase de
+31
+===== PAGE 41 =====
+Chaptitre 4 4.3. Outils ETL choisis
+transformation des données, et Power BI pour le chargement, la visualisation et certaines
+transformations. Cette approche a permis d’assurer un traitement automatisé, flexible et
+efficace des données, tout en garantissant une restitution visuelle claire et interactive à
+travers des tableaux de bord décisionnels.
+4.3.1 Langage de programmation : Python
+Python est un langage open-source reconnu pour sa puissance dans le traitement de
+données. Grâce à des bibliothèques telles que pandas, et openpyxl , il permet de lire
+les fichiers Excel et CSV, de nettoyer les données, de créer de nouvelles variables, de
+formater les dates et d’unifier l’ensemble des fichiers historiques (voir figure 4.1). Python
+a servi de colonne vertébrale à notre transformation des données, avec un script complet
+facilitant la consolidation de toutes les années d’analyse [17].
+Figure 4.1 : Logo Python [17]
+4.3.2 Environnement de développement : Spyder
+Spyder est un environnement de développement intégré (IDE) pour Python, spécialement
+conçu pour les scientifiques (voir figure 4.2), les ingénieurs et les analystes de données.
+Il offre une interface conviviale avec des fonctionnalités telles que l’édition de code, le
+débogage, l’exécution interactive et la visualisation de données [18]. Spyder est souvent
+utilisé avec des bibliothèques scientifiques comme NumPy, SciPy, Matplotlib et Pandas,
+ce qui en fait un outil puissant pour l’analyse de données et le calcul scientifique.
+Figure 4.2 : Logo Spyder [18]
+32
+===== PAGE 42 =====
+Chaptitre 4 4.3. Outils ETL choisis
+4.3.3 Bibliothèques Python utilisées
+Plusieurs bibliothèques spécialisées ont été utilisées, chacune jouant un rôle précis dans
+le pipeline ETL :
+— Extraction : Pandas (voir figure 4.3) pour la lecture de fichiers Excel et CSV, avec
+openpyxl (voir figure 4.4) comme moteur dédié à l’importation des fichiers.xlsx;
+— Transformation :Pandas a été utilisé pour le nettoyage, la sélection de colonnes, le
+renommage, le typage, et la fusion des données.Numpy (voir figure 4.5) a été utilisé
+pour des opérations numériques, comme le calcul des pertes avecnp.abs();
+— Chargement : Pandas a également été utilisé pour sauvegarder les données conso-
+lidées aux formatsExcel et CSV avec un encodage adapté à l’exportation.
+Cesbibliothèquesontpermisdeconstruireunpipelineautomatiséetfiablepourregrouper,
+nettoyer et structurer les données issues de plusieurs années d’assurance automobile.
+Figure 4.3 : Logo Pandas [19]
+Figure 4.4 : Logo Openpyxl [20]
+Figure 4.5 : Logo Numpy [21]
+33
+===== PAGE 43 =====
+Chaptitre 4 4.4. Extraction des données
+4.3.4 Sources de données
+Toutes les données du projet proviennent de fichiers Excel annuels (2020 à 2024) fournis
+par l’entreprise. Chaque fichier contient des informations sur les contrats, les clients et
+les agences. Ils ont été lus avec la bibliothèquepandas en utilisant le moteuropenpyxl,
+puis normalisés pour assurer une structure homogène. Cette étape a permis de consolider
+l’ensemble des données en une seule base prête pour le traitement ETL.
+4.3.5 Destination des données
+Les données transformées ont été exportées au formatCSV avec un encodageUTF-8-SIG,
+afin d’assurer une compatibilité optimale avec Power BI. Ce fichier regroupe toutes les
+données consolidées sur plusieurs années et comprend les colonnes nettoyées et enrichies
+(chiffred’affaires, statut,type decontrat, région,etc.). Ce formatléger etstructuré permet
+une intégration directe dans Power BI pour la création de rapports interactifs.
+4.3.6 Outil de visualisation : Power BI
+Power BI, développé par Microsoft, est utilisé comme un outil de BI pour construire des
+tableaux de bord à partir des données transformées. Il offre des fonctionnalités avancées
+de visualisation interactive, tout en restant accessible aux utilisateurs non techniques
+grâce à une interface intuitive (voir figure 4.6). Dans notre projet, Power BI a permis une
+exploration visuelle intuitive des résultats issus du traitement ETL réalisé en amont. Il
+a également été utilisé pour effectuer certaines transformations supplémentaires via Po-
+wer Query, telles que la normalisation de colonnes, le filtrage de valeurs ou la création
+de dimensions d’analyse. Son intégration fluide avec les fichiers CSV produits par Py-
+thon a facilité la construction de rapports dynamiques et fiables, accessibles en ligne et
+partageables entre utilisateurs [22].
+Figure 4.6 : Logo Power BI [22]
+4.4 Extraction des données
+L’extraction des données constitue la première étape essentielle du projet décisionnel. Elle
+vise à rassembler les informations brutes nécessaires à l’analyse des contrats d’assurance
+automobile. Dans notre cas, les données ont été extraites depuis des fichiers Excel au
+format .xlsx, représentant les années de 2020 à 2024 (voir figure 4.7). Chaque fichier
+contient des données clés telles que les identifiants de contrat, le mois d’exercice, les types
+de contrat, les codes client et agences, les montants de chiffre d’affaires, ainsi que des
+informations sur la catégorie du client. Comme illustré dans la figure 4.8, l’extraction a été
+34
+===== PAGE 44 =====
+Chaptitre 4 4.5. Transformation des données
+Figure 4.7 : Extrait de la base de données Excel utilisée pour l’analyse
+Figure 4.8 : Exemple de script Python pour l’extraction des fichiers Excel
+réalisée à l’aide du langage Python, en s’appuyant sur les bibliothèquespandas et numpy.
+Le dictionnaire paths a été utilisé pour définir les chemins d’accès aux différents fichiers.
+Ensuite, seuls les champs pertinents ont été sélectionnés via la variablecolonnes_utiles,
+cequiapermisdefiltrerlesdonnéesdèsl’importation.Grâceàcetteméthodeautomatisée,
+chaque fichier a pu être chargé dans un DataFrame, garantissant une lecture fiable, une
+gestion souple des chemins et une première étape de structuration des données. Cette
+extraction maîtrisée constitue ainsi la base sur laquelle repose toute la suite du traitement
+ETL et la visualisation dans Power BI.
+4.5 Transformation des données
+La phase de transformation constitue une étape cruciale dans notre projet décisionnel. Elle
+permet de structurer et préparer les données extraites afin de les rendre exploitables pour
+l’analyse. Cette étape comprend plusieurs opérations clés : Fusion de fichiers, nettoyage
+des colonnes, traitement des doublons et des valeurs manquantes, normalisation des dates,
+et renommage des champs pour les adapter aux objectifs du projet. Ces transformations
+garantissent la qualité, la lisibilité et la pertinence des données analysées dans Power BI.
+35
+===== PAGE 45 =====
+Chaptitre 4 4.5. Transformation des données
+4.5.1 Transformation des données avec Python
+La première phase de transformation a été réalisée en utilisant le langage Python, no-
+tamment à l’aide des bibliothèquespandas et numpy. Celles-ci ont permis d’automatiser
+le traitement des données brutes, de les structurer, et de générer une base consolidée
+exploitable dans Power BI.
+Les principales étapes du processus sont les suivantes :
+— Les fichiers Excel des années 2020 à 2024 ont été lus individuellement à l’aide de
+pandas.read_excel(), en sélectionnant uniquement les colonnes utiles dès l’im-
+portation;
+— Chaque fichier a été nettoyé : Typage des colonnes, suppression des valeurs in-
+utiles, conversion des montants et standardisation des catégories clients et types
+de contrat;
+— Une colonne supplémentaireSOURCE_ANNEE a été ajoutée pour identifier la prove-
+nance temporelle de chaque ligne;
+— Les fichiers ont ensuite été fusionnés dans un seul DataFrame à l’aide de
+pd.concat();
+— Une gestion des valeurs manquantes a été effectuée;
+— Les noms d’agences ont été déduits à partir des codes grâce au dictionnaire
+mapping_agents, et les régions associées viamapping_regions;
+— Le chiffre d’affaires a été divisé en deux colonnes :Perte (pour les typesA et R) et
+CA_Gain (pour les typesC et T), selon une fonction dédiée;
+— Une colonne Statut a été générée à partir de chiffres spécifiques du code police,
+différenciant les contratsIndividuel, Flotte ou Autre, selon l’année;
+— Le mois a été normalisé en extrayant les deux derniers chiffres de TMP_MONTH,
+assurant une cohérence temporelle sur toutes les années;
+— Enfin, le DataFrame final a été exporté au formatCSV (avec encodageUTF-8-SIG)
+et Excel, prêt pour la visualisation dans Power BI.
+Les différentes figures suivantes illustrent les étapes clés de ce processus :
+— La figure 4.9 montre le chargement des fichiers Excel et leur nettoyage initial;
+Figure 4.9 : Chargement et nettoyage des fichiers Excel
+36
+===== PAGE 46 =====
+Chaptitre 4 4.5. Transformation des données
+Figure 4.10 : Création de dictionnaires de mappage pour les agents et les régions
+Figure 4.11 : Création des colonnes
+Figure 4.12 : Création de la colonneStatut et normalisation du mois
+— La figure 4.10 présente les dictionnaires utilisés pour enrichir les données avec les
+noms d’agences et les régions;
+— La figure 4.11 illustre la fonction qui permet de calculer les colonnesPerte et
+CA_Gain;
+— La figure 4.12 décrit la génération de la colonneStatut et la normalisation du
+mois;
+37
+===== PAGE 47 =====
+Chaptitre 4 4.5. Transformation des données
+Figure 4.13 : Script d’export final de la base consolidée
+— La figure 4.13 montre l’export final du fichier nettoyé au format Excel et CSV.
+4.5.2 Transformation complémentaire avec Power BI
+Une fois la base de données consolidée avec Python, des ajustements supplémentaires ont
+été effectués dans Power BI à l’aide de l’éditeur Power Query, dans le but d’améliorer la
+qualité des données et leur lisibilité dans les rapports.
+Comme illustré dans la figure 4.14, plusieurs étapes successives ont été appliquées :
+— Les types de données ont été modifiés (texte, entier, date) pour garantir la cohé-
+rence des formats et éviter les erreurs de lecture;
+— Des colonnes personnalisées ont été ajoutées pour effectuer des calculs intermé-
+diaires ou enrichir les données avec des règles métiers;
+— Plusieurs colonnes ont été renommées pour améliorer la lisibilité et l’interprétation
+dans les visuels;
+— Une mise en majuscule automatique a été appliquée pour uniformiser la présenta-
+tion des libellés;
+— Enfin, des colonnes non pertinentes ont été supprimées et d’autres permutées pour
+alléger le modèle et se concentrer sur les variables essentielles.
+Ces opérations ciblées, bien que légères, ont permis d’optimiser la structure finale des
+donnéespouruneexploitationefficaceàtraversdestableauxdebordinteractifsetintuitifs.
+Figure 4.14 : Étapes de transformation effectuées dans Power Query
+38
+===== PAGE 48 =====
+Chaptitre 4 4.6. Chargement des données
+4.6 Chargement des données
+Après les phases d’extraction et de transformation des données, l’étape finale du processus
+ETL consiste à charger les données préparées dans l’outil de visualisation. Dans notre cas,
+la base consolidée a été importée dans Power BI pour permettre l’analyse interactive à
+travers des tableaux de bord dynamiques. Les données ont été exportées depuis Python
+sous format.csv puis chargées dans Power BI via l’éditeur Power Query. Cette opération
+a permis de structurer le modèle de données en tables de faits et de dimensions (clients,
+agences, temps et régions).
+— Chargement du fichier consolidé contenant toutes les années (2020–2024). Ce
+fichier centralise les données nettoyées issues de Python et sert de source prin-
+cipale pour les analyses.
+— Création de requêtes séparées pour les dimensions (clients, temps, agences,
+régions) à partir du fichier principal. Cela permet une meilleure modélisation
+et une organisation claire des axes d’analyse.
+— Définition des relations entre les tables afin d’obtenir un modèle en étoile adapté
+aux analyses. Cette structure relationnelle favorise l’efficacité des mesures DAX
+et la navigation dans les rapports.
+— Vérification des types de données et optimisation pour améliorer les perfor-
+mances d’affichage. Des ajustements ont été faits pour éviter les erreurs de
+format et accélérer le temps de chargement des visuels.
+— Création de mesures et de KPIs pour suivre les performances (Chiffre d’affaires,
+pertes, fidélité, churn, etc.). Ces KPIs sont essentiels pour guider la prise de
+décision et évaluer les objectifs de l’entreprise.
+4.7 Création des tableaux de bord
+Dans cette section, nous présentons une vue d’ensemble des différents tableaux de bord
+développés dans le cadre du projet. Ces tableaux de bord ont été conçus dans Power BI
+dont le but de fournir des indicateurs visuels pertinents sur plusieurs dimensions de l’ac-
+tivité de l’assurance automobile. Chaque tableau de bord répond à un objectif spécifique
+et permet de faciliter la prise de décision grâce à une visualisation claire et interactive des
+données. Les analyses proposées couvrent plusieurs volets :
+— Volet Analyse des clients : Permet de suivre l’évolution de la clientèle et ses
+comportements;
+— Volet Analyse des contrats : Donne une vue globale sur la gestion et la dyna-
+mique des contrats;
+— Volet Analyse des agences : Met en évidence la performance commerciale des
+différentes agences.
+4.7.1 Tableau de bord analyse des clients
+La figure 4.15 offre une vue d’ensemble complète sur le comportement et la structure de
+la clientèle. Ce tableau de bord permet aux parties prenantes d’analyser les tendances
+d’acquisition, de fidélisation et de contribution des clients au chiffre d’affaires global. Les
+différents visuels composant ce tableau de bord sont analysés dans le tableau 4.9, qui
+décrit le rôle et les données clés de chaque élément. Ce tableau de bord peut également
+39
+===== PAGE 49 =====
+Chaptitre 4 4.7. Création des tableaux de bord
+Figure 4.15 : Tableau de bord "Analyse des clients"
+être filtré selon la période, le type de contrat, la région, l’agence ou encore un client
+spécifique, pour affiner l’analyse.
+Tableau 4.9 : Description des visuels du tableau de bord "Analyse des clients"
+Type de visuel Description du visuel Interprétation
+Tuiles KPI (Nombre total
+de clients, taux de churn,
+taux de fidélité)
+Trois tuiles synthétiques af-
+fichent les indicateurs clés :
+Le nombre de clients actifs, le
+taux de départs et le taux de
+fidélisation. Elles permettent
+une lecture rapide de la sta-
+bilité commerciale.
+Le portefeuille client de l’as-
+surance BIAT présente un
+bon équilibre, avec un taux
+de churn relativement faible
+(11,16%) et un taux de fi-
+délité élevé (68,56%), tra-
+duisant une forte capacité à
+conserver les clients.
+Histogramme horizontal
+(Top 5 des clients par
+chiffre d’affaires)
+Graphique horizontal clas-
+sant les clients selon leur part
+dans le chiffre d’affaires. Il
+aide à repérer les clients les
+plus importants.
+Les cinq premiers clients
+contribuent largement au
+chiffre d’affaires total. Leur
+poids stratégique néces-
+site un suivi renforcé pour
+maintenir cette rentabilité.
+40
+===== PAGE 50 =====
+Chaptitre 4 4.7. Création des tableaux de bord
+Suite du tableau 4.9
+Courbe (Évolution du
+chiffre d’affaires)
+Une courbe chronologique
+qui retrace l’évolution men-
+suelle du chiffre d’affaires de
+2020 à 2024, utile pour anti-
+ciper les cycles d’activité.
+On observe une saisonnalité
+marquée avec des pics de
+venteréguliersenfind’année.
+Le chiffre d’affaires mensuel
+oscille entre 5 et 10 millions
+TND.
+Camembert (Répartition
+des clients par type)
+Diagramme circulaire illus-
+trant la répartition des
+clients entre entreprises et
+particuliers. Il aide à adapter
+les offres selon le profil de
+clientèle.
+La majorité des clients
+sont des personnes morales
+(85,16%), ce qui reflète
+une clientèle principalement
+composée d’entreprises. Les
+particuliers ne représentent
+que 14,84%.
+Anneau (Analyse du
+chiffre d’affaires)
+Diagramme en anneau com-
+parant la part du chiffre d’af-
+faires conservée par la société
+et la part perdue.
+Le chiffre d’affaires global at-
+teint 173,93 millions TND.
+Parmi ce total, seules 8,88
+millions TND (4,86%) ont
+été perdues à cause de résilia-
+tions, traduisant un bon ni-
+veau de rétention.
+Double courbe (Évolution
+du nombre de clients)
+Deux courbes superpo-
+sées illustrant l’évolution
+annuelle du nombre de
+nouveaux clients par rapport
+aux clients récurrents.
+La courbe des nouveaux
+clients connaît une évolution
+irrégulière, avec une hausse
+jusqu’en 2021, une baisse
+en 2022 probablement liée à
+l’impact du Covid, puis une
+reprise en 2023. En parallèle,
+la courbe des anciens clients
+progresse de manière conti-
+nue, ce qui traduit une bonne
+fidélisation au fil des années.
+4.7.2 Tableau de bord analyse des contrats
+La figure 4.16 offre une vue d’ensemble complète de la gestion des contrats d’assurance
+automobile, permettant aux parties prenantes d’analyser les indicateurs clés de perfor-
+mance, de fidélisation et de résiliation. Les différents visuels composant ce tableau de
+bord sont analysés dans le tableau 4.10, qui décrit le rôle et l’utilité de chaque élément.
+Ce tableau de bord peut également être filtré dynamiquement selon la période, le type
+de contrat, la catégorie de client, la région ou un code client spécifique pour une analyse
+ciblée.
+41
+===== PAGE 51 =====
+Chaptitre 4 4.7. Création des tableaux de bord
+Figure 4.16 : Tableau de bord "Analyse des contrats"
+Tableau 4.10 : Description des visuels du tableau de bord "Analyse des contrats"
+Type de visuel Description du visuel Interprétation
+Carte d’indicateurs (Tuiles
+KPI : Indicateur de renou-
+vellement, nombre total de
+contrats, taux de churn)
+Trois indicateurs affichés en
+haut du dashboard permet-
+tant de visualiser les per-
+formances globales du porte-
+feuille de contrats.
+Sur 67 000 contrats, 72,82%
+ont été renouvelés, dépas-
+sant largement l’objectif de
+50%. Le taux de churn
+est faible (2,76%), ce qui
+montre une forte rétention
+contractuelle.
+Histogramme vertical
+(Évolution du nombre de
+contrats 2020–2024)
+Histogramme empilé repré-
+sentant la répartition an-
+nuelle des nouveaux contrats,
+contrats résiliés et contrats
+totaux.
+Le volume total reste stable
+à environ 20 000 contrats
+par an. Entre 3 000 et 4 000
+sont des nouveaux contrats,
+tandis que les contrats rési-
+liés ne dépassent pas les 2
+000.
+Histogramme horizontal
+(Répartition du chiffre
+d’affaires par type de
+contrat)
+Barres horizontales compa-
+rant le chiffre d’affaires selon
+le type de contrat et l’année.
+Permet de mesurer la renta-
+bilité par ancienneté.
+Les anciens contrats gé-
+nèrent la majorité du chiffre
+d’affaires, surtout en 2024.
+Les nouveaux contrats par-
+ticipent aussi, mais de ma-
+nière plus modérée.
+42
+===== PAGE 52 =====
+Chaptitre 4 4.7. Création des tableaux de bord
+Suite du tableau 4.10
+Type de visuel Description du visuel Interprétation
+Diagramme circulaire (Ré-
+partition des contrats par
+type : Renouvelés vs rési-
+liés)
+Camembert illustrant visuel-
+lement la part des contrats
+renouvelés par rapport aux
+résiliations.
+96,59%descontratssontre-
+nouvelés (≈52000), contre
+seulement 3,41% résiliés (≈
+2000).
+Tableau (Informations
+contractuelles des clients)
+Tableau de données brutes
+montrant les colonnes : nu-
+méro de contrat, type, caté-
+gorie client et statut.
+Ce tableau regroupe toutes
+les informations contrac-
+tuelles, avec la possibilité
+de filtrer par code client
+afin d’afficher l’ensemble
+des contrats liés à un client
+spécifique.
+4.7.3 Tableau de bord analyse des agences
+La figure 4.17 présente une vue synthétique des performances commerciales selon les diffé-
+rentes agences réparties sur le territoire. L’utilisateur peut sélectionner l’année d’analyse
+et appliquer des filtres spécifiques tels que le type de contrat, la catégorie de client et la
+région. Les visuels de ce tableau de bord sont décrits dans le tableau 4.11, qui détaille
+leur contenu et leur rôle analytique.
+Figure 4.17 : Tableau de bord "Analyse des agences"
+43
+===== PAGE 53 =====
+Chaptitre 4 4.7. Création des tableaux de bord
+Tableau 4.11 : Description des visuels du tableau de bord "Analyse des agences"
+Type de visuel Description du visuel Interprétation
+Carte d’indicateurs (Nombre
+total d’agences, chiffre d’af-
+faires total)
+Deux tuiles résumant le
+nombre d’agences en acti-
+vité et leur chiffre d’affaires
+cumulé sur la période.
+Le réseau se compose de
+14 agences ayant généré
+un chiffre d’affaires total
+de 173,93 millions TND.
+Cela montre une couver-
+ture géographique relative-
+ment concentrée mais per-
+formante.
+Barre horizontale (Top 5
+agences les plus perfor-
+mantes)
+Visualisation des cinq
+agences les plus rentables,
+utile pour prioriser les
+ressources et récompenser
+la performance.
+L’agence Bureau Direct est
+celle ayant généré le plus
+de chiffre d’affaires, suivie
+par d’autres agences straté-
+giques. Ce classement aide
+à repérer les points forts du
+réseau.
+Diagramme circulaire (Ré-
+partition du chiffre d’affaires
+par agence)
+Camembert illustrant la
+part de chaque agence dans
+le chiffre d’affaires global.
+Permet d’identifier les
+déséquilibres ou les zones à
+potentiel.
+L’agence Bureau Direct gé-
+nère à elle seule près de
+64% du chiffre d’affaires
+(≈111M TND). Les autres
+agences restent marginales
+en comparaison, ce qui ré-
+vèle une forte concentration
+de performance.
+Carte géographique (Analyse
+régionale)
+Carte interactive localisant
+les agences par région, où
+la taille des cercles verts
+illustre la répartition du
+chiffre d’affaires de chaque
+agence selon la catégorie de
+client. Cet outil permet une
+lecture claire de la perfor-
+mance géographique.
+Le chiffre d’affaires est
+majoritairement concentré
+dans les régions du nord
+(Tunis, Ariana, Bizerte,
+Nabeul), reflétant une forte
+activité urbaine. Les cercles
+verts illustrent la réparti-
+tion du chiffre d’affaires par
+catégorie de client.
+Tableau (Matrice des indica-
+teurs par agence)
+Tableau synthétique listant,
+pour chaque agence, le
+nombre total de contrats,
+de clients et d’indicateurs
+clés.
+Ce tableau regroupe
+l’ensemble des informa-
+tions relatives à chaque
+agence, telles que le numéro
+d’agence, le nombre total de
+clients, le nombre total de
+contrats, le chiffre d’affaires
+réalisé ainsi que le taux de
+renouvellement.
+44
+===== PAGE 54 =====
+Chaptitre 4 4.8. Audit
+4.8 Audit
+L’audit constitue la dernière étape de la méthode GIMSI pour la mise en place du sys-
+tème décisionnel dédié au produit automobile au sein d’assurance BIAT. Même si cette
+phase reste facultative, elle joue un rôle important dans le maintien de la performance
+et l’adaptabilité du système dans le temps. Son objectif principal est de s’assurer que les
+solutions mises en œuvre restent alignées avec les objectifs stratégiques de l’entreprise et
+les attentes évolutives des clients. En effet, les besoins changent, et ce contrôle permet
+d’identifier les écarts éventuels et d’y remédier de manière proactive. L’audit s’articule
+généralement autour de quatre axes :
+— Repérer les points à améliorer;
+— Réaliser des entretiens et recueillir les retours d’expérience;
+— Étudier les résultats obtenus;
+— Proposer des actions correctives adaptées.
+Dans le cas d’assurance BIAT, cette phase n’est pas obligatoire, mais elle reste essentielle
+pour anticiper les éventuelles anomalies et ajuster le système aux évolutions futures.
+4.9 Conclusion
+En conclusion, ce chapitre a présenté la mise en œuvre de notre modèle d’entrepôt de
+données, en mettant en avant les étapes ETL. Grâce à l’utilisation de Python pour le
+traitement des données et de Power BI pour la création des tableaux de bord, nous avons
+construit une base solide pour l’intégration et l’analyse des données. Ces technologies nous
+ontpermisdecentraliserlesinformationsdemanièrecohérenteetd’offrirdesvisualisations
+claires et interactives. Ainsi, ce système fournit à l’assurance BIAT des indicateurs fiables,
+facilitant la prise de décision stratégique et la mise en place d’actions ciblées.
+45
+===== PAGE 55 =====
+Chapitre 5
+Analyse avancée des données des
+clients de l’assurance BIAT :
+Prévision, segmentation et prédiction
+5.1 Introduction
+Dans ce chapitre, nous présentons une approche analytique avancée visant à appuyer la
+prise de décision stratégique au sein de l’assurance BIAT. Celle-ci repose sur trois axes
+principaux : La prévision des KPIs, la segmentation des clients selon leur fidilité et leur
+comportement historique, ainsi que la prédiction du comportement futur des clients. Ces
+analyses permettent d’anticiper les risques, de détecter les clients à forte valeur, et de
+proposer des actions ciblées pour améliorer la performance commerciale et la fidélisation.
+5.2 Prévision du chiffre d’affaires et du nombre de
+clients
+La prévision d’une série temporelle est une approche statistique permettant d’estimer les
+valeurs futures d’une variable chronologique en se basant sur ses données historiques. Dans
+le cas de l’assurance BIAT, cette méthode est utilisée pour anticiper l’évolution du chiffre
+d’affaires total ainsi que du nombre global de clients. L’objectif principal est d’apporter
+une vision claire sur la dynamique commerciale de l’entreprise afin d’aider les décideurs à
+adapter leurs stratégies de fidélisation, d’optimisation des ressources et de développement
+de portefeuille client. Une prévision fiable de ces KPIs constitue un levier essentiel pour
+améliorer la performance globale et orienter les actions futures.
+5.2.1 Notions de base des séries temporelles
+— La tendance (Tt) : Elle représente la direction générale de la série (croissante ou
+décroissante) sur une période prolongée.
+— La saisonnalité (St) : Elle traduit les fluctuations périodiques et régulières observées
+au cours du temps.
+— Le résidu (Et) : Il regroupe les variations aléatoires qui ne sont expliquées ni par
+la tendance, ni par la saisonnalité.
+46
+===== PAGE 56 =====
+Chapitre 5 5.2. Prévision du chiffre d’affaires et du nombre de clients
+Avant toute modélisation, il est essentiel de vérifier si la série eststationnaire, c’est-à-dire
+si ses caractéristiques statistiques (moyenne, variance) restent constantes dans le temps.
+Une série stationnaire est généralement requise pour garantir la fiabilité des méthodes de
+prévision. Dans ce travail, deux approches ont été utilisées pour analyser la stationnarité
+[23] :
+— La méthode graphique : À travers la visualisation des courbes temporelles et l’ap-
+plication d’un lissage par moyenne mobile centrée, il a été possible de détecter la
+présence d’une tendance ou d’une variation saisonnière.
+— Le test statistique : Le test de Dickey-Fuller augmenté (ADF) a été appliqué pour
+valider formellement la stationnarité ou non de la série en calculant la p-value
+associée.
+Ces étapes préparatoires permettant d’ajuster les données de manière appropriée avant
+de procéder aux prévisions, assurant ainsi la qualité des résultats obtenus.
+5.2.2 Analyse exploratoire des données
+L’analyse exploratoire constitue une phase essentielle pour structurer les données et ga-
+rantir leur fiabilité avant toute modélisation. Dans cette étude, les données issues des
+contrats d’assurance ont été exploitées pour générer deux séries temporelles mensuelles :
+Le chiffre d’affaires et le nombre total de clients uniques par mois. La figure 5.1 présente
+les scripts Python utilisés pour effectuer les principales opérations de préparation, no-
+tamment le nettoyage des colonnes, la transformation des dates, l’agrégation mensuelle
+des données, ainsi que l’application d’un lissage afin de réduire les variations ponctuelles.
+Cette préparation a permis d’uniformiser les données, de faciliter la lecture des tendances
+et d’assurer une base solide pour les analysesprévisionnelles à venir. Les séries obtenues
+sont désormais prêtes à être testées dans les modèles de prévision.
+Figure 5.1 : Script de préparation des données
+5.2.3 Étude de la stationnarité
+Avant d’appliquer les modèles de prévision sur le chiffre d’affaires et le nombre total de
+clients, une étude de la stationnarité des séries temporelles a été réalisée. Cette étape est
+essentielle pour garantir la pertinence des modèles statistiques, qui nécessitent générale-
+ment des séries stationnaires [24].
+5.2.3.1 Vérification de la stationnarité avec le test ADF
+La stationnarité d’une série temporelle est une condition fondamentale pour l’application
+correctedenombreusesméthodesdeprévision.Pourévaluerlastationnaritédessériesana-
+47
+===== PAGE 57 =====
+Chapitre 5 5.2. Prévision du chiffre d’affaires et du nombre de clients
+lysées, nous avons eu recours au test de Dickey-Fuller augmenté (ADF), un test statistique
+reconnu dans l’analyse des séries chronologiques. Ce test repose sur deux hypothèses :
+— H0 : La série possède une racine unitaire, elle est donc non stationnaire;
+— H1 : La série ne possède pas de racine unitaire, elle est donc stationnaire.
+L’interprétation repose sur la comparaison entre la p-value obtenue et un seuil de signifi-
+cation fixé à 0,05. Si la p-value est inférieure à ce seuil, l’hypothèse nulle est rejetée, et la
+série est considérée comme stationnaire. Dans notre étude, ce test a été appliqué aux deux
+indicateurs principaux : Le chiffre d’affaires total agrégé par mois et le nombre total de
+clients uniques par mois. Le code Python utilisé pour appliquer ce test est présenté dans
+la figure 5.2, tandis que les résultats obtenus sont illustrés dans la figure 5.3. Ces derniers
+montrent que les deux séries sont non stationnaires, ce qui a nécessité une préparation
+supplémentaire avant l’application des modèles prévisionnels.
+Figure 5.2 : Script du test statistique ADF
+Figure 5.3 : Résultats du test ADF
+5.2.3.2 Stabilisation de la série temporelle
+Les résultats du test ADF ont révélé que les séries du chiffre d’affaires total et du nombre
+total de clients étaient non stationnaires (voir figure 5.3). Pour y remédier, une transfor-
+mation logarithmique a été appliquée lorsque la p-value dépassait 0,05, comme illustré
+dans le code Python (voir figure 5.2). Cette transformation permet de stabiliser la va-
+riance et de rendre les séries stationnaires, ce qui est essentiel pour garantir la validité des
+modèles de prévision.
+48
+===== PAGE 58 =====
+Chapitre 5 5.2. Prévision du chiffre d’affaires et du nombre de clients
+5.2.4 Division des données en des ensemble d’entraînement et
+de test
+Avant d’entraîner les modèles de prévision, les séries temporelles ont été divisées en deux
+ensembles : Un ensemble d’entraînement représentant 70% des données, et un ensemble
+de test représentant les 30% restants. Cette séparation permet de faire l’apprentissage des
+modèles sur les données passées, puis de valider leur performance sur des observations
+non utilisées durant l’entraînement. La figure 5.4 montre l’instruction Python utilisée
+pour effectuer cette division à l’aide de la méthodeiloc(), en se basant sur la taille du
+DataFrame.
+Figure 5.4 : Script de division des données temporelles en ensembles d’entraînement et
+de test
+5.2.5 Création des modèles
+Dans cette partie, nous avons évalué plusieurs modèles de prévision afin d’identifier ce-
+lui qui s’adapte le mieux aux caractéristiques de nos données. Trois approches ont été
+retenues : Holt-Winters, XGBoost et SARIMA,. Chacune de ces méthodes présente des
+avantages spécifiques pour la modélisation des séries temporelles étudiées, permettant de
+comparer leurs performances sur le chiffre d’affaires total et le nombre total de clients.
+5.2.5.1 Le modèle Holt-Winters
+Le modèle de Holt-Winters repose sur un lissage exponentiel triple, conçu pour les séries
+temporelles combinant à la fois une tendance et une saisonnalité [25]. Dans le cadre
+de cette étude, la version additive a été privilégiée afin de modéliser une saisonnalité
+mensuelle et une tendance linéaire. Avant d’estimer les valeurs futures, une vérification
+préalable est effectuée pour s’assurer que la série dispose d’au moins 24 observations,
+condition nécessaire à une modélisation fiable. Lorsque ce seuil est atteint, le modèle
+est ajusté sur les données d’apprentissage et une prévision sur un horizon de 36 mois
+est générée, comme illustré dans la figure 5.5. L’implémentation repose sur la fonction
+ExponentialSmoothing,fournieparlabibliothèque statsmodels.tsa.holtwinters.Les
+figures 5.6 et 5.7 montrent les prévisions du chiffre d’affaires et du nombre de clients.
+49
+===== PAGE 59 =====
+Chapitre 5 5.2. Prévision du chiffre d’affaires et du nombre de clients
+Figure 5.5 : Script de l’implémentation du modèle Holt-Winters
+Figure 5.6 : Illustration des résultats de prévision du chiffre d’affaires à l’aide du modèle
+Holt-Winters
+Figure 5.7 : Illustration des résultats de prévision du nombre de clients à l’aide du
+modèle Holt-Winters
+La première met en évidence une tendance croissante avec une saisonnalité marquée,
+tandis que la seconde illustre une évolution plus stable, caractérisée par des fluctuations
+saisonnières modérées. Ces résultats soulignent la capacité du modèle Holt-Winters à
+reproduire fidèlement la structure temporelle des deux séries.
+5.2.5.2 Le modèle XGBoost
+Le modèle eXtreme Gradient Boosting (XGBoost) est un algorithme de machine lear-
+ning reconnu pour sa performance, largement utilisé dans les tâches de régression et de
+classification. Il repose sur le principe de l’assemblage d’arbres de décision successifs, où
+chaque nouvel arbre apprend à corriger les erreurs des précédents. Bien qu’il ne soit pas
+nativement conçu pour les séries temporelles, XGBoost peut être utilisé pour la prévision
+50
+===== PAGE 60 =====
+Chapitre 5 5.2. Prévision du chiffre d’affaires et du nombre de clients
+Figure 5.8 : Script de l’implémentation du modèle XGBoost
+en transformant le problème en une tâche supervisée [26]. Pour cela, nous avons dérivé
+plusieurs attributs temporels à partir des dates disponibles : Mois, année et jour de l’an-
+née. Ces variables permettent au modèle de capturer les tendances et les effets saisonniers
+présents dans les données (voir figure 5.8). L’implémentation a été réalisée à l’aide de la
+classe xgb.XGBRegressor() de la bibliothèque xgboost en utilisant les paramètres par
+défaut. Le modèle a été entraîné à l’aide de la méthodefit() sur les données d’entraîne-
+ment X_train et y_train, puis appliqué à des dates futures pour réaliser les prévisions
+à l’aide de la fonctionpredict(). Les figures 5.9 et 5.10 présentent respectivement les
+prévisions du chiffre d’affaires et du nombre de clients à l’aide du modèle XGBoost. Les
+figures montrent que le modèle XGBoost capture globalement les variations saisonnières
+du chiffre d’affaires, tandis que la prévision du nombre de clients présente une dynamique
+plus irrégulière. Ces résultats suggèrent que le modèle reste efficace pour identifier des
+tendances courtes, mais moins adapté aux structures temporelles fortement dépendantes.
+Figure 5.9 : Illustration des résultats de prévision du chiffre d’affaires à l’aide du modèle
+XGBoost
+51
+===== PAGE 61 =====
+Chapitre 5 5.2. Prévision du chiffre d’affaires et du nombre de clients
+Figure 5.10 : Illustration des résultats de prévision du nombre de clients à l’aide du
+modèle XGBoost
+5.2.5.3 Le modèle ARIMA saisonnier (SARIMA)
+Le modèle SARIMA (Seasonal AutoRegressive Integrated Moving Average ) est une ex-
+tension du modèle ARIMA permettant de capturer les effets saisonniers dans les séries
+temporelles. Il est particulièrement adapté aux indicateurs que nous avons étudiés, no-
+tamment le chiffre d’affaires total et le nombre total de clients, qui présentent une certaine
+cyclicité mensuelle [27]. Le modèle SARIMA repose sur deux groupes de paramètres :
+— (p, d, q) : Paramètres non saisonniers pour l’autorégression, la différenciation et la
+moyenne mobile.
+— (P, D, Q, m) : Paramètres saisonniers, avecm = 12 pour une périodicité mensuelle.
+Dans notre cas, nous avons utilisé l’ordre(1,1,1) pour la partie non saisonnière, et
+(1,1,1,12) pour la composante saisonnière, afin de bien capturer les cycles mensuels
+présents dans nos données. Le modèle a été implémenté à l’aide de la classeSARIMAX
+fournie par la bibliothèque statsmodels après avoir vérifié la stationnarité de la série.
+Une prévision a ensuite été réalisée sur une période de 36 mois à partir de l’ensemble
+d’entraînement(voir figure 5.11). Les figures 5.12 et 5.13 présentent respectivement les
+prévisions du chiffre d’affaires et du nombre de clients générées par le modèle SARIMA.
+La première montre une continuité cohérente avec l’historique, en reproduisant correcte-
+ment les tendances et les cycles mensuels. La seconde illustre une dynamique client plus
+instable, mais dont la saisonnalité reste bien capturée. Ces résultats confirment la capacité
+du modèle SARIMA à modéliser efficacement les structures temporelles régulières et les
+composantes saisonnières marquées.
+Figure 5.11 : Script de l’implémentation du modèle SARIMA
+52
+===== PAGE 62 =====
+Chapitre 5 5.2. Prévision du chiffre d’affaires et du nombre de clients
+Figure 5.12 :Illustrationdesrésultatsdeprévisionduchiffred’affairesàl’aidedumodèle
+SARIMA
+Figure 5.13 : Illustration des résultats de prévision du nombre de clients à l’aide du
+modèle SARIMA
+5.2.6 Évaluation de la performance des modèles
+Pour sélectionner le modèle de prévision le plus performant, nous avons utilisé des mé-
+triques d’évaluation standards en séries temporelles.
+5.2.6.1 Les métriques d’évaluation
+Afin d’évaluer les performances des modèles sur la prévision du chiffre d’affaires et du
+nombre total de clients, deux indicateurs issus de la régression ont été utilisés :
+— RMSE (Root Mean Squared Error): Il s’agit de la racine carrée de la moyenne
+des carrés des erreurs. Cette métrique mesure la dispersion entre les valeurs prédites
+ˆyi et les valeurs réellesyi. Elle est définie par la formule [28] :
+RMSE(y,ˆy) =
+√ 1
+n
+n∑
+i=1
+(yi−ˆyi)2 (5.1)
+Où :
+— n : Nombre total de points de données (ou d’observations);
+53
+===== PAGE 63 =====
+Chapitre 5 5.2. Prévision du chiffre d’affaires et du nombre de clients
+Tableau 5.12 : Résultats obtenues par les trois modèles en comparaison (SARIMA,
+Holt-Winters et XGBoost) pour la prévision du chiffre d’affaires en terme de RMSE et
+MAE
+Modèle RMSE MAE
+SARIMA 101.56 82.53
+Holt-Winters 102.89 84.16
+XGBoost 314.07 274.74
+— yi : Valeur réelle observée à l’instanti;
+— ˆyi : Valeur prédite par le modèle à l’instanti;
+— (yi−ˆyi)2 : Carré de l’erreur de prédiction pour l’instanti.
+— MAE (Mean Absolute Error): Il s’agit de la moyenne des valeurs absolues des
+erreurs. Cette métrique évalue la précision globale des prédictions sans accorder
+plus de poids aux grandes erreurs. Elle est définie par [29] :
+MAE(y,ˆy) = 1
+n
+n∑
+i=1
+|yi−ˆyi| (5.2)
+Où :
+— n : Nombre total de points de données;
+— yi : Valeur réelle observée à l’instanti;
+— ˆyi : Valeur prédite par le modèle à l’instanti;
+—|yi−ˆyi|: Valeur absolue de l’erreur de prédiction à l’instanti.
+Ces métriques sont utilisées pour comparer les performances des modèles de prévision afin
+d’identifier le plus fiable, c’est-à-dire celui présentant les valeurs deRMSE et de MAE
+les plus faibles. L’implémentation de ces métriques, comme illustré dans la figure 5.14,
+permet d’automatiser cette comparaison pour les trois modèles évalués.
+Figure 5.14 : Script de comparaison des modèles de prévision
+54
+===== PAGE 64 =====
+Chapitre 5 5.2. Prévision du chiffre d’affaires et du nombre de clients
+Tableau 5.13 : Résultats obtenues par les trois modèles en comparaison (SARIMA,
+Holt-Winters et XGBoost) pour la prévision du nombre de clients en terme de RMSE et
+MAE
+Modèle RMSE MAE
+SARIMA 206.91 184.84
+Holt-Winters 279.66 262.77
+XGBoost 360.36 320.72
+5.2.6.2 Résultats obtenus
+Les résultats comparatifs entre les modèles SARIMA, Holt-Winters et XGBoost pour la
+prévision du chiffre d’affaires et du nombre de clients sont présentés dans les tableaux
+5.12 et 5.13 respectivement. Selon ces résultats, pour le chiffre d’affaires, SARIMA offre
+les meilleures performances (RMSE = 101.56, MAE = 82.53), suivi de Holt-Winters avec
+des résultats proches. À l’inverse, XGBoost affiche des erreurs nettement plus élevées, ce
+qui indique une faible précision.La même tendance s’observe pour la prévision du nombre
+de clients. SARIMA reste le plus précis (RMSE = 206.91, MAE = 184.84), devant Holt-
+Winters, tandis que XGBoost obtient les scores les plus faibles en termes de performance.
+Ainsi, selon les métriques utilisées, SARIMA est le modèle le plus performant pour les
+deux indicateurs, suivi de Holt-Winters, puis de XGBoost.
+5.2.7 Déploiement
+Après avoir terminé la phase de modélisation et identifié le modèle le plus performant
+en l’occurrence le modèle SARIMA pour les deux indicateurs clés (le chiffre d’affaires
+total et le nombre total de clients), nous avons procédé à la phase de déploiement afin de
+rendre les résultats accessibles de manière interactive. Pour cela, nous avons intégré les
+prévisions générées par Python directement dans Power BI. L’objectif était de permettre
+aux utilisateurs métier de consulter, filtrer et analyser dynamiquement les résultats selon
+différents critères (type de contrat, catégorie de client, agence, etc.). La figure 5.15 illustre
+l’interface du tableau de bord prévisionnel développé. On y retrouve :
+— Une visualisation des prévisions du chiffre d’affaires total et du nombre total de
+clientsàl’aidedecourbescomparantlesvaleursréellesetprédites(issuesdumodèle
+SARIMA);
+— Des filtres interactifs permettant de personnaliser l’affichage selon la période, la
+catégorie de client, l’agence ou encore le type de contrat;
+— Une expérience utilisateur fluide et intuitive, permettant aux équipes commerciales
+ou décisionnelles de mieux anticiper les tendances futures.
+Grâce à cette approche, les prévisions sont non seulement automatisées mais aussi facile-
+ment interprétables et exploitables via une interface conviviale intégrée à Power BI.
+55
+===== PAGE 65 =====
+Chapitre 5 5.3. Segmentation des clients
+Figure 5.15 : Dashboard "Tableau de bord prévisionnel"
+5.3 Segmentation des clients
+La segmentation des clients a été réalisée en plusieurs étapes, en se basant sur des variables
+clésissuesdeleurcomportementcontractuel:L’ancienneté,lesinterruptions( time_laps).
+L’objectif est de regrouper les clients selon leur fidélité au fil du temps.
+5.3.1 Préparation des données
+Le fichier source contenant l’historique des contrats a été filtré afin de ne conserver que
+les colonnes utiles : L’année, le numéro de contrat, le code client, l’agence et la région.
+Après suppression des doublons, trois indicateurs comportementaux ont été calculés :
+— Ancienneté : Nombre d’années successives de souscription d’un contrat;
+— Time_laps : Durée (en années) pendant laquelle le client a interrompu ses contrats
+avant de revenir.
+Ces indicateurs ont été fusionnés pour constituer un jeu de données final utilisé pour la
+phase de segmentation.
+5.3.2 Détermination du nombre optimal de clusters et applica-
+tion de l’algorithme K-Means
+Afin de segmenter efficacement la clientèle, il est essentiel d’estimer un nombre optimal
+de groupes homogènes. Pour cela, nous avons utilisé la méthode ELBOW.
+5.3.2.1 Choix du nombre de clusters
+La méthode duElbow est une technique couramment utilisée en apprentissage non super-
+visé pour déterminer le nombre optimal de clusters dans une classification. Elle consiste
+à tracer l’inertie intra-cluster (somme des distances entre chaque point et son centroïde)
+en fonction du nombre de clustersk, afin d’identifier un point de rupture visuel, appelé
+56
+===== PAGE 66 =====
+Chapitre 5 5.3. Segmentation des clients
+"coude" [30]. Le nombre optimal de segments a été identifié à l’aide de la méthode du
+Elbow réalisée dans Python (voir figure 5.16), qui consiste à représenter l’inertie intra-
+cluster en fonction du nombre de clusters. La figure 5.17 présente la courbe obtenue par
+la méthode du coude, qui trace l’évolution du score de distorsion (ou inertie intra-cluster)
+en fonction du nombre de clustersk. Cette courbe décroît rapidement au début, indiquant
+une amélioration significative de la qualité de regroupement, puis la diminution devient
+plus lente. Le point d’inflexion observé àk = 4 marque le seuil au-delà duquel l’ajout de
+nouveaux clusters n’apporte qu’un gain marginal. Ce comportement justifie la sélection de
+cette valeur comme seuil optimal pour segmenter efficacement les clients tout en évitant
+une complexité excessive du modèle.
+Figure 5.16 : Script de l’implémentation de la méthode Elbow
+Figure 5.17 : Illustration du résultat de l’application de la méthode Elbow
+5.3.2.2 Application de l’algorithme K-Means pour la segmentation
+L’algorithmeKMeans est une méthode de regroupement non supervisé qui vise à parti-
+tionner les données enk groupes homogènes, appelés clusters. Il regroupe les individus en
+minimisant la distance entre chaque point et le centroïde de son cluster [31]. L’algorithme
+57
+===== PAGE 67 =====
+Chapitre 5 5.3. Segmentation des clients
+KMeans a été appliqué aveck = 4, et chaque client a été assigné à un cluster. Une étiquette
+a ensuite été attribuée à chaque groupe selon son profil dominant (voir figure 5.18) :
+— Cluster 0 : Client très fidèle, avec une ancienneté de 5 ou 4 ans ettime_laps = 0,
+indiquant une souscription continue sans interruption;
+— Cluster 1 : Client fidèle, avec une ancienneté de 3 ou 2 ans ettime_laps = 0,
+représentant des clients réguliers avec une fidélité stable;
+— Cluster 2 : Client volatil, caractérisé par untime_laps strictement supérieur à 0,
+indiquant des interruptions de contrat suivies d’un retour;
+— Cluster 3 : Nouveau client, avec une ancienneté de 1 an ettime_laps = 0, ce sont
+des clients récents sans historique d’interruption.
+La figure 5.19 illustre la répartition des clients sur un plan en deux dimensions
+(ancienneté vs. time_laps), colorée selon leur segment. On observe que :
+— les clients très fidèles (cluster 0) apparaissent en bas à droite, avec une ancienneté
+élevée (4 ou 5 ans) et aucuntime_laps;
+— les clients fidèles (cluster 1) sont situés au centre bas du graphique, avec une
+ancienneté moyenne (2 à 3 ans) ettime_laps = 0;
+— les nouveaux clients (cluster 3) sont isolés en bas à gauche (ancienneté = 1 an,
+time_laps = 0);
+— les clients volatils (cluster 2) se trouvent dans la partie supérieure, marquée par
+un time_laps strictement positif, quelle que soit leur ancienneté.
+Figure 5.18 : Script de l’implémentation de l’algorithme K-Means
+5.3.3 Export des données segmentées
+Le fichier final enrichi de la variableType_Client a été exporté au format CSV afin d’être
+intégré dans Power BI pour l’analyse dynamique des segments et leur impact commercial.
+58
+===== PAGE 68 =====
+Chapitre 5 5.3. Segmentation des clients
+Figure 5.19 : Visualisation de la segmentation des clients par K-Means
+5.3.4 Intégration dans Power BI
+La segmentation a été intégrée dans Power BI afin de permettre une visualisation dy-
+namique et interactive des différents profils clients. Le tableau de bord présenté dans la
+figure 5.20 propose une analyse complète à l’aide de filtres et de visuels variés, facilitant
+l’exploration des données. Les éléments visuels sont détaillés dans le tableau 5.14, cha-
+cun offrant une perspective spécifique sur la répartition, la performance commerciale et
+la localisation des segments clients. Cette interface intuitive permet désormais d’orienter
+plus efficacement les actions marketing, d’identifier les profils à risque de désengagement
+et d’ajuster les offres commerciales en fonction des comportements historiques observés.
+Figure 5.20 : Tableau de bord "Segmentation des clients"
+59
+===== PAGE 69 =====
+Chapitre 5 5.4. Prédiction du comportement des clients
+Tableau 5.14 : Description des visuels du tableau de bord "Segmentation des clients"
+Type de visuel Description du visuel Interprétation
+Diagramme en arbre (Ré-
+partition du nombre de
+clients par segment)
+Affichage arborescent mon-
+trant le volume total de
+clients segmentés selon leur
+profil. Chaque branche re-
+présente un groupe distinct.
+La majorité des clients sont
+classés comme "très fidèles"
+(plus de 12000), suivis des
+clients réguliers et fidèles.
+Cela reflète une base de
+clients stable et engagée.
+Diagramme circulaire (Ré-
+partition du chiffre d’af-
+faires)
+Camembert représentant la
+contribution de chaque type
+de client au chiffre d’affaires
+global.
+Les clients très fidèles gé-
+nèrent plus de 38% du
+chiffre d’affaires, suivis des
+nouveaux clients (37%), ce
+qui montre l’importance des
+deux extrêmes.
+Barres horizontales (Perfor-
+mance commerciale par pro-
+fil client)
+Barres horizontales illus-
+trant la valeur commerciale
+de chaque segment client.
+Permet d’identifier les pro-
+fils les plus rentables.
+Les clients très fidèles repré-
+sentent à eux seuls plus de
+139M TND. Les autres seg-
+ments ont un impact beau-
+coup plus modéré.
+Tableau (Matrice des infor-
+mations de segmentation)
+Tableau interactif listant
+le code client, le contrat,
+le segment attribué et le
+chiffre d’affaires associé.
+Les clients très fidèles ap-
+paraissent le plus souvent,
+avec des chiffres d’affaires
+élevés. Le tableau permet
+d’analyser rapidement la ty-
+pologie client.
+Carte géographique (Répar-
+tition régionale des seg-
+ments clients)
+Carte de la Tunisie avec
+des points localisés indi-
+quant la concentration des
+profils clients par région.
+Les régions côtières comme
+Tunis, Sfax et Sousse re-
+groupent la majorité des
+clients très fidèles. Cela
+peut orienter les campagnes
+ciblées.
+5.4 Prédiction du comportement des clients
+L’objectif de cette section est de prédire le comportement des clients (fidèles ou résiliés) à
+l’aide de modèles d’apprentissage automatique. Deux modèles ont été développés et com-
+parés à l’aide de plusieurs métriques d’évaluation afin de sélectionner le plus performant.
+5.4.1 Préparation des données
+Avant d’entraîner les modèles de machine learning, une phase rigoureuse de préparation
+des données a été réalisée. Celle-ci comprend à la fois la compréhension des variables, le
+nettoyage des enregistrements et l’équilibrage de la variable cible.
+Les données proviennent d’un fichier CSV (voir figure 5.21) regroupant plusieurs années de
+contrats d’assurance. Chaque ligne correspond à un contrat souscrit par un client donné,
+60
+===== PAGE 70 =====
+Chapitre 5 5.4. Prédiction du comportement des clients
+avec des informations comme l’année, la région, le type de contrat, le chiffre d’affaires
+(CA), les pertes, les gains, ainsi que des identifiants clients et agences.
+— Après chargement, seules les colonnes utiles ont été conservées et les valeurs man-
+quantes supprimées.
+— Les données ont été nettoyées : Typage des colonnes, conversion des montants
+numériques, et suppression des doublons par client et par année.
+— Des variables dérivées ont été construites, notamment :
+— ancienneté : Nombre maximal d’années consécutives de souscription;
+— time_laps : Interruption constatée dans les années de souscription;
+— Une variable cible client_quitte a été introduite : Elle prend la valeur 1 si le
+client a eu une interruption (time_laps > 0) en 2024, sinon 0.
+— Les variables qualitatives (Statut, Type de contrat , Type de client ) ont été
+encodées numériquement viaLabelEncoder.
+— Le jeu de données final contient une seule ligne par client, intégrant les indicateurs
+agrégés.
+Figure 5.21 : Aperçu des données sources après nettoyage
+5.4.2 Construction des modèles
+Pour réaliser la prédiction de comportement des clients, deux modèles ont été développés :
+Un modèle Random Forest et un modèle de Régression Logistique.
+5.4.2.1 Random Forest
+Le modèle Random Forest est un ensemble d’arbres de décision. Il construit plusieurs
+arbres à partir de sous-échantillons de données et combine leurs résultats pour renforcer
+la précision et limiter le surapprentissage [32]. La figure 5.22 présente le script Python
+utilisé pour ce modèle.
+— Utilisation de RandomForestClassifier pour la classification;
+— Validation croisée mise en œuvre à l’aide deStratifiedKFold, qui consiste à
+diviser les données en 5 sous-groupes.
+61
+===== PAGE 71 =====
+Chapitre 5 5.4. Prédiction du comportement des clients
+Figure 5.22 : Script de l’implémentation du modèle Random Forest
+5.4.2.2 Régression Logistique
+La Régression Logistique est un modèle linéaire utilisé pour résoudre des problèmes de
+classification binaire. Elle estime la probabilité d’appartenance à une classe à partir d’une
+combinaison linéaire des variables d’entrée [33]. Le code utilisé pour sa mise en œuvre est
+montré dans la figure 5.23.
+— Implémentation avecLogisticRegression(max_iter=1000);
+— Validation croisée effectuée sur cinq plis.
+Figure 5.23 : Script de l’implémentation du modèle Régression Logistique
+5.4.3 Métriques d’évaluation
+Le choix des métriques d’évaluation joue un rôle fondamental dans l’analyse des perfor-
+mances d’un modèle d’apprentissage automatique. Selon la nature des données et l’objectif
+de la prédiction, certaines métriques peuvent s’avérer plus pertinentes que d’autres [34].
+Dans le cadre de ce projet, plusieurs indicateurs complémentaires ont été sélectionnés
+afin d’obtenir une évaluation globale, fiable et représentative du comportement des mo-
+dèles. Certaines métriques, comme l’exactitude (accuracy), peuvent être trompeuses dans
+un contexte de classes déséquilibrées ou en présence de valeurs aberrantes (outliers). À
+l’inverse, d’autres indicateurs comme la précision, le rappel et le F1-score offrent une
+meilleure sensibilité à la détection des cas minoritaires, bien que la précision et le rappel
+puissent également être affectés par des valeurs extrêmes [35]. Ces différentes métriques,
+choisies pour leur complémentarité, sont résumées dans le tableau 5.15.
+62
+===== PAGE 72 =====
+Chapitre 5 5.4. Prédiction du comportement des clients
+Tableau 5.15 : Métriques d’évaluation des modèles [36]
+Métrique Formule et définition Signification
+des termes
+Exactitude (Accu-
+racy)
+Accuracy = T P + T N
+T P + T N + F P + F N
+Proportion de bonnes prédictions
+parmi l’ensemble des cas.
+TP = Vrai positif
+TN = Vrai négatif
+FP = Faux positif
+FN = Faux négatif
+Précision (Precision)
+Precision = T P
+T P + F P
+Part des clients prédits comme
+quittant qui le sont réellement.
+FP = Client prédit
+"quitte" mais reste
+en réalité.
+Rappel (Recall)
+Recall = T P
+T P + F N
+Part des vrais clients quittant dé-
+tectés par le modèle.
+FN = Client a
+quitté, mais non
+détecté.
+F1-score
+F 1 = 2×Precision×Recall
+Precision +Recall
+Mesure équilibrée entre précision et
+rappel.
+Valeur moyenne
+harmonique des
+deux.
+ROC AUC Aire sous la courbe ROC : mesure
+globale de la capacité à bien distin-
+guer les classes.
+Valeur entre 0 et 1.
+5.4.4 Résultats obtenus
+La comparaison des performances des deux modèles est présentée dans le tableau 5.16. Le
+modèle Random Forest surpasse la régression logistique sur toutes les métriques, notam-
+ment en termes de précision et de F1-score. Les matrices de confusion présentées dans les
+figures 5.24 et 5.25 illustrent bien cette différence : Random Forest distingue correctement
+presque tous les cas, avec très peu d’erreurs. En revanche, la Régression Logistique génère
+un grand nombre de faux positifs, ce qui explique sa faible précision malgré un bon rappel.
+Compte tenu de ses résultats, le modèle Random Forest a été sélectionné pour la mise
+en production. Pour renforcer la fiabilité des prédictions, une règle métier a été ajoutée
+afin d’identifier certains clients comme quittant sans dépendre uniquement du modèle,
+notamment les nouveaux clients non rentables.
+63
+===== PAGE 73 =====
+Chapitre 5 5.4. Prédiction du comportement des clients
+Tableau 5.16 : Comparaison des performances des deux modèles
+Métrique Random Forest Régression Logistique
+Exactitude 1.00 0.78
+Précision 0.76 0.05
+Rappel 1.00 0.92
+F1-score 0.86 0.09
+ROC AUC 1.00 0.85
+Figure 5.24 : Matrice de confusion du modèle Random Forest
+Figure 5.25 : Matrice de confusion du modèle Régression Logistique
+64
+===== PAGE 74 =====
+Chapitre 5 5.4. Prédiction du comportement des clients
+5.4.5 Déploiement
+Le déploiement a été réalisé en deux étapes. La première consiste à afficher une interface
+d’accueil contenant l’ensemble des tableaux de bord et la seconde à proposer une interface
+web dédiée à la prédiction du comportement des clients.
+5.4.5.1 Interface d’accueil
+L’interface d’accueil permet d’accéder à l’ensemble des fonctionnalités de l’application,
+y compris la prédiction du comportement des clients, à travers des boutons clairs et or-
+ganisés. Comme illustré dans la figure 5.26, cette page regroupe les principaux tableaux
+de bord : analyse des clients, des contrats, des agences, la prévision ,segmentation, ainsi
+qu’un accès direct à la prédiction du comportement des clients. En cliquant sur le bou-
+ton dédié à la prédiction du comportement des clients, l’utilisateur est redirigé vers une
+interface interactive.
+Figure 5.26 : Page d’accueil
+5.4.5.2 Interface de prédiction du comprtement des clients
+L’interface de prédiction du comportement des clients est une application web interactive
+développée avec Gradio. Elle permet à l’utilisateur de saisir un code client afin d’afficher
+automatiquement les informations clés, telles que l’ancienneté, le nombre de contrats, le
+type de client (nouveau ou fidèle), ainsi que les gains et pertes enregistrés. L’interface
+génère ensuite une prédiction sur son comportement futur (quitter ou rester), de manière
+claire et accessible. Comme illustré dans la figure 5.27, l’utilisateur saisit simplement le
+code client, puis clique sur le boutonSoumettre pour obtenir les résultats. La figure 5.28
+présente un exemple de prédiction pour le client 196360. Ce dernier est un nouveau client,
+avec un seul contrat, une ancienneté d’un an, aucun gain et une perte totale de 18,396 DT.
+Il est prédit comme "quittant" avec un score de confiance de 100 %. En complément, un
+graphique illustre la position du client par rapport aux autres, en fonction de l’ancienneté
+et du gain total. Le point rouge, situé en bas du graphique, met en évidence une absence
+totale de gain, soulignant une contribution financière nulle accompagnée d’une perte.
+65
+===== PAGE 75 =====
+Chapitre 5 5.4. Prédiction du comportement des clients
+Figure 5.27 : Interface interactive de prédiction du comportement des clients
+Figure 5.28 : Exemple de prédicition du comportement des clients
+66
+===== PAGE 76 =====
+Chapitre 5 5.5. Conclusion
+5.5 Conclusion
+Ce chapitre a présenté une démarche analytique appliquée aux données de l’assurance
+automobile. La prévision des indicateurs, la segmentation des clients et la prédiction de
+leur comportement ont permis de développer des outils d’aide à la décision. Ces résultats
+offrent à l’assurance BIAT une meilleure compréhension de son portefeuille, une capacité à
+anticiper les risques et des bases solides pour orienter ses actions commerciales de manière
+ciblée et efficace.
+67
+===== PAGE 77 =====
+Conclusion générale
+Ce projet de fin d’études a été réalisé au sein de l’entreprise assurance BIAT , dans un
+contextemarquéparunegestiontraditionnelledesdonnées:Collectemanuelle,absencede
+centralisation, rapports en Excel et aucun outil d’anticipation ou d’analyse approfondie.
+Cette organisation limitait considérablement la réactivité de l’entreprise et sa capacité
+d’analyse, notamment pour le produit d’assurance automobile.
+Face à ces défis, l’entreprise a exprimé plusieurs besoins : Disposer de tableaux de
+bord dynamiques pour suivre les KPIs en temps réel, anticiper leur évolution grâce à
+des modèles de prévision, segmenter les clients de manière automatisée et prédire leur
+comportement (résiliation, fidélité).
+Dans ce cadre, nous avons conçu une solution complète et structurée. D’abord, nous
+avonsanalysélecontexteduproduitautomobileetlesbesoinsdécisionnelsafindeproposer
+une approche adaptée. Ensuite, un processus ETL a été développé avec Python pour
+nettoyer, transformer et unifier les données issues de différentes sources. Puis, nous avons
+construit des tableaux de bord interactifs via Microsoft Power BI, permettant de visualiser
+les KPIs liés aux clients, contrats et agences, ainsi faciliter la prise de décision. Nous avons
+intégré des modèles prédictifs (SARIMA) pour estimer l’évolution du chiffre d’affaires et
+du nombre de clients, tout en assurant une visualisation claire des tendances. L’algorithme
+K-Means a été utilisé pour segmenter les clients. Enfin, nous avons appliqué un modèle
+Random Forest afin de prédire le comportement des clients, notamment leur propension
+à résilier leur contrat.
+Notre solution couvre ainsi toutes les étapes de la préparation des données à leur
+valorisation par des KPIs, des prévisions et une analyse comportementale, dans un envi-
+ronnement ergonomique pensé pour les utilisateurs métier. Des pistes d’amélioration sont
+envisageables pour enrichir cette solution :
+— Étendre la solution décisionnelle à d’autres produits d’assurance par exemple l’ass-
+rance vie;
+— Intégrer des flux de données en temps réel (via des API ou systèmes de collecte
+automatisée) pour renforcer la réactivité décisionnelle[37];
+— Mettre en place un système de recommandation personnalisé basé sur les profils
+clients [38].
+Ce stage a été une expérience très enrichissante : il nous a permis d’acquérir des com-
+pétences solides en BI, modélisation prédictive et conception de solutions décisionnelles.
+Nous remercions vivement nos encadrants pour leur soutien et leur confiance. Ce projet
+constitue une étape importante dans notre parcours professionnel et personnel.
+68
+===== PAGE 78 =====
+Bibliographie
+[1] Biat assurance. https://www.assurancesbiat.com.tn. visité 04/02/2025.
+[2] Méthode de scrum. https://www.journaldunet.fr/web-tech/guide-de-l-
+entreprise-digitale/1443834-scrum-maitriser-le-framework-star-des-
+methodes-agiles/. visité : 11/02/2025.
+[3] Shéma en flocon. https://en.wikipedia.org/wiki/Snowflake_schema. visité :
+02/03/2025.
+[4] Les avantages de scrum. https://asana.com/fr/resources/what-is-scrum. vi-
+sité : 11/02/2025.
+[5] Méthode de gimsi. https://www.piloter.org/images/gimsi-1.jpg. visité :
+11/02/2025.
+[6] Les avantage de gimsi. https://www.piloter.org/mesurer/methode/methode-
+GIMSI-phases.htm. visité : 11/02/2025.
+[7] Les limites de gimsi. https://www.piloter.org/mesurer/methode/
+fondamentaux_gimsi.htm. visité : 11/02/2025.
+[8] Comparaison entre scrum et gimsi.https://www.piloter.org/mesurer/methode/
+fondamentaux_gimsi.htm. visité : 11/02/2025.
+[9] tableau de bord. https ://coggle.it/diagram/Zxfvae2sEHE5igz5/t/comparaison-
+entre-scrum-et-gimsi.
+[10] Approche inmon. https://www.geeksforgeeks.org/difference-between-
+kimball-and-inmon. visité : 11/03/2025.
+[11] inmon et kimball. https://www.astera.com/fr/type/blog/data-warehouse-
+concepts/. visité : 11/03/2025.
+[12] Avantages du shéma en étoile. https://www.astera.com/fr/type/blog/star-
+schema-vs-snowflake-schema/. visité : 11/03/25.
+[13] Shéma en étoile. https://en.wikipedia.org/wiki/Star_schema. visité :
+02/03/2025.
+[14] Les limites de scrum. https://www.lucidchart.com/blog/fr/3-majeurs-
+inconvenients-de-la-methode-agile. visité : 11/02/2025.
+[15] Shéma en constellation de faits. https://www.educba.com/data-warehouse-
+schema/. visité : 02/03/2025.
+[16] Définition d’un etl.https://fr.wikipedia.org/wiki/Extract-transform-load.
+visité : 11/03/2025.
+[17] Définition de python. https ://www.journaldunet.fr/web-tech/dictionnaire-du-
+webmastering/1445304-python-definition-et-utilisation-de-ce-langage-informatique/.
+[18] Définition de spyder. https ://www.wildcodeschool.com/lexique/spyder.
+69
+===== PAGE 79 =====
+Bibliographie Bibliographie
+[19] Définition de pandas. https://fr.wikipedia.org/wiki/Pandas#:~:
+text=Pandas%20est%20une%20biblioth%C3%A8que%20%C3%A9crite,num%C3%
+A9riques%20et%20de%20s%C3%A9ries%20temporelles. visité : 12/03/2025.
+[20] Définition de numpy.https://datascientest.com/numpy. visité : 12/03/2025.
+[21] Définition de openpyxl. https://www.tresfacile.net/la-bibliotheque-
+openpyxl-python/. visité : 12/03/2025.
+[22] Définition de power bi. https://fr.wikipedia.org/wiki/Microsoft_Power_BI.
+visité : 12/03/2025.
+[23] Damodar N. Gujarati et Dawn C. Porter. Basic econometrics.https://cbpbu.ac.
+in/userfiles/file/2020/STUDY_MAT/ECO/1.pdf. visité : 15/05/2025.
+[24] Deepesh Machiwal and Madan K Jha. Comparative evaluation of statistical tests for
+time series analysis : application to hydrological time series/evaluation comparative
+de tests statistiques pour l’analyse de séries temporelles : application à des séries tem-
+porelles hydrologiques. Hydrological Sciences Journal, 53(2) :353–366, 2008. visité :
+15/05/2025.
+[25] Définition de holt-winters. https://fr.statisticseasily.com/glossaire/Qu%
+27est-ce-que-la-m%C3%A9thode-Holt-Winters%2C-guide-complet/ . visité :
+15/05/2025.
+[26] Définition de xgboost. https://www.ibm.com/fr-fr/think/topics/xgboost#:
+~:text=XGBoost%20(eXtreme%20Gradient%20Boosting)%20est,utilise%20la%
+20descente%20de%20gradient. visité : 15/05/2025.
+[27] Définition de sarima. https://www.techniques-ingenieur.fr/base-
+documentaire/technologies-de-l-information-th9/traitement-du-signal-
+bases-theoriques-42295210/series-temporelles-te5220/processus-sarima-
+et-a-correlation-periodique-te5220niv10007.html. visité : 15/05/2025.
+[28] Formule de l’équation rmse. https://docs.oracle.com/cloud/help/fr/pbcs_
+common/PFUSU/insights_metrics_RMSE.htm#PFUSU-GUID-FD9381A1-81E1-4F6D-
+8EC4-82A6CE2A6E74. visité : 15/05/2025.
+[29] Formule de l’équation mse. https://fr.statisticseasily.com/
+glossaire/qu%27est-ce-que-l%27erreur-quadratique-moyenne-mse/#:~:
+text=La%20formule%20de%20calcul%20de,au%20nombre%20r%C3%A9el%20d’
+observations. visité : 15/05/2025.
+[30] Définition de la méthode elbow. https://www.intelligence-
+artificielle-school.com/ecole/technologies/k-means-algorithme/#:
+~:text=Initialisation%20des%20centro%C3%AFdes&text=La%20m%C3%
+A9thode%20Elbow%20est%20une,puis%20de%20les%20repr%C3%A9senter%
+20graphiquement. visité : 17/05/2025.
+[31] Shi Na, Liu Xumin, and Guan Yong. Research on k-means clustering algorithm : An
+improved k-means clustering algorithm. In2010 Third International Symposium on
+intelligent information technology and security informatics , pages 63–67. Ieee, 2010.
+visité : 17/05/2025.
+[32] Définition du modéle random-forest. https://www.intelligence-artificielle-
+school.com/ecole/technologies/random-forest-en-machine-learning/#:
+~:text=Il%20s’agit%20d’une,plusieurs%20jeux%20d’entra%C3%AEnement%
+20diff%C3%A9rents. visité : 18/05/2025.
+70
+===== PAGE 80 =====
+Bibliographie Bibliographie
+[33] Définition du modéle régression logistique. https://www.intelligence-
+artificielle-school.com/ecole/technologies/la-regression-logistique/.
+visité : 18/05/2025.
+[34] Tahani Daghistani and Riyad Alshammari. Comparison of statistical logistic regres-
+sion and random forest machine learning techniques in predicting diabetes.Journal
+of Advances in Information Technology Vol , 11(2) :78–83, 2020. visité : 18/05/2025.
+[35] Marjolaine Lannes, Nicolas Coulombel, and Yelva Roustan. Modèle désagrégé de
+choix de voiture par les ménages : comparaison des modèles de choix discret et d’ap-
+prentissage supervisé. Technical report, 2022. visité : 19/05/2025.
+[36] Les formules des métriques d’évaluation des modèles prédictifs. https:
+//fr.statisticseasily.com/exactitude-rappel-de-pr%C3%A9cision-ou-
+f1-quelle-m%C3%A9trique-pr%C3%A9vaut/. visité : 20/05/2025.
+[37] Intégrer des flux de données en temps réel. https://www.astera.com/fr/type/
+blog/how-to-use-apis-for-data-retrieval/ . visité : 21/05/2025.
+[38] Système de recommandation. https://interstices.info/les-systemes-de-
+recommandation-categorisation/. visité : 21/05/2025.
+71

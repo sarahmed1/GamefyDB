@@ -12,9 +12,11 @@ from gamefydb.forecaster import (
     forecast_peak_hours,
     forecast_session_volume,
     forecast_stock_replenishment,
+    study_stationarity,
 )
-from gamefydb.segmenter import segment_members
+from gamefydb.segmenter import segment_members, score_member_loyalty
 from gamefydb.anomaly_detector import detect_anomalies
+from gamefydb.figures import generate_all_figures
 
 
 def _print_anomaly_summary(anomalies: pd.DataFrame) -> None:
@@ -55,7 +57,8 @@ def main():
     print('  Note: each model is evaluated on an 80/20 chronological train/test split')
     print('  (first 80% of historical data trains the model, last 20% is held out')
     print('   and compared against real recorded values to measure accuracy)')
-    print('  Verdict thresholds — GOOD: MAPE < 10%  ACCEPTABLE: < 20%  POOR: > 20%')
+    print('  Metric: wMAPE (weighted MAPE = MAE / mean_actual) — stable for volatile data')
+    print('  Verdict thresholds — GOOD: wMAPE < 20%  ACCEPTABLE: < 50%  POOR: > 50%')
     print()
     forecasts_dir = os.path.join(args.output, 'forecasts')
     os.makedirs(forecasts_dir, exist_ok=True)
@@ -70,6 +73,11 @@ def main():
 
     # Cleaned stock rows (individual movements) for replenishment
     stock_mv = stock.rename(columns={'date': 'movement_datetime'})
+
+    print('  Stationarity analysis...')
+    study_stationarity(tx).to_csv(
+        os.path.join(forecasts_dir, 'stationarity_tests.csv'), index=False
+    )
 
     print('  Revenue...')
     forecast_revenue(tx).to_csv(
@@ -104,12 +112,26 @@ def main():
     for label, count in segments['segment_label'].value_counts().items():
         print(f'    {label}: {count} members')
 
+    print('  Member loyalty scoring...')
+    loyalty = score_member_loyalty(schema['dim_member'])
+    loyalty.to_csv(
+        os.path.join(forecasts_dir, 'member_loyalty.csv'), index=False, encoding='utf-8-sig'
+    )
+    for tier, count in loyalty['loyalty_tier'].value_counts().items():
+        print(f'    {tier}: {count} members')
+
     print('  Anomaly detection...')
     anomalies = detect_anomalies(tx)
     _print_anomaly_summary(anomalies)
     anomalies.to_csv(os.path.join(forecasts_dir, 'anomalies.csv'), index=False)
 
     print(f'  Forecasts written to {forecasts_dir}/')
+
+    print('Generating figures...')
+    figures_dir = os.path.join('docs')
+    generate_all_figures(tx, schema['dim_member'], forecasts_dir, figures_dir)
+    print(f'  Figures written to {figures_dir}/')
+
     print('Done.')
 
 

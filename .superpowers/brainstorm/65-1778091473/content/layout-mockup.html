@@ -1,0 +1,123 @@
+<h2>GamefyDB Assistant — Layout Mockup</h2>
+<p class="subtitle">This is what the app would look and feel like. Click to select if this works for you.</p>
+
+<div class="cards">
+  <div class="card" data-choice="approve" onclick="toggleSelect(this)" style="max-width:100%;width:100%">
+    <div class="card-image" style="background:#0f172a;padding:16px;border-radius:8px;font-family:sans-serif;">
+
+      <!-- Top bar -->
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid #1e293b">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="background:#6d28d9;width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px">🎮</div>
+          <span style="color:#f1f5f9;font-size:14px;font-weight:600">GamefyDB Assistant</span>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <!-- Language switcher -->
+          <div style="display:flex;gap:4px;">
+            <div style="background:#6d28d9;color:white;padding:2px 8px;border-radius:4px;font-size:10px;cursor:pointer">EN</div>
+            <div style="background:#1e293b;color:#94a3b8;padding:2px 8px;border-radius:4px;font-size:10px;cursor:pointer">FR</div>
+            <div style="background:#1e293b;color:#94a3b8;padding:2px 8px;border-radius:4px;font-size:10px;cursor:pointer">AR</div>
+          </div>
+          <!-- Role badge -->
+          <div style="background:#1e293b;color:#22c55e;padding:2px 8px;border-radius:4px;font-size:10px;">👤 Owner</div>
+        </div>
+      </div>
+
+      <!-- Main 2-column layout -->
+      <div style="display:flex;gap:12px;height:300px;">
+
+        <!-- LEFT: Chat panel -->
+        <div style="flex:1;background:#1e293b;border-radius:8px;padding:10px;display:flex;flex-direction:column;overflow:hidden;">
+          <div style="font-size:9px;color:#64748b;margin-bottom:8px;text-transform:uppercase;letter-spacing:1px">Conversation</div>
+
+          <!-- Messages -->
+          <div style="flex:1;overflow:hidden;display:flex;flex-direction:column;gap:8px;">
+            <!-- Bot message -->
+            <div style="display:flex;gap:6px;align-items:flex-start;">
+              <div style="background:#6d28d9;width:18px;height:18px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px">🤖</div>
+              <div style="background:#0f172a;border-radius:6px;padding:6px 8px;max-width:85%;">
+                <p style="color:#e2e8f0;font-size:10px;margin:0;line-height:1.5">Hi! I'm your GamefyDB assistant. Ask me anything about your gaming center — revenue, members, forecasts, or get a full summary.</p>
+              </div>
+            </div>
+            <!-- User message -->
+            <div style="display:flex;gap:6px;align-items:flex-start;flex-direction:row-reverse;">
+              <div style="background:#0284c7;width:18px;height:18px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px">👤</div>
+              <div style="background:#1d4ed8;border-radius:6px;padding:6px 8px;max-width:85%;">
+                <p style="color:#e2e8f0;font-size:10px;margin:0">Show me revenue for this month</p>
+              </div>
+            </div>
+            <!-- Bot reply -->
+            <div style="display:flex;gap:6px;align-items:flex-start;">
+              <div style="background:#6d28d9;width:18px;height:18px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px">🤖</div>
+              <div style="background:#0f172a;border-radius:6px;padding:6px 8px;max-width:85%;">
+                <p style="color:#e2e8f0;font-size:10px;margin:0;line-height:1.5">Revenue this month is <span style="color:#22c55e;font-weight:600">12,450 TND</span>, up 8% from last month. Chart generated on the right ➜</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick action buttons -->
+          <div style="display:flex;gap:4px;margin-top:8px;flex-wrap:wrap;">
+            <div style="background:#1e3a5f;color:#7dd3fc;padding:3px 7px;border-radius:4px;font-size:9px;cursor:pointer">📊 Full summary</div>
+            <div style="background:#1e3a5f;color:#7dd3fc;padding:3px 7px;border-radius:4px;font-size:9px;cursor:pointer">💡 Give me advice</div>
+            <div style="background:#1e3a5f;color:#7dd3fc;padding:3px 7px;border-radius:4px;font-size:9px;cursor:pointer">⚠️ Any anomalies?</div>
+          </div>
+
+          <!-- Input bar -->
+          <div style="display:flex;gap:6px;margin-top:8px;align-items:center;">
+            <div style="background:#374151;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;cursor:pointer;flex-shrink:0" title="Voice input">🎤</div>
+            <div style="flex:1;background:#0f172a;border-radius:6px;padding:6px 10px;font-size:10px;color:#64748b;">Ask anything about your dashboards...</div>
+            <div style="background:#6d28d9;color:white;padding:4px 10px;border-radius:6px;font-size:10px;cursor:pointer;flex-shrink:0">Send</div>
+          </div>
+        </div>
+
+        <!-- RIGHT: Chart panel -->
+        <div style="flex:1.2;background:#1e293b;border-radius:8px;padding:10px;display:flex;flex-direction:column;">
+          <div style="font-size:9px;color:#64748b;margin-bottom:8px;text-transform:uppercase;letter-spacing:1px">Chart</div>
+
+          <!-- Fake chart area -->
+          <div style="flex:1;background:#0f172a;border-radius:6px;padding:12px;display:flex;flex-direction:column;justify-content:flex-end;">
+            <!-- Fake bar chart -->
+            <div style="display:flex;align-items:flex-end;gap:6px;height:160px;margin-bottom:8px;">
+              <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;">
+                <div style="width:100%;background:#3b82f6;border-radius:3px 3px 0 0;height:70px;"></div>
+                <div style="font-size:8px;color:#64748b">Sep</div>
+              </div>
+              <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;">
+                <div style="width:100%;background:#3b82f6;border-radius:3px 3px 0 0;height:90px;"></div>
+                <div style="font-size:8px;color:#64748b">Oct</div>
+              </div>
+              <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;">
+                <div style="width:100%;background:#3b82f6;border-radius:3px 3px 0 0;height:65px;"></div>
+                <div style="font-size:8px;color:#64748b">Nov</div>
+              </div>
+              <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;">
+                <div style="width:100%;background:#3b82f6;border-radius:3px 3px 0 0;height:110px;"></div>
+                <div style="font-size:8px;color:#64748b">Dec</div>
+              </div>
+              <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;">
+                <div style="width:100%;background:#6d28d9;border-radius:3px 3px 0 0;height:85px;"></div>
+                <div style="font-size:8px;color:#64748b">Jan</div>
+              </div>
+              <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;">
+                <div style="width:100%;background:#22c55e;border-radius:3px 3px 0 0;height:130px;"></div>
+                <div style="font-size:8px;color:#64748b">Feb</div>
+              </div>
+            </div>
+            <div style="font-size:9px;color:#94a3b8;text-align:center">Monthly Revenue (TND)</div>
+          </div>
+
+          <!-- Chart actions -->
+          <div style="display:flex;gap:4px;margin-top:8px;">
+            <div style="background:#1e3a5f;color:#7dd3fc;padding:3px 7px;border-radius:4px;font-size:9px;cursor:pointer">⬇ Download</div>
+            <div style="background:#1e3a5f;color:#7dd3fc;padding:3px 7px;border-radius:4px;font-size:9px;cursor:pointer">🔄 Refresh</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>Does this layout work for you?</h3>
+      <p>Chat on the left with quick-action buttons + mic. Chart generated on the right. Language switcher and role badge at the top.</p>
+    </div>
+  </div>
+</div>

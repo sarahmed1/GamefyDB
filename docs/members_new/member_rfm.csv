@@ -1,0 +1,93 @@
+member_id,recency_days,frequency_tx,monetary_tx,username,firstname,lastname,total_tnd,duration_min,monetary,R_score,F_score,M_score,RFM_score,segment
+41,16,31,278.0,rayen,rayen,chaweli,536.01,4091.0,536.01,4,4,4,444,Champions
+2,1,43,586.0,doudi,doudi,,153.62,1167.0,153.62,4,4,3,443,Champions
+42,17,25,220.65,amine,amine,drissi,138.27,1036.0,138.27,4,4,3,443,Champions
+50,16,24,231.5,has2407,has2407,,109.39,820.0,109.39,4,4,3,443,Champions
+53,2,24,360.0,911jynx,mohamed youssef,ben slama,164.26,1234.0,164.26,4,4,3,443,Champions
+51,6,21,0.0,,,,,,0.0,4,4,2,442,Loyal
+4,4,32,0.0,,,,,,0.0,4,4,1,441,Lost
+6,3,28,0.0,,,,,,0.0,4,4,1,441,Lost
+54,2,16,593.5,lazy,lazy,touka,949.19,7117.0,949.19,4,3,4,434,Champions
+61,1,18,448.0,sorroww11,khalil,hannachi,2238.22,18732.0,2238.22,4,3,4,434,Champions
+65,6,19,265.0,ravenn,hadil,abdellaoui,158.79,1193.0,158.79,4,3,3,433,Loyal
+28,11,17,188.0,khanfour,khanfour,,26.77,200.0,26.77,4,3,2,432,Lost
+52,6,20,299.0,bop,Ahmed,Bouabdallah,82.72,619.0,82.72,4,3,2,432,Lost
+60,12,19,0.0,,,,,,0.0,4,3,2,432,Lost
+33,5,13,346.9,daly1505,daly1505,,183.19,1380.0,183.19,4,2,3,423,Potential
+11,9,13,0.0,,,,,,0.0,4,2,1,421,New
+13,8,14,0.0,,,,,,0.0,4,2,1,421,New
+14,4,10,0.0,,,,,,0.0,4,2,1,421,New
+23,2,14,0.0,,,,,,0.0,4,2,1,421,New
+24,8,10,0.0,,,,,,0.0,4,2,1,421,New
+25,10,9,0.0,,,,,,0.0,4,2,1,421,New
+30,13,14,0.0,,,,,,0.0,4,2,1,421,New
+37,10,14,0.0,,,,,,0.0,4,2,1,421,New
+9,24,51,275.0,jousef,jousef,,1517.35,11417.0,1517.35,3,4,4,344,Loyal
+35,21,21,609.9,mhmd,MOHAMED,LOUATI,4488.27,34472.0,4488.27,3,4,4,344,Loyal
+63,23,26,418.0,ysf,youssef,abid,310.01,2327.0,310.01,3,4,4,344,Loyal
+66,35,22,415.0,mikayy,mariem,ben hamouda,320.63,2478.0,320.63,3,4,4,344,Loyal
+5,37,42,498.0,prime_lillo7046,Yassine,Merichko,271.36,2059.0,271.36,3,4,3,343,Loyal
+3,23,44,344.0,hzied,hzied,,76.47,573.0,76.47,3,4,2,342,Loyal
+8,30,43,312.0,ivio,ivio,,8.59,64.0,8.59,3,4,2,342,Loyal
+43,26,27,364.0,siko,heni,karaa,50.07,378.0,50.07,3,4,2,342,Loyal
+1,19,36,0.0,,,,,,0.0,3,4,1,341,Lost
+17,21,21,267.0,darker,Nizar,Bourawi,508.11,3818.0,508.11,3,3,4,334,Loyal
+18,28,21,124.8,terexa,terexa,,631.29,4734.0,631.29,3,3,4,334,Loyal
+34,40,16,281.9,ghassen,ghassen,ayari,1794.03,13965.0,1794.03,3,3,4,334,Loyal
+47,30,18,215.0,riados,riados,riadh,89.23,668.0,89.23,3,3,3,333,Loyal
+62,30,20,355.9,yasso,yassin,hasan,102.63,576.0,102.63,3,3,3,333,Loyal
+55,19,18,249.0,aziz,aziz,Kaffel,43.23,324.0,43.23,3,3,2,332,Lost
+56,43,19,198.0,aicha,aicha,Kaffel,20.98,156.0,20.98,3,3,2,332,Lost
+27,34,17,0.0,,,,,,0.0,3,3,1,331,Lost
+32,25,17,0.0,,,,,,0.0,3,3,1,331,Lost
+38,25,15,0.0,,,,,,0.0,3,3,1,331,Lost
+49,18,10,0.0,,,,,,0.0,3,2,2,322,Potential
+20,19,13,0.0,,,,,,0.0,3,2,1,321,Potential
+21,37,10,0.0,,,,,,0.0,3,2,1,321,Potential
+22,20,12,0.0,,,,,,0.0,3,2,1,321,Potential
+10,49,43,284.0,fazekoskos,mehdi,zbiba,136.52,825.0,136.52,2,4,3,243,At Risk
+44,57,22,460.0,darkleft,darkleft,,150.97,1131.0,150.97,2,4,3,243,At Risk
+45,87,26,261.0,greyangel,greyangel,,141.69,1067.0,141.69,2,4,3,243,At Risk
+48,77,21,438.0,azer,azer,,189.0,1419.0,189.0,2,4,3,243,At Risk
+57,85,21,128.0,mika,Mickaêl,Hamza,71.69,537.0,71.69,2,4,2,242,At Risk
+7,45,38,0.0,,,,,,0.0,2,4,1,241,Lost
+36,57,20,308.0,adam,adam,,513.15,3445.0,513.15,2,3,4,234,At Risk
+59,97,15,287.0,bar1z,bar1z,,534.06,4086.0,534.06,2,3,4,234,At Risk
+64,93,18,441.0,zinox,Helmi,Chermiti,2364.99,19890.0,2364.99,2,3,4,234,At Risk
+40,63,17,429.9,zou,adam,zoubeidi,164.49,1324.0,164.49,2,3,3,233,At Risk
+12,73,20,214.0,yahya,Yahya,Ghzazoua,74.19,565.0,74.19,2,3,2,232,Lost
+29,102,18,249.0,bikancho,bikancho,,20.24,151.0,20.24,2,3,2,232,Lost
+58,168,17,187.0,panda,Majdouline,Hamza,72.72,547.0,72.72,2,3,2,232,Lost
+19,50,14,485.9,khalil,khalil,,702.13,5312.0,702.13,2,2,4,224,At Risk
+15,58,15,254.0,idriss,idriss,,114.63,792.0,114.63,2,2,3,223,Lost
+16,57,12,0.0,,,,,,0.0,2,2,1,221,Hibernating
+26,92,9,0.0,,,,,,0.0,2,2,1,221,Hibernating
+31,69,15,0.0,,,,,,0.0,2,2,1,221,Hibernating
+39,73,14,0.0,,,,,,0.0,2,2,1,221,Hibernating
+46,134,9,0.0,,,,,,0.0,2,2,1,221,Hibernating
+76,188,7,212.9,zippo,fares,fendri,1815.22,14778.0,1815.22,2,1,4,214,Lost
+127,190,7,330.0,crunchy,Aziz,Ayari,904.4,7719.0,904.4,2,1,4,214,Lost
+128,190,7,371.9,lala,Asli,Amenallah,1069.64,8020.0,1069.64,2,1,4,214,Lost
+131,198,7,287.0,fakeflach,noureddine,khelfa,345.81,2592.0,345.81,1,2,4,124,Cant Lose
+132,191,7,408.4,skandwich,souilem,skander,921.5,6914.0,921.5,1,2,4,124,Cant Lose
+134,210,7,440.9,diaa,Dhia,Akermi,134.07,1028.0,134.07,1,2,3,123,Lost
+78,198,7,387.5,yamoun,mohamed,yamoun,365.66,2741.0,365.66,1,1,4,114,Lost
+114,199,7,458.0,ahmedy,ahmed yassin,fattoum,286.33,2147.0,286.33,1,1,4,114,Lost
+129,194,7,269.9,awad,Awad,Mahdi,770.58,5778.0,770.58,1,1,4,114,Lost
+130,193,7,648.0,jirenp,Yassine,Trigui,844.12,6336.0,844.12,1,1,4,114,Lost
+69,200,7,386.9,drayra,ilyes,drira,200.96,1689.0,200.96,1,1,3,113,Hibernating
+72,204,7,348.0,yurriz,kais,khaled,151.92,1200.0,151.92,1,1,3,113,Hibernating
+74,207,7,238.5,eleuch04,mahdi,eleuch,141.66,1064.0,141.66,1,1,3,113,Hibernating
+75,207,7,413.0,hammami456,ahmed,hammami,155.7,1167.0,155.7,1,1,3,113,Hibernating
+79,211,7,217.0,wertex,ilyes,douib,108.0,810.0,108.0,1,1,3,113,Hibernating
+125,201,7,363.0,mehdi,Daaloul,Mehdi,205.46,1640.0,205.46,1,1,3,113,Hibernating
+126,205,7,398.0,spirit,fares,abid,156.73,1177.0,156.73,1,1,3,113,Hibernating
+67,220,6,441.0,syrine,syrine,daly,29.83,223.0,29.83,1,1,2,112,Hibernating
+68,220,6,243.0,talbi21,achref,talbi,27.8,223.0,27.8,1,1,2,112,Hibernating
+70,221,6,164.0,rachid,Rachid,Mdalla,21.63,162.0,21.63,1,1,2,112,Hibernating
+71,221,6,642.0,malek,Malek,Mdalla,21.96,164.0,21.96,1,1,2,112,Hibernating
+73,215,6,224.0,nasr,aziz,nasr,72.39,568.0,72.39,1,1,2,112,Hibernating
+77,219,6,207.0,hvaco,ramzi,jabbou,43.23,324.0,43.23,1,1,2,112,Hibernating
+85,221,6,236.0,ahmed2012,ahmed,zouari,21.27,159.0,21.27,1,1,2,112,Hibernating
+117,213,6,299.0,moataz,moataz,boughanmi,84.7,635.0,84.7,1,1,2,112,Hibernating
+135,218,6,177.2,karoui,amin,karoui,57.6,432.0,57.6,1,1,2,112,Hibernating

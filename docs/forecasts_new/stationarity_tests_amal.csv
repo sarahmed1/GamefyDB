@@ -1,0 +1,5 @@
+serie,transformation,adf_pvalue,stationnaire
+Chiffre d'affaires,brute,1.076960884659285e-05,True
+Chiffre d'affaires,log,3.81321566733505e-05,True
+Nombre de clients,brute,0.00021730773733619598,True
+Nombre de clients,log,0.00041793551884879886,True

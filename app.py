@@ -75,8 +75,8 @@ if "suggestions" not in st.session_state:
     st.session_state.suggestions = []
 if "last_chart_spec" not in st.session_state:
     st.session_state.last_chart_spec = None
-if "voice_pending" not in st.session_state:
-    st.session_state.voice_pending = None
+if "pending_query" not in st.session_state:
+    st.session_state.pending_query = None
 if "_last_transcript" not in st.session_state:
     st.session_state._last_transcript = None
 
@@ -136,56 +136,60 @@ with col_chat:
                 if msg["role"] == "assistant" and msg.get("suggestions"):
                     for i, sugg in enumerate(msg["suggestions"]):
                         if st.button(sugg, key=f"sugg_{msg_idx}_{i}"):
-                            st.session_state.voice_pending = sugg
+                            st.session_state.pending_query = sugg
                             st.rerun()
 
     # Quick action buttons
     qa_col1, qa_col2, qa_col3, qa_col4 = st.columns(4)
     with qa_col1:
         if st.button(strings["summary_btn"], key="qa_summary", use_container_width=True):
-            st.session_state.voice_pending = "Give me a full summary of everything"
+            st.session_state.pending_query = "Give me a full summary of everything"
             st.rerun()
     with qa_col2:
         if st.button(strings["advice_btn"], key="qa_advice", use_container_width=True):
-            st.session_state.voice_pending = "What should I focus on improving?"
+            st.session_state.pending_query = "What should I focus on improving?"
             st.rerun()
     with qa_col3:
         if st.button(strings["anomaly_btn"], key="qa_anomaly", use_container_width=True):
-            st.session_state.voice_pending = "Show me recent anomalies"
+            st.session_state.pending_query = "Show me recent anomalies"
             st.rerun()
     with qa_col4:
         if st.button(strings["forecast_btn"], key="qa_forecast", use_container_width=True):
-            st.session_state.voice_pending = "Show me the revenue forecast for the next 4 weeks as a line chart"
+            st.session_state.pending_query = "Show me the revenue forecast for the next 4 weeks as a line chart"
             st.rerun()
 
-    # Promote a pending value (from voice, suggestion chip, or quick action)
-    # into the input widget's state key, then clear the signal so it can't
-    # re-inject on the next rerun.
-    if st.session_state.voice_pending is not None:
-        st.session_state["user_input_field"] = st.session_state.voice_pending
-        st.session_state.voice_pending = None
-
-    # Input row
-    voice_col, input_col, send_col = st.columns([1, 5, 2])
+    # Input row. The mic stays outside the form (it triggers its own rerun via
+    # st.rerun()), but the text input and send button must share a form so that
+    # the typed value commits in the same rerun as the click — otherwise the
+    # first click fires with stale state and you need a second click.
+    voice_col, form_col = st.columns([2, 9])
     with voice_col:
         transcript = voice_input(language=st.session_state.language)
         if transcript and transcript != st.session_state._last_transcript:
             st.session_state._last_transcript = transcript
-            st.session_state.voice_pending = transcript
+            st.session_state.pending_query = transcript
             st.rerun()
-    with input_col:
-        user_text = st.text_input(
-            "",
-            placeholder=strings["placeholder"],
-            label_visibility="collapsed",
-            key="user_input_field",
-        )
-    with send_col:
-        send_clicked = st.button(strings["send"], type="primary", use_container_width=True)
+    with form_col:
+        with st.form("chat_form", clear_on_submit=False):
+            input_col, send_col = st.columns([7, 2])
+            with input_col:
+                user_text = st.text_input(
+                    "",
+                    placeholder=strings["placeholder"],
+                    label_visibility="collapsed",
+                    key="user_input_field",
+                )
+            with send_col:
+                send_clicked = st.form_submit_button(strings["send"], type="primary", use_container_width=True)
 
-    # Handle send
+    # Handle send. A pending_query (from a chip, quick-action, or voice
+    # transcript) bypasses the input box and fires immediately. Otherwise we
+    # take whatever was typed and submitted via the form.
     query = None
-    if send_clicked and user_text.strip():
+    if st.session_state.pending_query:
+        query = st.session_state.pending_query.strip()
+        st.session_state.pending_query = None
+    elif send_clicked and user_text.strip():
         query = user_text.strip()
 
     if query:

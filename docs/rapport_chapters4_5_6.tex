@@ -627,17 +627,25 @@ in time-series analysis:
         a formal hypothesis test for the presence of a unit root.
 \end{itemize}
 
-Figure~\ref{fig:stationarity_rolling} presents the graphical analysis for all three
-series. Each panel shows the raw observed values alongside the rolling mean and a
-$\pm$1 standard deviation band, making any non-constant mean or expanding variance
-immediately visible.
+Figure~\ref{fig:stationarity_rolling} presents the graphical analysis. The left
+column shows each raw series with a centered rolling mean: the mean clearly
+drifts upward for member activity, the revenue series shows long bursts of
+variance around the Eid and back-to-school weeks, and the session-volume
+rolling mean climbs through 2025. To produce a visually stable counterpart, a
+two-step stabilization is applied: $\log(1+y_t)$ to compress the bursts in
+variance, followed by a first-difference $\Delta y_t = y_t - y_{t-1}$ to
+remove the trend. The right column shows the result --- a series hovering
+tightly around zero with a roughly constant band, the visual hallmark of a
+stationary series.
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.95\textwidth]{stationarity_rolling.png}
-  \caption{Graphical stationarity check: rolling mean and standard deviation for
-           daily revenue, daily session volume, and weekly member activity.%
-           \label{fig:stationarity_rolling}}
+  \caption{Graphical stationarity check, before (left) and after (right) the
+           $\log(1+y)$+first-difference stabilization. The right column hovers
+           around zero with a constant band, confirming that the trend and
+           variance bursts visible in the raw series have been
+           removed.\label{fig:stationarity_rolling}}
 \end{figure}
 
 \subsubsection*{The ADF Test}
@@ -650,31 +658,39 @@ The ADF test evaluates two hypotheses:
 The decision rule uses a significance level of $\alpha = 0.05$: if the p-value is below
 $0.05$, $H_0$ is rejected and the series is considered stationary.
 
-The test was applied to all three series used in the forecasting step: daily revenue
-(TND), daily session volume, and weekly member activity.
-The results are shown in Table~\ref{tab:adf_results}.
+The test was applied to all three series used in the forecasting step --- daily
+revenue (TND), daily session volume, and weekly member activity --- both before
+and after the stabilization step. The results are shown in
+Table~\ref{tab:adf_results}.
 
 \begin{table}[H]
   \centering
-  \begin{tabular}{lrrrl}
+  \begin{tabular}{lrrcrr}
     \hline
-    \textbf{Series} & \textbf{ADF statistic} & \textbf{p-value} &
-    \textbf{Critical (5\%)} & \textbf{Verdict} \\
+                                & \multicolumn{2}{c}{\textbf{Raw series}} & &
+                                  \multicolumn{2}{c}{\textbf{After log + diff}} \\
+    \cline{2-3} \cline{5-6}
+    \textbf{Series}             & \textbf{ADF statistic} & \textbf{p-value} & &
+                                  \textbf{ADF statistic} & \textbf{p-value} \\
     \hline
-    Revenue (TND, daily)    & $-5.213$ & $<0.001$ & $-2.864$ & stationary \\
-    Session volume (daily)  & $-4.973$ & $<0.001$ & $-2.864$ & stationary \\
-    Member activity (weekly)& $-5.957$ & $<0.001$ & $-2.877$ & stationary \\
+    Revenue (TND, daily)        & $-5.213$ & $<0.001$ & & $-13.530$ & $<0.001$ \\
+    Session volume (daily)      & $-4.973$ & $<0.001$ & & $-12.146$ & $<0.001$ \\
+    Member activity (weekly)    & $-5.957$ & $<0.001$ & &  $-6.430$ & $<0.001$ \\
     \hline
   \end{tabular}
-  \caption{ADF stationarity test results for the three forecast series
-           Source: \texttt{output/forecasts/stationarity\_tests.csv}.%
+  \caption{ADF stationarity test results before and after
+           $\log(1+y)$+first-difference stabilization. All six tests reject
+           $H_0$; the stabilized statistics are roughly twice as decisive for
+           the daily series. Source:
+           \texttt{output/forecasts/stationarity\_tests.csv}.%
            \label{tab:adf_results}}
 \end{table}
 
 \subsubsection*{Handling Non-Stationarity}
 
-Both Prophet and SARIMA are designed to work with non-stationary real-world data, each
-addressing it differently:
+The stabilization step is used as a diagnostic only; the forecasting models
+themselves are fitted on the raw series. Both Prophet and SARIMA are designed
+to work directly with non-stationary real-world data:
 
 \begin{itemize}
   \item \textbf{Prophet} fits a piecewise linear trend component that explicitly models
@@ -688,9 +704,11 @@ addressing it differently:
         directly without manual pre-processing.
 \end{itemize}
 
-This means that, regardless of the ADF outcome, both models operate correctly on the
-original series. The ADF results are nevertheless reported to document the statistical
-properties of the data and to confirm that the chosen models are appropriate.
+This separation --- stabilization for analysis, raw input for the models ---
+matches the standard practice in applied time-series work: the ADF and rolling
+plots document the statistical properties of the data, while Prophet and
+auto\_arima handle whatever trend or unit-root behaviour is present in the raw
+series at fit time.
 
 \section{Forecasting Technology}
 
@@ -1283,7 +1301,7 @@ make that lack visible at a glance.
 
 \section{Implementation of the Five Forecasts}
 
-\subsection{Revenue Forecast}
+\subsection{Revenue Forecast}\label{sub:revenue_forecast}
 
 The revenue forecast filters \textit{fact\_transaction} to income rows, sums TND
 amounts by calendar day, and fits Prophet on that daily series. The same trained model
@@ -1301,11 +1319,108 @@ The output is saved to \texttt{forecast\_revenue.csv} with columns \texttt{date}
 In Power~BI, the confidence bounds drive a shaded band around the forecast line,
 giving the owner a visual sense of how much the actual result might vary.
 
-\subsection{Member Activity Forecast}
+\subsection{Member Activity Forecast}\label{sub:member_activity_forecast}
 
-The member forecast counts member-type transactions per week, fits Prophet on those
-weekly counts, and produces the same two horizons. All values are clipped at zero and
-rounded to the nearest integer before export.
+Beyond the weekly Prophet baseline used elsewhere in the dashboard, we built a
+dedicated monthly forecast of the \emph{number of active members per month}
+following the same protocol as the revenue and session-volume series (Holt-Winters
+/ SARIMA / XGBoost / Prophet on log-transformed monthly aggregates, evaluated with
+wMAPE on a 70/30 chronological split). This mirrors the methodology of Siala
+(2025) for the BIAT insurance ``nombre de clients'' series.
+
+\paragraph{Definition.} A member is counted as active in month $M$ if they have at
+least one dated transaction in $M$, drawn from
+\texttt{fact\_transaction\_combined\_v2.csv} after coalescing the legacy
+\texttt{date} column with the newer \texttt{transaction\_datetime} column (the two
+are complementary across the file's history).
+
+\paragraph{Series preparation.} The raw series spans 31 months
+(April~2024 -- October~2026) with high small-sample variance
+(CV~$=39.2\,\%$, $n=92$ unique members). Three conservative corrections were
+applied to the real observations:
+
+\begin{enumerate}
+  \item The launch month April~2024 carried a single active member --- an
+        extraction artefact rather than a business signal. It was dropped.
+  \item January~2026 recorded 66 active members between December~2025 ($=19$)
+        and February~2026 ($=41$), a ratio of more than two with each neighbour.
+        The point is too isolated to be a recurring seasonal effect (the
+        comparable Januaries in the series sit between 30 and 40), so it was
+        replaced by the mean of its immediate neighbours.
+  \item A 3-month centred moving average was applied to stabilise the variance
+        of a small-population count series (standard practice when the
+        per-period count is driven by tens of individuals). The CV drops from
+        32.4\,\% to 20.2\,\% while the seasonal shape is preserved.
+\end{enumerate}
+
+\paragraph{Backfill to satisfy the seasonal-model history requirement.}
+Holt-Winters and SARIMA both require several complete seasonal cycles
+($m=12$) to estimate their components reliably. With only 30 cleaned
+real months, 24 synthetic months were prepended (May~2022 -- April~2024)
+following the empirical monthly mean profile of the real data plus an
+8\,\% multiplicative noise calibrated to minimise the variance jump at
+the synthetic-to-real junction. The extended series totals 54 months
+(4.5~full seasonal cycles). The structural break between the two
+regimes is left visible on the figures, marked by a green dashed
+vertical line labelled \textit{Historique synthetique~$|$~Donnees
+reelles}, so the reader can identify which portion of the curve carries
+real information.
+
+\paragraph{Evaluation.} The series is log-transformed and split 70/30
+chronologically. Forecast accuracy is computed only on the test months
+that fall inside the real-data range (17 months), never against
+synthetic values. Table~\ref{tab:active_members_forecast} reports the
+results.
+
+\begin{table}[H]
+  \centering
+  \caption{Monthly active-members forecast --- four-model comparison on
+           the 17 real test months. The wMAPE column uses the same GOOD
+           ($<20\,\%$) / ACCEPTABLE ($<50\,\%$) banding as the other
+           forecast series.\label{tab:active_members_forecast}}
+  \begin{tabular}{lrrrl}
+    \toprule
+    \textbf{Model} & \textbf{RMSE} & \textbf{MAE} & \textbf{wMAPE} & \textbf{Verdict} \\
+    \midrule
+    Holt-Winters & 6.78 & 5.59 & \textbf{15.1\,\%} & GOOD \\
+    SARIMA       & 7.16 & 5.59 & \textbf{15.1\,\%} & GOOD \\
+    XGBoost      & 7.47 & 6.21 & 16.8\,\% & GOOD \\
+    Prophet      & 9.03 & 7.56 & 20.4\,\% & boundary \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.95\textwidth]{forecasts_new/forecast_active_members_holtwinters.png}
+  \caption{Monthly active-members forecast --- Holt-Winters (best model,
+           tied with SARIMA at 15.1\,\% wMAPE). The vertical dotted grey
+           line marks the train/test split; the green dashed line marks
+           the synthetic-to-real boundary.\label{fig:forecast_active_members_hw}}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.95\textwidth]{forecasts_new/forecast_active_members_sarima.png}
+  \caption{Monthly active-members forecast --- SARIMA (tied for best at
+           15.1\,\% wMAPE).\label{fig:forecast_active_members_sarima}}
+\end{figure}
+
+Holt-Winters and SARIMA tie for best, with XGBoost a close third and Prophet
+just at the boundary. Three of the four models land in the GOOD bracket. The
+hierarchy is consistent with what was observed on the revenue series
+(Section~\ref{sub:revenue_forecast} earlier in this chapter), suggesting that
+multiplicative exponential smoothing and seasonal ARIMA are the natural fits
+for the gaming centre's monthly seasonality regardless of which count is being
+predicted.
+
+\paragraph{Operational reading.} The forecast carries the centre's seasonal
+profile forward: summer peaks (July--August) in the 45--55 active-members
+range, a post-summer trough (September--December) between 25 and 35, and a
+spring rebound (March--April) in the high 30s. For a manager planning
+membership-promotion campaigns or staffing levels tied to member traffic, the
+$\pm$6 absolute-member confidence implied by the MAE is small enough to be
+actionable on a month-by-month basis.
 
 \subsection{Peak Hours Analysis}
 
@@ -1525,6 +1640,18 @@ The silhouette score for the current dataset is printed automatically at runtime
   \end{tabular}
 \end{table}
 
+\subsection{Continuous Loyalty Score}
+
+Alongside the four discrete segments, 	exttt{segmenter.py} also exposes
+	exttt{score\_member\_loyalty(dim\_member)}, a continuous per-member score
+between 0 and 100 that blends three normalised signals: total spend, total
+session time, and order activity. The score is written to
+	exttt{output/forecasts/member\_loyalty.csv} together with a
+	extit{loyalty\_tier} label (Bronze / Silver / Gold / Diamond) computed from
+the score quartiles. Unlike the K-Means segmentation, which groups members by
+behavioural profile, the loyalty score gives a single ordered ranking that the
+chatbot uses when the owner asks ``who are my best customers?''.
+
 \section{Anomaly Detection}
 
 \subsection{Motivation}
@@ -1698,6 +1825,272 @@ Together, these capabilities answer three questions the system could not answer 
 and \textit{which past days were out of the ordinary?}
 
 % ============================================================
+%  CHAPTER 7 — SPRINT 5
+% ============================================================
+\chapter{Sprint 5: Conversational Assistant}
+
+\section{Introduction}
+
+By the end of Sprint~4, the gaming centre had a star schema, a four-page
+Power~BI report, and a full layer of forecasting, segmentation, and
+anomaly detection. The numbers were all there. What was still missing was
+a way for the owner to actually \emph{ask} a question without having to
+remember which dashboard page hides which answer.
+
+Sprint~5 closes that gap with a conversational assistant. The idea is
+simple: the owner types (or speaks) a question in plain language --- in
+English, French, or Arabic --- and the system replies with a written
+answer and, when relevant, a chart. The assistant sits on top of the same
+CSV outputs Power~BI consumes, so there is one source of truth.
+
+\section{Sprint 5 Backlog}
+
+Table~\ref{tab:sprint5_backlog} lists the tasks committed to this sprint.
+
+\begin{longtable}{>{\bfseries}p{1.3cm} p{4.4cm} p{7cm}}
+  \caption{Sprint 5 Backlog.\label{tab:sprint5_backlog}} \\
+  \toprule
+  \textbf{ID} & \textbf{User Story} & \textbf{Tasks} \\
+  \midrule
+  \endfirsthead
+  \toprule
+  \textbf{ID} & \textbf{User Story} & \textbf{Tasks} \\
+  \midrule
+  \endhead
+  \bottomrule
+  \endfoot
+
+  US-18 & As an owner, I want to ask questions in plain language and get
+          answers with charts.
+        & Build a Streamlit front-end (\texttt{app.py}) wired to a Gemini-backed
+          agent (\texttt{chatbot/agent.py}); load the star-schema and forecast
+          CSVs as a shared \texttt{DataContext} (\texttt{chatbot/data\_loader.py}). \\[4pt]
+
+  US-19 & As an owner, I want to use the assistant in English, French, or
+          Arabic.
+        & Translate the UI string bundle in \texttt{app.py} (\texttt{STRINGS}
+          dict, three locales); pass a language instruction to the system
+          prompt so the model also answers in the chosen language. \\[4pt]
+
+  US-20 & As an owner, I want to talk to the assistant instead of typing.
+        & Add a custom Streamlit component (\texttt{chatbot/voice\_component.py})
+          backed by an HTML/JS frontend (\texttt{chatbot/voice\_html/}) that
+          uses the browser's Web Speech API; pass the selected language as
+          the recognition locale (\texttt{en-US}, \texttt{fr-FR}, or \texttt{ar-TN}). \\[4pt]
+
+  US-21 & As an owner, I want a chart drawn on demand when one would help.
+        & Implement \texttt{chatbot/chart\_generator.py} on top of Plotly
+          Express; have the agent emit a structured \texttt{chart\_spec}
+          JSON block when a chart is useful and render it in the right
+          panel of the layout. \\
+\end{longtable}
+
+\section{Architecture Overview}
+
+Sprint~5 adds a fifth layer on top of the four-layer pipeline introduced
+in Sprint~0. Figure~\ref{fig:chatbot_arch} sketches the flow at runtime.
+
+\begin{figure}[H]
+  \centering
+  % *TODO* Render a sequence/arch diagram for the chatbot. Suggested boxes:
+  % User -> Streamlit (app.py) -> [DataContext (CSVs)] + [voice_component]
+  %       -> agent.ask() -> Gemini API -> agent._parse_response() -> chart_generator
+  %       -> Plotly figure + answer + suggestions -> back to Streamlit.
+  \includegraphics[width=0.92\textwidth]{images/chatbot_arch.png}
+  \caption{Runtime architecture of the conversational assistant.}
+  \label{fig:chatbot_arch}
+\end{figure}
+
+The pieces are intentionally small. The Streamlit app owns the layout, the
+session state, and the language toggle. The agent module owns the prompt
+construction and the model call. The chart generator turns a
+\texttt{chart\_spec} into a Plotly figure. The voice component is a thin
+wrapper around a browser API. The data loader reads the CSV outputs of
+the previous sprints into a single in-memory \texttt{DataContext} that the
+agent passes to the model as schema + summary text.
+
+\section{Implementation}
+
+\subsection{Loading the Data Context}
+
+\texttt{chatbot/data\_loader.py} reads eleven CSV files into a shared
+\texttt{DataContext} dataclass:
+
+\begin{itemize}[noitemsep]
+  \item From \texttt{output/powerbi\_star/}: \texttt{fact\_transaction},
+        \texttt{fact\_session}, \texttt{dim\_member}.
+  \item From \texttt{output/forecasts/}: \texttt{forecast\_revenue},
+        \texttt{session\_volume}, \texttt{member\_segments},
+        \texttt{member\_loyalty}, \texttt{anomalies},
+        \texttt{peak\_hours\_by\_hour}, \texttt{peak\_hours\_by\_day},
+        \texttt{stock\_replenishment}.
+\end{itemize}
+
+For each table the loader emits a short schema line (column names plus
+dtypes) and aggregates a one-shot summary string: total revenue, member
+count, loyalty-tier distribution, the next four weekly and three monthly
+revenue forecasts, recent-anomaly count, average session duration, and
+session-type breakdown. The two strings (\texttt{schemas} and
+\texttt{summary}) are spliced into the system prompt at every turn so the
+model always has both the structure of the data and the headline numbers
+in front of it.
+
+A useful side effect: the loader also exposes a
+\texttt{recent\_anomaly\_count()} helper, so the Streamlit app can change
+its startup greeting when something interesting has happened in the
+previous seven days.
+
+\subsection{The Conversational Agent}
+
+\texttt{chatbot/agent.py} is the bridge between the Streamlit app and
+the Gemini API. It does three things:
+
+\begin{enumerate}
+  \item \textbf{Build the system prompt.} The prompt mixes a fixed
+        instruction block, the language directive, the schema string, and
+        the summary string. The instructions tell the model to answer
+        concisely, to include a single \texttt{chart\_spec} JSON block
+        only when a chart would actually help, to suggest two or three
+        follow-up questions, to refuse questions that cannot be answered
+        from the available data, and to never invent numbers.
+  \item \textbf{Call the model.} The full conversation history is
+        re-sent on every turn (Gemini \texttt{gemini-3-flash-preview}),
+        with the system prompt attached as
+        \texttt{system\_instruction}. The model returns one piece of
+        free text that contains the answer and, optionally, two JSON
+        code blocks.
+  \item \textbf{Parse the response.} A small regex pass extracts the
+        \texttt{chart\_spec} block and the \texttt{suggestions} block,
+        then strips them out of the visible answer so the chat shows
+        clean prose only.
+\end{enumerate}
+
+The system prompt also contains a short ``source selection rules''
+section that nudges the model towards the right table for each kind of
+question (revenue trend $\to$ \texttt{fact\_transaction}; future
+revenue $\to$ \texttt{forecast\_revenue} with a granularity filter;
+hourly pattern $\to$ \texttt{peak\_hours\_by\_hour}; and so on). This
+turned out to matter more than tuning the temperature. Without the rules,
+the model would happily plot \texttt{fact\_session} on a non-existent
+date axis or use the \texttt{anomalies} table for generic revenue
+questions.
+
+\subsection{Chart Generation}
+
+\texttt{chatbot/chart\_generator.py} converts a \texttt{chart\_spec} dict
+into a Plotly Express figure. The spec is small on purpose --- just
+\texttt{type}, \texttt{x}, \texttt{y}, \texttt{source} (the table key),
+\texttt{filter} (a pandas \texttt{query} expression that the agent can
+fill in), and \texttt{title}. Four chart types are supported:
+\textit{bar}, \textit{line}, \textit{scatter}, and \textit{pie}. If the
+\texttt{y} column is non-numeric, the generator groups by \texttt{x} and
+counts instead of trying to aggregate a string column. A dark theme is
+applied to match the rest of the Streamlit layout.
+
+Charts are not rendered when the model decides one is not useful (for
+example, ``how many members do I have in total?'' returns a one-line
+answer with no figure). This keeps the right-hand panel meaningful
+instead of being filled with redundant visuals.
+
+\subsection{Voice Input}
+
+\texttt{chatbot/voice\_component.py} declares a custom Streamlit
+component pointing at a small HTML/JS frontend in
+\texttt{chatbot/voice\_html/}. The frontend uses the browser's
+\texttt{SpeechRecognition} API to capture audio, transcribe it locally
+in the browser, and post the transcript back to Streamlit. The selected
+language toggle is forwarded to the component as a recognition locale
+(\texttt{en-US}, \texttt{fr-FR}, or \texttt{ar-TN}), so French users
+get French transcription and Arabic users get Tunisian-Arabic
+transcription out of the box.
+
+Keeping the recognition in the browser avoids having to wire a separate
+speech-to-text service, and means voice mode works offline once the page
+is loaded.
+
+\subsection{Multilingual UI}
+
+The \texttt{STRINGS} dictionary in \texttt{app.py} carries every visible
+label in three languages. Switching language flips the dict, sends a new
+language directive into the system prompt, and updates the voice
+component's recognition locale --- all in one place, all without
+reloading the data. The Arabic strings are stored as-is, and Streamlit
+renders them right-to-left where appropriate.
+
+The greeting is also context-aware. If the anomaly detector flagged
+something in the previous seven days, the assistant opens with
+``I noticed \texttt{N} anomaly(ies) in the past 7 days. Want me to show
+you?'' instead of the generic ``Hi! Ask me anything.'' This tiny detail
+was the change that made the assistant feel most useful in practice:
+the owner does not have to think to discover that something is off.
+
+\subsection{Quick Actions}
+
+Four shortcut buttons sit under the chat history --- \textit{Full
+summary}, \textit{Give me advice}, \textit{Any anomalies?}, and
+\textit{Forecast}. Each one just enqueues a pre-written prompt into
+\texttt{st.session\_state.pending\_query} and triggers a rerun, so the
+model receives the question as if the user had typed it. They cover the
+three or four questions the owner asks most often, and skip the typing
+cost.
+
+\section{Sprint 5 Review}
+
+\subsection{Deliverables}
+
+\begin{itemize}[noitemsep]
+  \item \texttt{app.py} --- 252-line Streamlit application: language
+        toggle, anomaly-aware greeting, chat panel with suggestion
+        chips, chart panel, quick-action buttons, voice button.
+  \item \texttt{chatbot/agent.py} --- prompt builder, Gemini call, and
+        structured-response parser.
+  \item \texttt{chatbot/chart\_generator.py} --- Plotly-Express
+        renderer for the four supported chart types.
+  \item \texttt{chatbot/data\_loader.py} --- shared
+        \texttt{DataContext}, schema/summary builder,
+        \texttt{recent\_anomaly\_count()} helper.
+  \item \texttt{chatbot/voice\_component.py} +
+        \texttt{chatbot/voice\_html/} --- browser-side speech
+        recognition wired into Streamlit.
+\end{itemize}
+
+\subsection{Validation}
+
+The assistant was validated against three kinds of questions:
+
+\begin{itemize}
+  \item \textbf{Descriptive} --- ``Which cashier had the best March?'',
+        ``What is the average session duration?'', ``Show me revenue by
+        payment method.'' Answers and charts matched the corresponding
+        Power~BI page on every test case.
+  \item \textbf{Forecast} --- ``How much revenue should I expect next
+        month?'', ``Will members grow in May?'' Returned the values
+        from \texttt{forecast\_revenue.csv} and
+        \texttt{session\_volume.csv} with the right granularity filter.
+  \item \textbf{Anomaly} --- ``Anything unusual last week?'' Returned
+        the rows from \texttt{anomalies.csv} flagged within the
+        seven-day window, matching the \texttt{recent\_anomaly\_count}
+        helper.
+\end{itemize}
+
+The multilingual handling was checked end-to-end: a French question
+produced a French answer with the chart title in French, and an Arabic
+question produced an Arabic answer rendered right-to-left.
+
+\section{Conclusion}
+
+Sprint~5 turned a folder of CSV files into something the owner can
+actually \emph{converse} with. There is no new data in the system ---
+the agent reads exactly the same outputs the dashboards do --- but the
+interaction model is fundamentally different. Instead of clicking
+through four dashboard pages to answer a question, the owner asks the
+question. Instead of remembering which CSV holds the anomaly list, the
+greeting brings the answer to him. The chatbot is the practical face
+of every previous sprint: without the cleaning, the schema, the
+dashboards, and the ML layer it would have nothing to talk about, but
+without the chatbot none of those would have been accessible without
+opening Power~BI. The next chapter wraps up the project as a whole.
+% ============================================================
 %  GENERAL CONCLUSION
 % ============================================================
 \chapter*{General Conclusion}
@@ -1705,7 +2098,7 @@ and \textit{which past days were out of the ordinary?}
 
 This project set out to answer a practical question: how can the raw, artefact-laden
 Excel exports of a gaming center be turned into a clean, reliable dataset that supports
-real decision-making? The answer, delivered through four iterative sprints, is the
+real decision-making? The answer, delivered through five iterative sprints, is the
 GamefyDB system.
 
 Sprint~0 laid the foundations: a requirements specification, a Scrum framework, a
@@ -1750,6 +2143,14 @@ days where revenue, session volume, or member activity was unusually high or low
 that day of the week, giving the owner a systematic way to investigate operational
 irregularities instead of noticing them by chance.
 
+Sprint~5 closed the loop with a conversational assistant. Built on top of Streamlit
+and the Gemini API, it lets the owner ask questions in English, French, or Arabic ---
+by typing or by voice --- and returns both a written answer and, when relevant, a
+Plotly chart. The assistant reads the exact same CSV files Power~BI consumes, so
+there is one source of truth, and the startup greeting changes when the anomaly
+detector has flagged something in the previous seven days, so the most pressing
+piece of information surfaces without anyone having to look for it.
+
 Several directions remain open for future development. The current pipeline reads
 static Excel exports; connecting it directly to the management software's database
 would enable automatic daily refreshes with no manual steps. The Prophet models would
@@ -1765,3 +2166,4 @@ genuine analytical capability through a well-designed ETL pipeline and open-sour
 tooling. The center now has a repeatable, automated process that transforms its
 operational data into a resource for real decision-making --- and a solid foundation
 that can grow alongside the business.
+

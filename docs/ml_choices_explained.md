@@ -219,6 +219,34 @@ Each series uses its own mean and std. An anomaly in revenue has no effect on th
 
 ---
 
+## 12. Member Loyalty Scoring — FM Model
+
+**What it is:**
+An FM model is a simplified version of the classic RFM (Recency, Frequency, Monetary) framework used in CRM and customer analytics. Each member receives a score on two dimensions:
+- **F (Frequency)** — how often the member visits, approximated by total time spent (`duration_min`)
+- **M (Monetary)** — how much the member spends in total (`total_tnd`)
+
+Each dimension is scored 1–4 using quartile ranking. The scores are summed into a composite FM score (range 2–8), which is mapped to four loyalty tiers: Bronze, Silver, Gold, and Platinum.
+
+**Why FM and not full RFM:**
+RFM requires a Recency dimension — the date of the member's last visit. Our dataset contains only aggregate member statistics (total spend, total time) with no individual visit timestamps. Recency cannot be computed reliably. Omitting it and using only F and M is a standard and academically accepted adaptation when visit-level data is unavailable.
+
+**Why this complements K-means and does not replace it:**
+K-means captures the *shape* of member behavior — it groups members with similar spending and time patterns regardless of their absolute values. A Heavy User cluster might contain both a moderately high spender and a very high spender. FM scoring captures *absolute rank* — it answers "who are our most valuable members?" regardless of what behavioral pattern they follow. The two techniques answer different business questions and are used together.
+
+**Why quartile scoring:**
+Quartile ranking (1–4) is the standard approach in RFM models. It avoids the need to set arbitrary monetary thresholds (e.g. "Gold means spending over 500 TND") that would not generalize across different time periods or business scales. Every member is ranked relative to the current member population.
+
+**Why four tiers:**
+Four tiers (Bronze/Silver/Gold/Platinum) map naturally to the four quartile combinations at the extremes (score 2 = bottom quartile on both dimensions, score 8 = top quartile on both). The naming convention is widely recognized in loyalty program literature and is immediately interpretable by a non-technical audience.
+
+**Alternatives considered:**
+- **Full RFM** — rejected because individual visit timestamps are not available in the dataset
+- **Monetary-only tiering** — rejected because it ignores how frequently members use the center, which is an independent dimension of loyalty
+- **Extending K-means to 5+ clusters** — rejected because it complicates the segmentation without adding a loyalty ranking lens; K-means answers "what type of member" while FM answers "how loyal"
+
+---
+
 ## Summary Table
 
 | Choice | Decision | Main Reason |
@@ -238,3 +266,6 @@ Each series uses its own mean and std. An anomaly in revenue has no effect on th
 | Random seed | 42 | Reproducibility |
 | Anomaly detection algorithm | Z-score (day-of-week) | Statistical standard, no extra library, easy to explain |
 | Anomaly threshold | 2σ (mild) / 3σ (severe) | Flags ~5% of days; severe reserved for true outliers |
+| Loyalty scoring model | FM (Frequency + Monetary) | Recency unavailable; FM is a standard accepted adaptation |
+| Loyalty scoring method | Quartile ranking 1–4 | Relative ranking, no arbitrary thresholds |
+| Loyalty tiers | 4 (Bronze/Silver/Gold/Platinum) | Maps to FM score range 2–8, widely recognized naming |

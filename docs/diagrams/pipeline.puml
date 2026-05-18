@@ -1,53 +1,95 @@
 @startuml pipeline
-title GamefyDB ETL Pipeline Architecture
+title GamefyDB — Technical Architecture
 
-skinparam componentStyle rectangle
 skinparam shadowing false
-skinparam ArrowColor #333
-skinparam component {
-  BackgroundColor<<stage>> #E3F2FD
-  BorderColor<<stage>> #1565C0
+skinparam DefaultFontName "Liberation Sans"
+skinparam DefaultFontSize 12
+skinparam ArrowColor #555555
+skinparam ArrowThickness 1.3
+skinparam ranksep 45
+skinparam nodesep 30
+skinparam rectangle {
+  FontColor       #1F3A5F
+  BorderColor     #4A6FA5
+  BackgroundColor #DCE6F4
+  RoundCorner     8
+  FontSize        12
 }
-skinparam folder {
-  BackgroundColor #FFF8E1
-  BorderColor #F9A825
-}
-
-folder "excel/" as input {
-  file "Cash DATA\n01-09-2025.xls" as cash
-  file "DATA session\nreports 01-09-2025.xls" as sess
-  file "Stock DATA\n01-09-2025.xls" as stock
-  file "memeber DATA\n01-09-2025.xls" as mem
-}
-
-component "ingestor.py\n(xlrd → DataFrames)" as ing <<stage>>
-component "cleaner.py\n(typing, artifacts)" as cln <<stage>>
-component "transformer.py\n(star schema)" as trans <<stage>>
-component "writer.py\n(CSV / Excel)" as wrt <<stage>>
-
-folder "output/" as outdir {
-  folder "dims/" {
-    file "dim_cashier.csv" as d1
-    file "dim_terminal.csv" as d2
-    file "dim_item.csv" as d3
-    file "dim_member.csv" as d4
-  }
-  folder "facts/" {
-    file "fact_cash_transactions.csv" as f1
-    file "fact_sessions.csv" as f2
-    file "fact_stock_movements.csv" as f3
-    file "fact_member_stats.csv" as f4
-  }
+skinparam node {
+  FontColor       #444444
+  BorderColor     #999999
+  BackgroundColor #FAFAFA
+  FontStyle       bold
+  FontSize        13
 }
 
-cash  --> ing
-sess  --> ing
-stock --> ing
-mem   --> ing
+' === Band 1 - Data sources ==============================================
+node "Data sources" as SRC {
+  rectangle "Cash report\n(.xls)"     as SRC1
+  rectangle "Sessions report\n(.xls)" as SRC2
+  rectangle "Stock report\n(.xls)"    as SRC3
+  rectangle "Members report\n(.xls)"  as SRC4
+  SRC1 -[hidden]r- SRC2
+  SRC2 -[hidden]r- SRC3
+  SRC3 -[hidden]r- SRC4
+}
 
-ing   --> cln   : raw DataFrames\n(strings)
-cln   --> trans : typed DataFrames
-trans --> wrt   : 4 dims + 4 facts
-wrt   --> outdir
+' === Band 2 - ETL pipeline ==============================================
+node "ETL pipeline  (gamefydb/pipeline.py)" as PIPE {
+  rectangle "Ingest\n(xlrd)"           as P1
+  rectangle "Clean &\ntype"            as P2
+  rectangle "Transform\n(star schema)" as P3
+  rectangle "Export\n(CSV / UTF-8)"    as P4
+  P1 -right-> P2
+  P2 -right-> P3
+  P3 -right-> P4
+}
+
+' === Band 3 - Warehouse =================================================
+node "Star-schema warehouse" as DWH {
+  rectangle "4 dimensions\n+ 2 fact tables\n(output/powerbi_star/)" as DWH1
+}
+
+' === Band 4 - Analytics =================================================
+node "Analytics layer" as ML {
+  rectangle "Forecaster\n(Prophet . SARIMA . XGBoost\n+ weather regressor)" as ML1
+  rectangle "Segmenter\n(K-means, k=4)"                                     as ML2
+  rectangle "Anomaly detector\n(day-of-week Z-score)"                       as ML3
+  ML1 -[hidden]r- ML2
+  ML2 -[hidden]r- ML3
+}
+
+' === Band 5 - Delivery ==================================================
+node "Delivery" as DEL {
+  rectangle "Power BI\ndashboards"                  as DEL1
+  rectangle "Streamlit chatbot\n(Gemini + Plotly)"  as DEL2
+  DEL1 -[hidden]r- DEL2
+}
+
+' === Wiring =============================================================
+' Sources fan into the first ETL step
+SRC1 --> P1
+SRC2 --> P1
+SRC3 --> P1
+SRC4 --> P1
+
+' Export populates the warehouse
+P4 --> DWH1
+
+' Warehouse fans out to each analytics module
+DWH1 --> ML1
+DWH1 --> ML2
+DWH1 --> ML3
+
+' Warehouse also feeds dashboards directly (raw star tables)
+DWH1 --> DEL1
+
+' Analytics outputs land in both delivery surfaces
+ML1 --> DEL1
+ML2 --> DEL1
+ML3 --> DEL1
+ML1 --> DEL2
+ML2 --> DEL2
+ML3 --> DEL2
 
 @enduml
