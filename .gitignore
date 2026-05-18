@@ -67,3 +67,5 @@ output/
 # Local-only
 CLAUDE.md
 verify_spec.py
+api/gamefydb.sqlite
+api/gamefydb.sqlite-journal
