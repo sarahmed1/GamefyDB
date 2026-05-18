@@ -1,8 +1,10 @@
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from api.auth.router import build_auth_router
 from api.config import get_settings
+from api.deps import require_admin
+from api.models import User
 
 
 def create_app() -> FastAPI:
@@ -22,6 +24,11 @@ def create_app() -> FastAPI:
     @app.get("/api/health")
     async def health() -> dict[str, str]:
         return {"status": "ok"}
+
+    # TODO(phase-9): remove when real admin routes exist
+    @app.get("/api/_admin_ping")
+    async def admin_ping(user: User = Depends(require_admin)) -> dict[str, str]:
+        return {"hello": user.email}
 
     return app
 
