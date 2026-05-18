@@ -24,6 +24,7 @@
 - No i18n — English UI only.
 - No mobile-specific layouts — responsive shadcn defaults only.
 - No saved dashboards / user-customizable views.
+- **Single API worker only.** The DataFrame cache lives in-process; multi-worker deployments would have inconsistent reads after a pipeline run. v1 runs a single uvicorn process. A future move to multi-worker requires either (a) externalizing the cache (Redis / on-disk parquet + filesystem watch) or (b) keeping single-worker behind a reverse proxy.
 
 ---
 
@@ -195,7 +196,7 @@ Auth
   POST   /api/auth/login                       cookie set, httpOnly + SameSite=Lax
   POST   /api/auth/logout
   GET    /api/auth/me                          current user + role
-  POST   /api/auth/register                    admin-only
+  (no self-registration; new users created via /api/admin/users)
 
 KPIs
   GET    /api/kpis/overview?from&to            totals, top items, top terminals
@@ -215,7 +216,7 @@ Dims
 Forecasts
   GET    /api/forecasts/{prophet|sarima|xgboost}?horizon=N&target=revenue|sessions
   GET    /api/forecasts/compare?horizon=N      wMAPE table for all three
-  POST   /api/forecasts/{model}/retrain        → returns { job_id }
+  POST   /api/forecasts/{model}/retrain        admin-only → returns { job_id }
 
 Chatbot
   POST   /api/chat                             { messages[] } → { reply, tool_calls[] }
@@ -237,6 +238,8 @@ Admin
 ```
 
 **Data source for KPIs/facts/dims:** the API runs `gamefydb.transformer.transform()` on the latest cleaned data **once at startup** and caches the star-schema DataFrames in memory. A successful pipeline-run job triggers a cache refresh. No SQL warehouse needed for v1.
+
+**Empty / missing `excel/` source files:** startup must not crash. If ingestion fails for any of the four files, the cache initializes as empty DataFrames with the correct columns, a warning is logged, and KPI/fact endpoints return empty payloads. The pipeline-upload + run flow is the recovery path.
 
 ---
 
@@ -271,13 +274,13 @@ class Job(Base):
 
 **Flow:**
 
-1. `POST /api/pipeline/run` (or `/api/forecasts/{model}/retrain`) creates a `Job` row with `status=pending` and dispatches the work via `BackgroundTasks` into a single worker thread.
+1. `POST /api/pipeline/run` (or `/api/forecasts/{model}/retrain`) creates a `Job` row with `status=pending` and submits the work to a process-wide `ThreadPoolExecutor(max_workers=1)`.
 2. Worker updates `progress` and appends to `log` as it runs.
 3. Frontend `useJob(id)` polls `GET /api/jobs/{id}` every 1s while `status ∈ {pending, running}`, then stops.
 4. On `done`, frontend invalidates affected TanStack Query keys (e.g., `kpis/*`, `facts/*`) so charts refresh.
-5. In-memory `dict[uuid, Future]` lets the app cancel pending work on graceful shutdown.
+5. The executor is tracked alongside a `dict[uuid, Future]` for shutdown — `executor.shutdown(wait=False, cancel_futures=True)` on app lifespan exit.
 
-**Concurrency:** single worker thread in v1 (jobs are serialized). Two simultaneous pipeline runs queue.
+**Concurrency:** `max_workers=1` in v1 — jobs are serialized; two simultaneous pipeline runs queue. Bumping to >1 is a one-line change but invalidates the single-worker cache invariant above.
 
 ---
 
@@ -345,9 +348,35 @@ Frontend → sonner toast "Pipeline complete · 3.2s"
 
 ---
 
-## 11. Open Questions / Future Work
+## 11. Phasing for Implementation Planning
 
-- **Output file downloads** — `result_url` on jobs returns the generated CSV/Excel. Streaming endpoint or pre-signed local-fs link? Defer to plan.
+This spec is too large for a single implementation plan. writing-plans should decompose along these boundaries; each phase is a separately mergeable, demoable unit:
+
+1. **Phase 1 — Backend bootstrap.** `api/` FastAPI app, SQLite + Alembic, `User` + `Job` models, fastapi-users wiring, cookie auth, `current_user` + `require_admin` deps, `/api/auth/*` endpoints, pytest harness. *Demo:* curl login → me → logout works; 401 on protected routes.
+
+2. **Phase 2 — Data cache + read endpoints.** `services/data_cache.py` (startup build, empty-on-failure path), `/api/kpis/*`, `/api/facts/*`, `/api/dims/*`. *Demo:* curl returns paged transactions and an overview KPI payload.
+
+3. **Phase 3 — Frontend shell + auth.** Wire React Router v7, icon-rail layout, TopBar, `useAuth`, `ProtectedRoute`, login page. *Demo:* log in via browser, see the shell with an empty canvas.
+
+4. **Phase 4 — Overview section.** `/overview/today`, `/overview/terminal`, `/overview/cashier`, `/overview/heatmap` with shadcn Charts + heatmap primitive. *Demo:* a real dashboard view.
+
+5. **Phase 5 — Fact browsers.** Transactions, Sessions, Stock, Members pages with TanStack Table + URL-state filters. *Demo:* filter transactions by date + terminal.
+
+6. **Phase 6 — Jobs subsystem + pipeline trigger.** `services/jobs.py`, `Job` endpoints, `useJob`, `/admin/pipeline` upload + run UI, `/admin/jobs` history. *Demo:* upload a new `.xls`, watch progress, charts refresh.
+
+7. **Phase 7 — Forecasts.** `/api/forecasts/*` (incl. admin-only retrain), four forecast pages. *Demo:* Prophet/SARIMA/XGBoost charts with wMAPE comparison.
+
+8. **Phase 8 — Chatbot.** `/api/chat` wired to `chatbot/agent.py`, `/chat` page. *Demo:* ask "top terminal yesterday?" and get a tool-call-backed answer.
+
+9. **Phase 9 — Admin / users.** `/api/admin/users` CRUD + `/admin/users` page. *Demo:* admin creates a viewer, viewer logs in and is gated.
+
+Each phase ships with its tests. Phases 4–9 are mostly independent and could be parallelized after Phase 3.
+
+---
+
+## 12. Open Questions / Future Work
+
+- **Output file downloads** — `result_url` on jobs returns the generated CSV/Excel. Streaming `FileResponse` endpoint vs. a tokenized download URL? Defer to plan.
 - **Chat history persistence** — schema for `chat_session` and `chat_message` tables; reuse `Job`-style polling for streaming later.
 - **Saved views** — let users persist their filter combinations. Out of v1; revisit after defense.
 - **SSE for chat** — defer until JSON response feels insufficient.
