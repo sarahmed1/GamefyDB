@@ -15,3 +15,12 @@ python-dotenv
 kaleido
 requests
 pyarrow
+fastapi
+uvicorn[standard]
+fastapi-users[sqlalchemy]
+sqlalchemy[asyncio]
+aiosqlite
+alembic
+httpx
+pytest-asyncio
+pydantic-settings
