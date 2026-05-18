@@ -1,8 +1,53 @@
-output/
+# Python
 __pycache__/
-*.pyc
-.pytest_cache/
+*.py[cod]
+*$py.class
 *.egg-info/
-verify_spec.py
-CLAUDE.md
+build/
+dist/
+.eggs/
+.tox/
+.nox/
+
+# Test / type-check caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.pyre/
+.pytype/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Virtualenvs
+.venv/
+venv/
+env/
+
+# Environment / secrets
 .env
+.env.*
+!.env.example
+
+# IDE / editor
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Project state
+output/
+.superpowers/brainstorm/*/state/
+
+# Local-only
+CLAUDE.md
+verify_spec.py
