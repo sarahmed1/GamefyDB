@@ -1,6 +1,22 @@
 import asyncio
 import uuid
 
+# Allow reserved test TLDs like `.test` in EmailStr validation. Pydantic and
+# fastapi-users call `email_validator.validate_email` without `test_environment=True`,
+# which rejects `admin@gamefy.test`. Patch the module-level function so the test
+# environment domains are accepted everywhere (pydantic looks it up by attribute).
+import email_validator as _email_validator
+
+_original_validate_email = _email_validator.validate_email
+
+
+def _validate_email_allow_test(email, *args, **kwargs):
+    kwargs.setdefault("test_environment", True)
+    return _original_validate_email(email, *args, **kwargs)
+
+
+_email_validator.validate_email = _validate_email_allow_test
+
 import pytest
 import pytest_asyncio
 from fastapi.testclient import TestClient
