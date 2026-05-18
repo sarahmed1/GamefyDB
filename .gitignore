@@ -47,6 +47,22 @@ desktop.ini
 # Project state
 output/
 .superpowers/brainstorm/*/state/
+.claude/settings.local.json
+
+# Binary artifacts (keep .pbit templates, drop compiled .pbix)
+*.pbix
+*.pid
+*.jar
+
+# Root-level orphan figures (canonical copies live in figures/)
+/dossier.png
+/star.png
+/pipeline.png
+/usecase.png
+
+# Reference PDFs (kept locally, not in repo)
+/Rapport_de_PFE_Amal_Siala.pdf
+/pfe version finale (1) (1).pdf
 
 # Local-only
 CLAUDE.md
