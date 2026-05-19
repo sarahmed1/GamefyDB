@@ -1,3 +1,7 @@
+import os
+from pathlib import Path
+from unittest.mock import patch
+
 import pandas as pd
 import pytest
 
@@ -22,3 +26,36 @@ def test_empty_schema_columns_match_contract():
 def test_loaded_flag_starts_false():
     cache = DataCache()
     assert cache.loaded is False
+
+
+def test_build_with_missing_dir_keeps_empty_schema(tmp_path):
+    cache = DataCache()
+    cache.build(tmp_path / "does-not-exist")  # must NOT raise
+
+    assert cache.loaded is False
+    assert len(cache.schema["fact_transaction"]) == 0
+    assert list(cache.schema["fact_transaction"].columns) == EMPTY_COLUMNS["fact_transaction"]
+
+
+def test_build_with_real_excel_dir_loads_schema():
+    repo_root = Path(__file__).resolve().parents[2]
+    excel_dir = repo_root / "excel"
+    if not excel_dir.exists() or not (excel_dir / "extended_cash.xlsx").exists():
+        pytest.skip("extended_*.xlsx not present in excel/")
+
+    cache = DataCache()
+    cache.build(excel_dir)
+
+    assert cache.loaded is True
+    assert len(cache.schema["fact_transaction"]) > 0
+    assert pd.api.types.is_datetime64_any_dtype(cache.schema["fact_transaction"]["date"])
+
+
+def test_build_pipeline_exception_logged_and_swallowed(caplog):
+    cache = DataCache()
+    with patch("gamefydb.pipeline.run_pipeline", side_effect=RuntimeError("boom")):
+        with caplog.at_level("WARNING"):
+            cache.build("/tmp/whatever")
+
+    assert cache.loaded is False
+    assert "DataCache build failed" in caplog.text
