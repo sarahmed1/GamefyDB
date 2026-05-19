@@ -63,3 +63,43 @@ def test_by_cashier_returns_named_rows():
     by_name = {r["cashier"]: r for r in rows}
     assert by_name["taktek"]["amount"] == 38.0    # 10 + 3 + 25
     assert by_name["youssef"]["amount"] == 53.0   # 20 + 15 + 18
+
+
+def test_kpis_overview_endpoint(cached_app):
+    r = cached_app.get("/api/kpis/overview")
+    assert r.status_code == 200
+    body = r.json()
+    assert body["total_revenue"] == 91.0
+    assert body["transaction_count"] == 6
+
+
+def test_kpis_heatmap_endpoint(cached_app):
+    r = cached_app.get("/api/kpis/heatmap")
+    assert r.status_code == 200
+    body = r.json()
+    assert len(body["matrix"]) == 24
+    assert len(body["matrix"][0]) == 7
+
+
+def test_kpis_by_terminal_endpoint(cached_app):
+    r = cached_app.get("/api/kpis/by-terminal")
+    assert r.status_code == 200
+    body = r.json()
+    names = {row["terminal"] for row in body["rows"]}
+    assert names == {"PC-01", "PS5-01"}
+
+
+def test_kpis_by_cashier_endpoint(cached_app):
+    r = cached_app.get("/api/kpis/by-cashier")
+    assert r.status_code == 200
+    body = r.json()
+    names = {row["cashier"] for row in body["rows"]}
+    assert names == {"taktek", "youssef"}
+
+
+def test_kpis_unauth(client):
+    from fastapi.testclient import TestClient
+    from api.main import app
+    with TestClient(app) as c:
+        r = c.get("/api/kpis/overview")
+        assert r.status_code == 401

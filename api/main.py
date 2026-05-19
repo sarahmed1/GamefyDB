@@ -4,7 +4,7 @@ from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from api.auth.router import build_auth_router
-from api.routers import dims as dims_router, facts as facts_router
+from api.routers import dims as dims_router, facts as facts_router, kpis as kpis_router
 from api.config import get_settings
 from api.deps import require_admin
 from api.models import User
@@ -33,6 +33,7 @@ def create_app() -> FastAPI:
     app.include_router(build_auth_router(), prefix="/api")
     app.include_router(dims_router.router, prefix="/api")
     app.include_router(facts_router.router, prefix="/api")
+    app.include_router(kpis_router.router, prefix="/api")
 
     @app.get("/api/health")
     async def health() -> dict[str, str]:
