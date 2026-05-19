@@ -59,3 +59,23 @@ def test_build_pipeline_exception_logged_and_swallowed(caplog):
 
     assert cache.loaded is False
     assert "DataCache build failed" in caplog.text
+
+
+def test_app_startup_builds_cache(monkeypatch):
+    from api.services.data_cache import cache as singleton
+
+    called = {}
+
+    def fake_build(input_dir):
+        called["dir"] = str(input_dir)
+        singleton.loaded = True
+
+    monkeypatch.setattr(singleton, "build", fake_build)
+
+    from api.main import app
+    from fastapi.testclient import TestClient
+    with TestClient(app):
+        pass
+
+    assert "dir" in called
+    assert called["dir"].endswith("excel")

@@ -76,3 +76,38 @@ def client(session_maker, seeded_users):
     with TestClient(app) as c:
         yield c
     app.dependency_overrides.clear()
+
+
+from api.services import data_cache as _data_cache_mod
+from api.services.data_cache import cache as data_cache
+from api.tests._fixtures.synthetic_schema import build_synthetic_schema
+
+
+@pytest.fixture(scope="session", autouse=True)
+def _disable_real_cache_build():
+    """Prevent the lifespan startup from hitting the real ``excel/`` dir on every
+    TestClient context entry. Patches the singleton instance only, so fresh
+    ``DataCache()`` instances created inside individual tests still get the
+    real ``build`` method (and tests that need to verify build behavior on a
+    fresh instance work correctly)."""
+    original = data_cache.build
+    data_cache.build = lambda input_dir: None
+    yield
+    data_cache.build = original
+
+
+@pytest.fixture(scope="function")
+def synthetic_schema():
+    """A small deterministic star schema for KPI/facts/dims tests."""
+    return build_synthetic_schema()
+
+
+@pytest.fixture(scope="function")
+def cached_app(client, synthetic_schema):
+    """Reuse the authenticated TestClient from `client`, but install
+    the synthetic schema into the module-level DataCache singleton."""
+    previous = data_cache.schema, data_cache.loaded
+    data_cache.schema = synthetic_schema
+    data_cache.loaded = True
+    yield client
+    data_cache.schema, data_cache.loaded = previous

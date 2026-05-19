@@ -1,3 +1,5 @@
+from contextlib import asynccontextmanager
+
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -5,11 +7,19 @@ from api.auth.router import build_auth_router
 from api.config import get_settings
 from api.deps import require_admin
 from api.models import User
+from api.services.data_cache import cache as data_cache
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    settings = get_settings()
+    data_cache.build(settings.excel_dir)
+    yield
 
 
 def create_app() -> FastAPI:
     settings = get_settings()
-    app = FastAPI(title="GamefyDB API", version="0.1.0")
+    app = FastAPI(title="GamefyDB API", version="0.1.0", lifespan=lifespan)
 
     app.add_middleware(
         CORSMiddleware,

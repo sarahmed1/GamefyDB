@@ -1,4 +1,6 @@
 from functools import lru_cache
+from pathlib import Path
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -9,8 +11,9 @@ class Settings(BaseSettings):
     database_url: str = "sqlite+aiosqlite:///./api/gamefydb.sqlite"
     cookie_name: str = "gamefydb_session"
     cookie_max_age: int = 60 * 60 * 24  # 24h
-    cookie_secure: bool = False  # True in prod
+    cookie_secure: bool = False
     cors_origins: list[str] = ["http://localhost:5173"]
+    excel_dir: str = str(Path(__file__).resolve().parents[1] / "excel")
 
 
 @lru_cache
