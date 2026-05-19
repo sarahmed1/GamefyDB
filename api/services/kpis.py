@@ -68,3 +68,60 @@ def overview(schema: dict[str, pd.DataFrame], date_from, date_to) -> dict[str, A
         ],
         "top_terminals": top_terminals,
     }
+
+
+def heatmap(schema: dict[str, pd.DataFrame], date_from, date_to) -> dict[str, Any]:
+    tx = _filter_by_date(schema["fact_transaction"], date_from, date_to)
+    matrix = [[0.0] * 7 for _ in range(24)]
+    if len(tx) == 0:
+        return {"matrix": matrix}
+    tx = tx.dropna(subset=["date"])
+    hours = tx["date"].dt.hour.astype(int)
+    weekdays = tx["date"].dt.weekday.astype(int)  # Monday=0 .. Sunday=6
+    grouped = pd.DataFrame({"hour": hours, "weekday": weekdays, "amount": tx["amount"]})
+    pivot = grouped.groupby(["hour", "weekday"])["amount"].sum().reset_index()
+    for _, row in pivot.iterrows():
+        matrix[int(row["hour"])][int(row["weekday"])] = float(row["amount"])
+    return {"matrix": matrix}
+
+
+def by_terminal(schema: dict[str, pd.DataFrame], date_from, date_to) -> list[dict[str, Any]]:
+    tx = _filter_by_date(schema["fact_transaction"], date_from, date_to)
+    if len(tx) == 0:
+        return []
+    grouped = (
+        tx.dropna(subset=["terminal_id"])
+        .groupby("terminal_id")["amount"].agg(["sum", "count"])
+        .reset_index()
+    )
+    lookup = dict(zip(schema["dim_terminal"]["terminal_id"], schema["dim_terminal"]["terminal"]))
+    return [
+        {
+            "terminal_id": int(r["terminal_id"]),
+            "terminal": lookup.get(int(r["terminal_id"]), str(int(r["terminal_id"]))),
+            "amount": float(r["sum"]),
+            "transactions": int(r["count"]),
+        }
+        for _, r in grouped.iterrows()
+    ]
+
+
+def by_cashier(schema: dict[str, pd.DataFrame], date_from, date_to) -> list[dict[str, Any]]:
+    tx = _filter_by_date(schema["fact_transaction"], date_from, date_to)
+    if len(tx) == 0:
+        return []
+    grouped = (
+        tx.dropna(subset=["cashier_id"])
+        .groupby("cashier_id")["amount"].agg(["sum", "count"])
+        .reset_index()
+    )
+    lookup = dict(zip(schema["dim_cashier"]["cashier_id"], schema["dim_cashier"]["cashier_name"]))
+    return [
+        {
+            "cashier_id": int(r["cashier_id"]),
+            "cashier": lookup.get(int(r["cashier_id"]), str(int(r["cashier_id"]))),
+            "amount": float(r["sum"]),
+            "transactions": int(r["count"]),
+        }
+        for _, r in grouped.iterrows()
+    ]
