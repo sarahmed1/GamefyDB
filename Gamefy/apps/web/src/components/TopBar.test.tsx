@@ -32,7 +32,7 @@ function renderAt(path: string) {
 
 describe("TopBar", () => {
   it("renders the title matching the current path", () => {
-    globalThis.fetch = vi.fn(() => new Promise(() => {}))
+    globalThis.fetch = vi.fn(() => new Promise<Response>(() => {}))
 
     renderAt("/cash")
 

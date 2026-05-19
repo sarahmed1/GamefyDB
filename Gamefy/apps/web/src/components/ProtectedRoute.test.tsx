@@ -31,7 +31,7 @@ function renderAt(path: string) {
 
 describe("ProtectedRoute", () => {
   it("renders Loading… while useMe is pending", () => {
-    globalThis.fetch = vi.fn(() => new Promise(() => {}))
+    globalThis.fetch = vi.fn(() => new Promise<Response>(() => {}))
 
     renderAt("/")
 

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest"
 
-import { apiFetch, ApiError } from "./api"
+import { apiFetch } from "./api"
 
 describe("apiFetch", () => {
   it("sends credentials: include and parses JSON on 2xx", async () => {
