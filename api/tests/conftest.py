@@ -105,9 +105,11 @@ def synthetic_schema():
 @pytest.fixture(scope="function")
 def cached_app(client, synthetic_schema):
     """Reuse the authenticated TestClient from `client`, but install
-    the synthetic schema into the module-level DataCache singleton."""
+    the synthetic schema into the module-level DataCache singleton.
+    Logs in as admin so that authenticated endpoints are reachable."""
     previous = data_cache.schema, data_cache.loaded
     data_cache.schema = synthetic_schema
     data_cache.loaded = True
+    client.post("/api/auth/login", data={"username": "admin@gamefy.test", "password": "admin12345"})
     yield client
     data_cache.schema, data_cache.loaded = previous
