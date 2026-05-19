@@ -52,3 +52,30 @@ def test_facts_cash_unauth(client):
     with TestClient(app) as c:
         r = c.get("/api/facts/cash")
         assert r.status_code == 401
+
+
+def test_facts_sessions_returns_paged_rows(cached_app):
+    r = cached_app.get("/api/facts/sessions")
+    assert r.status_code == 200
+    body = r.json()
+    assert body["total"] == 2
+    types = {it["session_type"] for it in body["items"]}
+    assert types == {"Walk-in", "Member"}
+
+
+def test_facts_sessions_member_filter(cached_app):
+    r = cached_app.get("/api/facts/sessions?session_type=Member")
+    assert r.status_code == 200
+    items = r.json()["items"]
+    assert len(items) == 1
+    assert items[0]["member_id"] == 1001
+
+
+def test_facts_stock_returns_404(cached_app):
+    r = cached_app.get("/api/facts/stock")
+    assert r.status_code == 404
+
+
+def test_facts_members_returns_404(cached_app):
+    r = cached_app.get("/api/facts/members")
+    assert r.status_code == 404
