@@ -1,0 +1,124 @@
+<h2>Which navigation pattern for the app shell?</h2>
+<p class="subtitle">8 pages: Overview, Transactions, Sessions, Stock, Members, Forecasts, Chatbot, Admin. Pick A/B/C.</p>
+
+<style>
+  .frame { display:grid; grid-template-rows: 32px 1fr; height:340px; border:1px solid #2a2a2a; border-radius:8px; overflow:hidden; background:#0f0f10; }
+  .frame .topbar { background:#1a1a1c; display:flex; align-items:center; gap:10px; padding:0 10px; font-size:11px; color:#a0a0a0; border-bottom:1px solid #2a2a2a; }
+  .frame .topbar .brand { color:#fff; font-weight:600; }
+  .frame .topbar .user { margin-left:auto; }
+  .body { display:flex; min-height:0; }
+  .sidebar { width:170px; background:#141416; border-right:1px solid #2a2a2a; padding:8px 6px; font-size:11px; color:#cfcfcf; display:flex; flex-direction:column; gap:2px; }
+  .sidebar .group { color:#777; padding:8px 8px 4px; font-size:9px; letter-spacing:1px; text-transform:uppercase; }
+  .sidebar .item { padding:6px 8px; border-radius:4px; }
+  .sidebar .item.active { background:#27272a; color:#fff; }
+  .sidebar.rail { width:48px; align-items:center; padding-top:8px; gap:8px; }
+  .sidebar.rail .ico { width:28px; height:28px; border-radius:6px; background:#27272a; display:grid; place-items:center; color:#fff; font-size:11px; }
+  .sidebar.rail .ico.dim { background:transparent; color:#777; }
+  .tabs { background:#141416; border-bottom:1px solid #2a2a2a; display:flex; gap:2px; padding:0 10px; font-size:11px; }
+  .tabs .tab { padding:8px 10px; color:#cfcfcf; border-bottom:2px solid transparent; }
+  .tabs .tab.active { color:#fff; border-bottom-color:#7c3aed; }
+  .canvas { flex:1; padding:14px; display:grid; gap:10px; grid-template-columns:1fr 1fr 1fr; grid-auto-rows:64px; min-height:0; }
+  .card { background:#1a1a1c; border:1px solid #2a2a2a; border-radius:6px; }
+  .card.tall { grid-row:span 2; }
+  .card.wide { grid-column:span 2; }
+  .secondary { width:130px; background:#161618; border-right:1px solid #2a2a2a; padding:10px 6px; font-size:11px; color:#cfcfcf; }
+  .secondary .item { padding:5px 8px; border-radius:4px; }
+  .secondary .item.active { background:#27272a; color:#fff; }
+</style>
+
+<div class="cards">
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="frame">
+        <div class="topbar"><span class="brand">GamefyDB</span><span class="user">Sarra ▾</span></div>
+        <div class="body">
+          <div class="sidebar">
+            <div class="group">Analytics</div>
+            <div class="item active">Overview</div>
+            <div class="item">Transactions</div>
+            <div class="item">Sessions</div>
+            <div class="item">Stock</div>
+            <div class="item">Members</div>
+            <div class="item">Forecasts</div>
+            <div class="group">Tools</div>
+            <div class="item">Chatbot</div>
+            <div class="item">Admin</div>
+          </div>
+          <div class="canvas">
+            <div class="card"></div><div class="card"></div><div class="card"></div>
+            <div class="card wide"></div><div class="card"></div>
+            <div class="card wide tall"></div><div class="card"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A — Collapsible left sidebar (shadcn pattern)</h3>
+      <p>One full-height nav with grouped sections. Best fit for 8 pages, what most analytics dashboards (Vercel, Linear, Stripe) use. Collapses to icons on narrow screens.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="frame">
+        <div class="topbar"><span class="brand">GamefyDB</span><span class="user">Sarra ▾</span></div>
+        <div class="body" style="flex-direction:column;">
+          <div class="tabs">
+            <div class="tab active">Overview</div>
+            <div class="tab">Transactions</div>
+            <div class="tab">Sessions</div>
+            <div class="tab">Stock</div>
+            <div class="tab">Members</div>
+            <div class="tab">Forecasts</div>
+            <div class="tab">Chatbot</div>
+            <div class="tab">Admin</div>
+          </div>
+          <div class="canvas">
+            <div class="card"></div><div class="card"></div><div class="card"></div>
+            <div class="card wide"></div><div class="card"></div>
+            <div class="card wide tall"></div><div class="card"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B — Top tab navigation</h3>
+      <p>All pages along the top bar. Saves horizontal space for charts but gets crowded with 8 tabs and offers no grouping. Sub-navigation (e.g., forecast variants) gets messy.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="frame">
+        <div class="topbar"><span class="brand">GamefyDB</span><span class="user">Sarra ▾</span></div>
+        <div class="body">
+          <div class="sidebar rail">
+            <div class="ico">◆</div>
+            <div class="ico dim">≣</div>
+            <div class="ico dim">◷</div>
+            <div class="ico dim">⬚</div>
+            <div class="ico dim">☺</div>
+            <div class="ico dim">↗</div>
+            <div class="ico dim">💬</div>
+            <div class="ico dim">⚙</div>
+          </div>
+          <div class="secondary">
+            <div class="item active">Today</div>
+            <div class="item">By terminal</div>
+            <div class="item">By cashier</div>
+            <div class="item">Hourly heatmap</div>
+          </div>
+          <div class="canvas">
+            <div class="card"></div><div class="card"></div><div class="card"></div>
+            <div class="card wide"></div><div class="card"></div>
+            <div class="card wide tall"></div><div class="card"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C — Icon rail + secondary panel</h3>
+      <p>Compact icon rail switches sections; a second narrow panel holds sub-views of the active section. Great if pages have many sub-views (e.g., Overview → Today / Terminal / Cashier / Heatmap). More chrome to build.</p>
+    </div>
+  </div>
+</div>
