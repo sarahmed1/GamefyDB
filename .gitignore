@@ -6,15 +6,11 @@ __pycache__/
 build/
 dist/
 .eggs/
-.tox/
-.nox/
 
 # Test / type-check caches
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
-.pyre/
-.pytype/
 .coverage
 .coverage.*
 htmlcov/
@@ -45,30 +41,20 @@ Thumbs.db
 desktop.ini
 
 # Project state
-output/
+data/output/
 .superpowers/brainstorm/*/state/
 .claude/settings.local.json
 
-# Binary artifacts (keep .pbit templates, drop compiled .pbix)
+# Compiled Power BI (keep .pbit templates)
 *.pbix
-*.pid
+
+# Tooling jars (e.g. plantuml)
 *.jar
-
-# Root-level orphan figures (canonical copies live in figures/)
-/dossier.png
-/star.png
-/pipeline.png
-/usecase.png
-
-# Reference PDFs (kept locally, not in repo)
-/Rapport_de_PFE_Amal_Siala.pdf
-/pfe version finale (1) (1).pdf
 
 # Local-only
 CLAUDE.md
-verify_spec.py
 backend/apps/api/gamefydb.sqlite
 backend/apps/api/gamefydb.sqlite-journal
 
-# Frontend dep trees (each workspace ignores its own; this is a safety net)
+# Node (each workspace ignores its own; safety net)
 node_modules/
