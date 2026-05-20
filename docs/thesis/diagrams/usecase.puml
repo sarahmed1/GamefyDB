@@ -1,0 +1,105 @@
+@startuml usecase
+title GamefyDB — Global Use Case Diagram
+
+left to right direction
+skinparam shadowing false
+skinparam DefaultFontName "Liberation Sans"
+skinparam DefaultFontSize 12
+skinparam ArrowColor #555555
+skinparam ranksep 35
+skinparam nodesep 18
+skinparam packageStyle rectangle
+skinparam package {
+  BorderColor      #4A6FA5
+  BackgroundColor  #F5F8FC
+  FontColor        #1F3A5F
+  FontStyle        bold
+  FontSize         13
+}
+skinparam rectangle {
+  BorderColor      #4A6FA5
+  BackgroundColor  #FFFFFF
+  FontStyle        bold
+  FontSize         14
+}
+skinparam usecase {
+  BackgroundColor  #DCE6F4
+  BorderColor      #4A6FA5
+  FontColor        #1F3A5F
+  FontSize         12
+}
+skinparam actor {
+  Style            awesome
+  BackgroundColor  #FFFFFF
+  BorderColor      #333333
+  FontColor        #222222
+  FontSize         12
+}
+
+' === Actors ==============================================================
+actor "Cashier\n(data source)"           as cashier
+actor "Data Analyst /\nBI Developer"     as analyst
+actor "Gaming Centre\nOwner / Manager"   as owner
+
+rectangle "GamefyDB System" {
+
+  package "ETL Pipeline (backend)" as PKG_ETL {
+    usecase "Execute ETL pipeline"        as UC_ETL
+    usecase "Ingest source files"         as UC_ING
+    usecase "Cleanse & normalise data"    as UC_CLN
+    usecase "Model star schema"           as UC_TRA
+    usecase "Publish warehouse files"     as UC_EXP
+  }
+
+  package "Power BI Dashboards" as PKG_DASH {
+    usecase "Analyse revenue\nperformance"   as UC_REV
+    usecase "Track top members\n& terminals" as UC_MEM
+    usecase "Monitor live\noperations"       as UC_LIVE
+    usecase "Evaluate shift\nperformance"    as UC_SHIFT
+  }
+
+  package "Machine-Learning Insights" as PKG_ML {
+    usecase "Forecast revenue\n& session volume" as UC_FCAST
+    usecase "Identify peak\nperiods"             as UC_PEAK
+    usecase "Plan stock\nreplenishment"          as UC_STOCK
+    usecase "Analyse member\nloyalty"            as UC_SEG
+    usecase "Flag unusual\nactivity"             as UC_ANOM
+  }
+
+  package "Conversational Assistant" as PKG_CHAT {
+    usecase "Consult AI assistant\n(EN / FR / AR)" as UC_CHAT
+    usecase "Render chart\non demand"              as UC_CHART
+    usecase "Submit voice\nquery"                  as UC_VOICE
+  }
+}
+
+' === Include / extend relationships ======================================
+UC_ETL ..> UC_ING : <<include>>
+UC_ETL ..> UC_CLN : <<include>>
+UC_ETL ..> UC_TRA : <<include>>
+UC_ETL ..> UC_EXP : <<include>>
+
+' Chart rendering and voice input are optional behaviours of the chat UC
+UC_CHART ..> UC_CHAT : <<extend>>
+UC_VOICE ..> UC_CHAT : <<extend>>
+
+' === Actor links (solid associations) ====================================
+cashier --> UC_ETL : submits\ndaily reports
+
+analyst --> UC_ETL
+analyst --> UC_FCAST
+analyst --> UC_SEG
+analyst --> UC_ANOM
+
+owner --> UC_REV
+owner --> UC_MEM
+owner --> UC_LIVE
+owner --> UC_SHIFT
+owner --> UC_FCAST
+owner --> UC_PEAK
+owner --> UC_STOCK
+owner --> UC_SEG
+owner --> UC_ANOM
+owner --> UC_CHAT
+
+@enduml

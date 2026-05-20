@@ -9,16 +9,16 @@ os.environ.setdefault('MPLBACKEND', 'Agg')
 
 import pandas as pd
 
-from gamefydb.forecaster import (
+from backend.packages.analytics.forecaster import (
     forecast_revenue,
     forecast_members,
     forecast_peak_hours,
     forecast_session_volume,
     study_stationarity,
 )
-from gamefydb.segmenter import segment_members, score_member_loyalty
-from gamefydb.anomaly_detector import detect_anomalies
-from gamefydb.figures import generate_all_figures
+from backend.packages.analytics.segmenter import segment_members, score_member_loyalty
+from backend.packages.analytics.anomaly_detector import detect_anomalies
+from backend.packages.analytics.figures import generate_all_figures
 
 
 def _load_combined_transactions_v2():
@@ -139,3 +139,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+

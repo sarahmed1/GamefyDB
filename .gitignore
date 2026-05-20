@@ -67,8 +67,8 @@ output/
 # Local-only
 CLAUDE.md
 verify_spec.py
-api/gamefydb.sqlite
-api/gamefydb.sqlite-journal
+backend/apps/api/gamefydb.sqlite
+backend/apps/api/gamefydb.sqlite-journal
 
 # Frontend dep trees (each workspace ignores its own; this is a safety net)
 node_modules/
